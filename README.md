@@ -56,7 +56,7 @@ python scripts/run_tests.py --ui
 python scripts/check_docs.py
 ```
 
-默认测试只用虚构资料、临时数据库和本机页面，不调用真实模型或招聘官网。初步版插件包 **1.3.2**，注入核心 **1.2.21**，客户端 **1.2.10**，执行协议 **v1**；各组件独立版本见 [扩展接口](prototypes/icbc-native-extension/API.md)。
+默认测试只用虚构资料、临时数据库和本机页面，不调用真实模型或招聘官网。初步版插件包 **1.3.3**，注入核心 **1.2.21**，客户端 **1.2.10**，执行协议 **v1**；各组件独立版本见 [扩展接口](prototypes/icbc-native-extension/API.md)。
 
 - [项目交接](docs/HANDOFF_CONTEXT.md) · [当前产品规则](docs/PRODUCT_REQUIREMENTS.md)
 - [架构](docs/ARCHITECTURE.md) · [数据与接口](docs/DATA_AND_API.md)

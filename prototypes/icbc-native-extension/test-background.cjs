@@ -17,6 +17,8 @@ test('read-only connection waits past search-only shell and never requests match
  vm.runInContext(fs.readFileSync(__dirname+'/service-controller.js','utf8'),ctx);
  const c=new ctx.JobFillService();Object.assign(c,{details:{url:'https://fixture.example/apply',mode:'verify',code:'fictional'},tabId:42,client:{async call(method){assert.equal(method,'scan');return {ok:true,result:{fields}};}},request:async action=>{assert(['connect','launch-report'].includes(action));if(action==='connect')connects++;return {connection:'read-only'};}});
  assert.equal(await c.connect(),false);assert.equal(connects,0);
+ fields=[{label:'搜索职位关键词',disabled:false},{label:'验证码',disabled:false}];
+ assert.equal(await c.connect(),false);assert.equal(connects,0);
  fields=[{label:'姓名',disabled:true,currentValue:'虚构姓名'}];
  assert.equal(await c.connect(),true);assert.equal(connects,1);assert.equal(c.prepared,true);
 });

@@ -165,7 +165,10 @@ async function confirmPreparation(){
     if(fresh.digest!==preparationState.current?.digest){await refresh();throw Error('资料已更新，请核对右侧最新预览。');}
     if(fresh.pending.length)throw Error('请先处理左侧待补充项');
     showExecutionDialog();
-    if(!preparationState.executor?.connected)await launchBrowser();
+    // A read-only controller intentionally rejects filling. A new material
+    // confirmation must reconnect in prepare mode before queueing its values.
+    if(preparationState.execution?.verification_only)await launchBrowser('prepare',true);
+    else if(!preparationState.executor?.connected)await launchBrowser();
     const execution=await api('/api/preparation/start',{session_id:selected,digest:fresh.digest});
     if(selected===sessionId){preparationState.execution=execution;updatePreparationProgress();}
   }catch(error){executionError=error.message;updatePreparationProgress();throw error;}
@@ -176,6 +179,8 @@ function updatePreparationProgress(){
   const total=(execution?.confirmed_materials?.rows||preparationState.current?.rows||[]).reduce((n,row)=>n+(row.records?row.records.reduce((sum,record)=>sum+record.values.filter(v=>v.value!==''&&v.value!=null).length,0):row.value?1:0),0);
   const active=['awaiting_executor','running'].includes(execution?.status),finished=!!execution&&!active;
   const preserve=!!execution?.confirmed_materials?.preserve_unsaved_page,readyCurrent=finished&&preserve&&execution.verified===total&&(!execution.confirmed_materials?.attachment||execution.attachment_verified);
+  const readOnly=!!execution?.verification_only||!!execution?.confirmed_materials?.verification_only;
+  const checkedReadOnly=finished&&readOnly&&total>0&&execution.verified===total&&(!execution.confirmed_materials?.attachment||execution.attachment_verified)&&!execution.issues?.length;
   const dirty=[...answerDrafts.keys()].some(key=>key.startsWith(sessionId+'/'))||$$('[data-version-content]',$('#form-analysis')).some(e=>e.value!==e.dataset.applied);
   for(const id of ['#prep-confirm-inline','#prep-confirm'])if($(id))$(id).disabled=!!pending.length||active||dirty||confirmingPreparation||!!preparationSaves?.busy(sessionId);
   for(const button of $$('[data-group-mode]'))button.disabled=!!preparationSaves?.busy(sessionId)||button.dataset.saving==='true';
@@ -193,7 +198,7 @@ function updatePreparationProgress(){
   const order=['connecting','filling','saving','verifying','review'],index=order.indexOf(phase);
   const completed=[index>0,!!execution&&total>0&&execution.verified>=total,!!execution?.saved&&!!execution?.persistence_verified,!!execution?.saved&&!!execution?.persistence_verified,false];
   $$('#execution-steps li').forEach((li,i)=>{li.classList.toggle('done',i<index&&completed[i]);li.classList.toggle('incomplete',finished&&i<index&&!completed[i]);li.classList.toggle('active',i===index);if(i===index)li.setAttribute('aria-current','step');else li.removeAttribute('aria-current');});
-  $('#execution-title').textContent=executionError?'本次填写需要处理':active||confirmingPreparation?'正在为你填写':execution?.status==='failed'?'填写遇到阻碍':execution?.status==='paused'?'填写已暂停':finished?(readyCurrent?'资料已填好，请在当前官网提交':execution.saved&&execution.persistence_verified?'草稿已保存，请到官网确认':'还有内容未完成，请检查下方事项'):'准备自动填写';
+  $('#execution-title').textContent=executionError?'本次填写需要处理':active||confirmingPreparation?(readOnly?'正在核对官网资料':'正在为你填写'):execution?.status==='failed'?'填写遇到阻碍':execution?.status==='paused'?'填写已暂停':finished?(readyCurrent?'资料已填好，请在当前官网提交':execution.saved&&execution.persistence_verified?'草稿已保存，请到官网确认':checkedReadOnly?'当前资料已核对，请到官网确认':'还有内容未完成，请检查下方事项'):'准备自动填写';
   const connectionNotice=execution?.status==='awaiting_executor'&&['needs_user','failed'].includes(preparationState.browser?.status)?preparationState.browser.message:'';
   $('#execution-current').textContent=executionError||connectionNotice||(confirmingPreparation?'正在自动连接本次官网':(execution?.saved&&!execution?.persistence_verified?'此前收到暂存提示，但没有重新打开核对；保存结果尚未确认。':execution?.message)||preparationState.browser?.message||'正在连接本次官网');
   $('#execution-counts').textContent=execution?`本轮写入 ${execution.filled||0} 项 · 页面已核对 ${execution.verified||0}${total?' / '+total:''} 项${execution.attachment_verified?' · 附件已确认':''}${execution.persistence_verified?' · 重新打开后保留 '+(execution.persisted||0)+' / '+(execution.expected_count||total)+' 项':preserve?' · 官网不保留草稿，请勿刷新':execution.save_acknowledged||execution.saved?' · 保存尚待核对':' · 尚未确认保存'}`:'';
@@ -205,7 +210,7 @@ function updatePreparationProgress(){
   $('#execution-official').textContent=siteName&&siteName.length<=16?'去'+siteName+'官网确认':'去本次官网确认';
   const file=execution?.confirmed_materials?.attachment;
   $('#execution-attachment').hidden=!file;
-  $('#execution-attachment').textContent=file?(execution.attachment_verified&&execution.persistence_verified?'已保存到官网「简历附件」：'+file.name:execution.attachment_verified?(preserve?'所选原件已上传至当前官网：':'附件已显示，正在检查是否保存：')+file.name:'附件尚未确认保存：'+file.name):'';
+  $('#execution-attachment').textContent=file?(execution.attachment_verified&&execution.persistence_verified?'已保存到官网「简历附件」：'+file.name:execution.attachment_verified?(preserve?'所选原件已上传至当前官网：':readOnly?'当前官网附件已核对：':'附件已显示，正在检查是否保存：')+file.name:'附件尚未确认保存：'+file.name):'';
   $('#execution-issues').innerHTML=[...new Set((execution?.issues||[]).map(readableIssue))].map(t=>`<li>${escapeHtml(t)}</li>`).join('');
   $('#execution-return').hidden=active||confirmingPreparation;$('#execution-pause').hidden=!active;$('#execution-official').hidden=!finished&&!executionError&&preparationState.browser?.status!=='needs_user';
   $('.execution-monitor').classList.toggle('running',active||confirmingPreparation);

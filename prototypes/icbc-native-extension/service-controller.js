@@ -44,7 +44,13 @@ class JobFillService {
   const target=new URL(this.details.url),actual=new URL(tab.url);
   if(actual.protocol!=='https:'||actual.origin!==target.origin)throw Error('请在对应官网完成登录');
   this.url=tab.url;
-  let scan=await this.client.call('scan');if(!scan.ok||!(this.details.mode==='verify'?scan.result.fields?.some(f=>!f.disabled||!/搜索|密码|验证码|附件|上传|协议|声明/.test(f.label)):scan.result.fields?.some(f=>!f.disabled)))return false;
+  let scan=await this.client.call('scan');
+  if(!scan.ok)return false;
+  const fields=scan.result.fields||[];
+  // Read-only application fields can be disabled after submission. Editable
+  // search/login controls still do not establish that the form has loaded.
+  const readable=fields.some(f=>f.label?.trim()&&!/搜索|密码|验证码|附件|上传|协议|声明/.test(f.label));
+  if(this.details.mode==='verify'?!readable:!fields.some(f=>!f.disabled))return false;
   if(this.details.mode==='verify'||this.details.resume_confirmed){
    if(!this.connection)this.connection=(await this.request('connect',{code:this.details.code})).connection;
    this.connectedUrl=this.url;this.prepared=true;await this.request('launch-report',{ticket:this.ticket,status:'ready'}).catch(()=>{});return true;

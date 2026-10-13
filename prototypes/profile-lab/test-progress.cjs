@@ -34,3 +34,26 @@ test('restored unsaved form reports current page readiness without claiming save
  assert(c.node('#execution-attachment').textContent.includes('所选原件已上传至当前官网'));
  assert(!c.steps[2].classes.has('done'));
 });
+
+test('successful read-only review reports checked content without claiming a save or pending work',()=>{
+ const c=render({status:'needs_attention',phase:'review',verification_only:true,verified:1,attachment_verified:true,saved:false,issues:[],confirmed_materials:{verification_only:true,attachment:{name:'fictional.pdf'},rows:[{value:'虚构姓名'}]}});
+ assert.equal(c.node('#execution-title').textContent,'当前资料已核对，请到官网确认');
+ assert.equal(c.node('#execution-attachment').textContent,'当前官网附件已核对：fictional.pdf');
+ assert(!c.steps[2].classes.has('done'));
+});
+
+test('a complete value count cannot hide manual follow-up or a missing attachment',()=>{
+ for(const extra of [{issues:['仍需本人处理']},{attachment_verified:false}]){
+  const c=render({status:'needs_attention',phase:'review',verification_only:true,verified:1,attachment_verified:true,issues:[],confirmed_materials:{verification_only:true,attachment:{name:'fictional.pdf'},rows:[{value:'虚构姓名'}]},...extra});
+  assert.equal(c.node('#execution-title').textContent,'还有内容未完成，请检查下方事项');
+ }
+});
+
+test('new confirmation after read-only review reconnects a filling controller before queueing',async()=>{
+ const calls=[],preview={digest:'fixture',pending:[]};
+ const context=vm.createContext({sessionId:'fixture',preparationState:{current:preview,executor:{connected:true},execution:{verification_only:true}},$:()=>({}),setInterval(){},requireSavedPreparation(){},launchBrowser:async(...args)=>calls.push(['launch',...args]),api:async(path)=>{calls.push(['api',path]);return path.endsWith('preview')?preview:{status:'awaiting_executor'};}});
+ vm.runInContext(fs.readFileSync(__dirname+'/web/preparation.js','utf8'),context);
+ vm.runInContext('requireSavedPreparation=()=>{};showExecutionDialog=()=>{};updatePreparationProgress=()=>{}',context);
+ await vm.runInContext('confirmPreparation()',context);
+ assert.deepEqual(calls,[['api','/api/preparation/preview'],['launch','prepare',true],['api','/api/preparation/start']]);
+});
