@@ -1,0 +1,44 @@
+/* Extension-side entry point: a future trusted controller can reuse this class. */
+function jobFillNativeSetter(marker,value,blur,url){
+ if(location.href!==url)throw Error('网页已切换');
+ const roots=[document];for(let i=0;i<roots.length;i++)for(const e of roots[i].querySelectorAll('*'))if(e.shadowRoot)roots.push(e.shadowRoot);
+ const matches=roots.flatMap(r=>[...r.querySelectorAll('[data-jobfill-native-field]')]).filter(e=>e.getAttribute('data-jobfill-native-field')===marker);
+ if(matches.length!==1)throw Error('文本输入目标不唯一');const e=matches[0];
+ if(e.disabled||e.readOnly||!(e instanceof HTMLTextAreaElement||e instanceof HTMLInputElement&&['text','email','tel','number','search'].includes(e.type)))throw Error('该控件不允许文本输入');
+ e.focus();let nativeEdit=false;
+ const setter=Object.getOwnPropertyDescriptor(e instanceof HTMLTextAreaElement?HTMLTextAreaElement.prototype:HTMLInputElement.prototype,'value').set;
+ // Force one actual editing transition when replaying an uncommitted equal value.
+ if(e.value===value)setter.call(e,'');
+ if(typeof document.execCommand==='function'&&typeof e.select==='function'&&(e instanceof HTMLTextAreaElement||['text','search','tel'].includes(e.type))){e.select();nativeEdit=document.execCommand('insertText',false,value)&&e.value===value;}
+ if(!nativeEdit){Object.getOwnPropertyDescriptor(e instanceof HTMLTextAreaElement?HTMLTextAreaElement.prototype:HTMLInputElement.prototype,'value').set.call(e,value);e.dispatchEvent(new InputEvent('input',{bubbles:true,composed:true,inputType:'insertText',data:value}));}
+ e.dispatchEvent(new Event('change',{bubbles:true,composed:true}));e.dispatchEvent(new KeyboardEvent('keyup',{key:'Unidentified',bubbles:true}));if(blur)e.blur();
+ return {value:e.value,method:nativeEdit?'native-edit':'native-setter'};
+}
+globalThis.JobFillClient=class {
+ async reloadAndScan(expectedUrl){
+  const tab=await chrome.tabs.get(this.tabId);if(tab.url!==expectedUrl)throw Error('官网已切换，未刷新');
+  await chrome.tabs.reload(this.tabId,{bypassCache:true});
+  for(let n=0;n<60;n++){await new Promise(r=>setTimeout(r,500));const current=await chrome.tabs.get(this.tabId);if(current.url!==expectedUrl)throw Error('官网刷新后需要重新登录或检查页面');if(current.status==='complete'){const scan=await this.call('scan');if(scan.ok&&scan.result.fields?.some(f=>!f.disabled))return scan.result;}}
+  throw Error('官网重新打开超时，尚未确认内容已保存');
+ }
+ constructor(tabId){
+  if(!Number.isInteger(tabId))throw Error('需要明确的 tabId');this.tabId=tabId;this.channel=crypto.randomUUID();
+  chrome.runtime.onMessage.addListener((message,sender,respond)=>{
+   if(message?.type!=='jobfill:native-text'||message.channel!==this.channel)return;
+   if(sender.id!==chrome.runtime.id||sender.tab?.id!==this.tabId||sender.frameId!==0||message.url!==this.activeUrl||!/^https:/.test(message.url)||!/^[0-9a-f-]{36}$/i.test(message.marker)||typeof message.value!=='string'||message.value.length>200000||typeof message.blur!=='boolean'){respond({ok:false,error:'文本输入请求未通过目标校验'});return;}
+   chrome.tabs.get(this.tabId).then(tab=>{if(tab.url!==message.url)throw Error('网页已切换');return chrome.scripting.executeScript({target:{tabId:this.tabId},world:'MAIN',func:jobFillNativeSetter,args:[message.marker,message.value,message.blur,message.url]});}).then(results=>{if(results.length!==1)throw Error('执行目标不唯一');respond({ok:true,result:results[0].result});}).catch(e=>respond({ok:false,error:e.message}));
+   return true;
+  });
+ }
+ async call(method,payload={}){
+  const tab=await chrome.tabs.get(this.tabId),u=new URL(tab.url||'');
+  if(u.protocol!=='https:')throw Error('执行器仅在用户主动调用的 HTTPS 页面运行');
+  this.activeUrl=tab.url;
+  await chrome.scripting.executeScript({target:{tabId:this.tabId},func:channel=>{window.JobFillNativeChannel=channel;window.JobFillClientRevision='1.2.9';},args:[this.channel]});
+  await chrome.scripting.executeScript({target:{tabId:this.tabId},files:['executor-core.js','dom-utils.js','generic-adapter.js','feishu-adapter.js','icbc-adapter.js','bootstrap.js']});
+  const results=await chrome.scripting.executeScript({target:{tabId:this.tabId},func:(m,p)=>window.JobFillExecutor.dispatch(m,p),args:[method,payload]});
+  if(results.length!==1)throw Error('执行目标不唯一');return results[0].result;
+ }
+};
+
+if(typeof window!=='undefined')window.JobFillClient=globalThis.JobFillClient;

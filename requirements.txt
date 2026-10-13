@@ -1,0 +1,3 @@
+# PDF text extraction; other production Python imports use the standard library.
+pypdf==6.10.0
+jsonschema==4.26.0

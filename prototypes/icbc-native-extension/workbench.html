@@ -1,0 +1,6 @@
+<!doctype html><meta charset="utf-8"><title>连接投递工作台</title>
+<style>body{font:15px/1.7 system-ui;max-width:780px;margin:60px auto;padding:24px;color:#203a35}input{padding:12px;width:90%;font:inherit}button{padding:12px 20px;margin:16px 8px 16px 0}pre{white-space:pre-wrap;background:#f0f4ef;padding:20px}p{overflow-wrap:anywhere}</style>
+<h1>求职空间填写程序</h1><p id="target">正在读取当前招聘页面…</p><p>从工作台启动后自动连接。只有你确认总预览后才填写，不会替你提交申请。</p>
+<section id="permission" hidden><h2>首次启用自动填写</h2><p>允许此执行器读取和填写HTTPS网站，以便以后点击“开始投递”就能运行。程序仅处理你在求职空间启动的目标页面，不后台浏览其他网页。</p><button id="enable-auto">授权并启用自动填写</button></section>
+<section id="legacy-connect"><label>连接码<input id="code" autocomplete="off"></label><button id="connect">连接</button></section><button id="retry-scan" hidden>已登录，继续读取</button><button id="stop">停止后续填写</button><pre id="status">正在启动。</pre>
+<script src="client.js?v=1.2.9"></script><script src="material-runner.js?v=1.2.9"></script><script src="workbench.js?v=1.2.9"></script>

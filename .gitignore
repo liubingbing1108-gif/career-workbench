@@ -1,0 +1,34 @@
+.runtime/
+__pycache__/
+*.py[cod]
+.venv/
+node_modules/
+.DS_Store
+.env
+.env.*
+!.env.example
+*.sqlite
+*.sqlite-*
+*.sqlite3
+*.sqlite3-*
+*.db
+*.db-*
+*.log
+*.pid
+config/local*.json
+config/locations.json
+config/lark_base.json
+config/feishu*.local.json
+# Historical real-site evidence stays local until individually sanitized.
+prototypes/browser-fill-lab/evidence/
+prototypes/icbc-native-extension/legacy/
+screenshots/
+docs/assets/
+test-results/
+playwright-report/
+
+# Release staging contains only reviewed exports; never commit the staging container.
+.release/
+*.zip
+config/feishu.local.json
+prototypes/profile-lab/web/samples/

@@ -1,0 +1,45 @@
+{
+  "url": "https://example.com/fictional/application",
+  "title": "虚构示例 · 拓展申请表",
+  "source": "仅用于离线界面演练的虚构问题，不是已核验的真实官网。",
+  "execution": "manual",
+  "manual_reason": "官网存在意向志愿选择，按已确认规则提醒人工申请。",
+  "fields": [
+    {
+      "id": "site_0",
+      "label": "是否有全职工作经历",
+      "type": "text",
+      "required": true,
+      "section": "拓展申请表"
+    },
+    {
+      "id": "site_1",
+      "label": "请问你是否有数字化相关的技能或比赛/课题研究/实习经历？",
+      "type": "text",
+      "required": true,
+      "section": "拓展申请表"
+    },
+    {
+      "id": "site_2",
+      "label": "你觉得财务工作重点和价值是什么？请用100字以内描述",
+      "type": "textarea",
+      "maxLength": 100,
+      "required": true,
+      "section": "拓展申请表"
+    },
+    {
+      "id": "site_3",
+      "label": "请问你是否有AI或者Data相关的项目经验或者实习经验？",
+      "type": "text",
+      "required": true,
+      "section": "拓展申请表"
+    },
+    {
+      "id": "site_4",
+      "label": "请问你是否通过CFA/CPA/ACC其中的几门考试或者拥有证书？",
+      "type": "text",
+      "required": true,
+      "section": "拓展申请表"
+    }
+  ]
+}

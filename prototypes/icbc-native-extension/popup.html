@@ -1,0 +1,11 @@
+<!doctype html><meta charset="utf-8"><title>填写执行器</title>
+<style>body{font:13px/1.6 system-ui;width:440px;padding:14px;color:#17243a}button{padding:8px;margin:4px 4px 4px 0}textarea{box-sizing:border-box;width:100%;height:155px;font:11px monospace}pre{white-space:pre-wrap;max-height:245px;overflow:auto;font:11px monospace}h2{margin:0}details{margin-top:8px}</style>
+<h2>填写执行器</h2><p>先扫描字段，再接收指定答案。默认保留已有值；不会提交申请。按控件结构识别网站；未支持的控件会报告并停下。</p>
+<button id="scan">扫描当前页</button><button id="status">查看执行结果</button><button id="cancel">停止后续动作</button>
+<button id="workbench">连接投递工作台</button>
+<label for="request">接口请求（JSON）</label><textarea id="request" spellcheck="false" placeholder='{"method":"execute","payload":{...}}'></textarea>
+<button id="validate">只检查填写计划</button><button id="send">执行接口请求</button>
+<details><summary>开发验证</summary><p>仅生成虚构示例到上方输入框，点击执行后才写网页。示例与执行器分开维护。</p><button id="demo">生成局部填写示例</button><button id="records">生成经历条数示例</button><button id="report">在网页显示最近报告</button></details>
+<pre id="result">尚未读取页面。</pre>
+<script src="client.js"></script><script src="demo-plans.js"></script><script src="popup.js"></script>
+<script src="workbench-launcher.js"></script>
