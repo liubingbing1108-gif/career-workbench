@@ -129,7 +129,13 @@ with tempfile.TemporaryDirectory(prefix='profile-browser-test-') as directory:
     await page.goto(base+'/?prep-test=1#practice/'+session.id);await page.locator('#prep-preview').waitFor();
     assert(await page.locator('#prep-live-preview').isVisible());assert.equal(await page.locator('#execution-dialog').count(),1);assert((await page.locator('#prep-live-preview').textContent()).includes(employees[0].values.company));assert.equal(await page.locator('[data-choice-entry]').count(),employees.length);assert.equal(await page.locator('[data-experience]:checked').count(),1);
     assert.equal(await page.locator('[data-prep-version]').count(),employees.length);assert(await page.locator('[data-expansion-key="automatic"]').evaluate(e=>!e.open));
-    assert.equal(await page.locator('#prep-needed [data-missing-key]').count(),1);await page.locator('#prep-attachment').selectOption('');
+    assert.equal(await page.locator('#prep-needed [data-missing-key]').count(),1);
+    let releaseSettings;const settingsGate=new Promise(resolve=>releaseSettings=resolve);
+    await page.route('**/api/preparation/settings',async route=>{await settingsGate;await route.continue();});
+    await page.locator('#prep-attachment').selectOption('');
+    try{assert(await page.locator('#prep-needed [data-group-mode="update"]').isDisabled());}finally{releaseSettings();}
+    await page.waitForFunction(()=>document.querySelector('#preview-save-state').textContent==='选择已保存 · 预览已更新');
+    await page.unroute('**/api/preparation/settings');
     await page.locator('#prep-needed [data-missing-value]').selectOption('商务会话');await page.locator('#prep-needed [data-group-mode="update"]').click();
     await page.waitForFunction(()=>!document.querySelector('#prep-needed [data-missing-key]'));
     const after=await read();assert(after.fields.some(f=>f.label==='精通程度'));

@@ -106,8 +106,8 @@ function bindPreparation(){
   $$('[data-group-mode]',root).forEach(button=>button.onclick=safe(async()=>{
     if(preparationQueue().busy(sessionId))throw Error('本次选择正在保存，请稍候。');
     const blocks=$$('[data-answer-ref]',button.closest('[data-question-group]')).filter(b=>{const ref=JSON.parse(b.dataset.answerRef);return $('[data-missing-value]',b)&&answerDrafts.has(draftKey(ref));});
-    if(!blocks.length)throw Error('请先填写这组缺少的信息。');button.disabled=true;
-    try{for(const block of blocks){const ref=JSON.parse(block.dataset.answerRef);await api('/api/website/answer',preparationAnswerBody(ref,$('[data-missing-value]',block).value,button.dataset.groupMode));answerDrafts.delete(draftKey(ref));}await refresh();toast('这组补充已保存');}finally{button.disabled=false;}
+    if(!blocks.length)throw Error('请先填写这组缺少的信息。');button.dataset.saving='true';button.disabled=true;
+    try{for(const block of blocks){const ref=JSON.parse(block.dataset.answerRef);await api('/api/website/answer',preparationAnswerBody(ref,$('[data-missing-value]',block).value,button.dataset.groupMode));answerDrafts.delete(draftKey(ref));}await refresh();toast('这组补充已保存');}finally{delete button.dataset.saving;updatePreparationProgress();}
   }));
   $$('[data-reuse-answer]',root).forEach(button=>button.onclick=safe(async()=>{const ref=JSON.parse(button.closest('[data-answer-ref]').dataset.answerRef);await api('/api/website/answer',preparationAnswerBody(ref,button.dataset.reuseAnswer,'session'));answerDrafts.delete(draftKey(ref));await refresh();}));
   $$('[data-defer-key]',root).forEach(button=>button.onclick=()=>{const ref=JSON.parse(button.closest('[data-answer-ref]').dataset.answerRef);answerDrafts.delete(draftKey(ref));queuePreparation('defer/'+button.dataset.deferKey,'/api/preparation/defer',{key:button.dataset.deferKey,deferred:button.dataset.deferred==='true'});});
@@ -177,6 +177,7 @@ function updatePreparationProgress(){
   const active=['awaiting_executor','running'].includes(execution?.status),finished=!!execution&&!active;
   const dirty=[...answerDrafts.keys()].some(key=>key.startsWith(sessionId+'/'))||$$('[data-version-content]',$('#form-analysis')).some(e=>e.value!==e.dataset.applied);
   for(const id of ['#prep-confirm-inline','#prep-confirm'])if($(id))$(id).disabled=!!pending.length||active||dirty||confirmingPreparation||!!preparationSaves?.busy(sessionId);
+  for(const button of $$('[data-group-mode]'))button.disabled=!!preparationSaves?.busy(sessionId)||button.dataset.saving==='true';
   const save=preparationSaves?.state(sessionId),saving=save&&(save.running||save.pending.size),tasks=preparationState.current?.tasks||[];
   if($('#preview-save-state'))$('#preview-save-state').textContent=save?.error?'保存失败，选择仍保留':saving?'正在保存本次选择…':dirty?'有尚未保存的编辑':'选择已保存 · 预览已更新';
   if($('#prep-retry-save'))$('#prep-retry-save').hidden=!save?.error;
