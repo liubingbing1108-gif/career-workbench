@@ -58,6 +58,13 @@ class LaunchTests(unittest.TestCase):
         first=self.ticket();second=self.ticket()
         self.assertEqual(first,second);self.assertEqual(len(self.opened),1)
 
+    def test_explicit_rescan_creates_fresh_ticket_even_when_current_page_is_connected(self):
+        ticket=self.ticket();d=self.launch.claim(ticket,self.origin)
+        self.bridge.call('connect',self.origin,{'code':d['code'],'url':d['url']})
+        self.assertEqual(self.launch.request(self.session['id'],'http://127.0.0.1:8768')['status'],'ready')
+        fresh=self.launch.request(self.session['id'],'http://127.0.0.1:8768',rescan=True)
+        self.assertIn('ticket',fresh);self.assertNotEqual(fresh['ticket'],ticket)
+
     def test_connected_controller_receives_launch_and_focus_without_opening_pages(self):
         ticket=self.ticket();details=self.launch.claim(ticket,self.origin)
         token=self.bridge.call('connect',self.origin,{'code':details['code'],'url':details['url']})['connection']

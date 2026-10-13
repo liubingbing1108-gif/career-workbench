@@ -3,7 +3,10 @@ from datetime import datetime, timezone
 import re
 import threading
 from lab import LabError, find
-from form_analysis import save_analysis
+from form_analysis import save_analysis, validate_analysis
+
+def schema_shape(analysis):
+    return [(s['label'],s['repeatable'],[(f['label'],f['type'],f['required'],f.get('options',[])) for f in s['fields']]) for s in analysis.get('sections',[])]
 
 
 def scan_analysis(snapshot, url):
@@ -75,15 +78,25 @@ class SiteScan:
     def __init__(self,lab,preparation):
         self.lab,self.preparation=lab,preparation
         self.threads=[]
+        # In-memory model workers do not survive a backend restart.
+        def recover(state):
+            for session in state['sessions']:
+                prep=session.get('preparation',{})
+                if prep.get('scan_status')=='matching':prep.update(scan_status='failed',scan_error='资料匹配因服务重载中断，请重新读取本次官网后继续。')
+        if any(s.get('preparation',{}).get('scan_status')=='matching' for s in lab.state()['sessions']):lab.mutate(recover)
 
     def accept(self,url,snapshot,session_id=None):
-        analysis=scan_analysis(snapshot,url)
+        analysis=validate_analysis(scan_analysis(snapshot,url))
         sessions=[s for s in self.lab.state()['sessions'] if (s.get('target') or s.get('website') or {}).get('url')==url
                   and (session_id is None or s['id']==session_id)]
         if len(sessions)>1:raise LabError('请从本次岗位连接浏览器，不能按链接共用材料',409)
         session=next(iter(sessions),None)
         if not session:raise LabError('未找到对应的待投递链接')
-        if session.get('website'):
+        diagnostics=[str(v)[:1500] for v in snapshot.get('coverageDetails',{}).get('controlStructure',[])[:30]]
+        self.lab.mutate(lambda state:find(state['sessions'],session['id']).setdefault('preparation',{}).update(scan_diagnostics=diagnostics))
+        changed=session.get('website') and schema_shape(session.get('form_analysis',{}))!=schema_shape(analysis)
+        if changed and session.get('preparation',{}).get('execution',{}).get('status') in ('running','awaiting_executor'):raise LabError('官网问题已变化，请先暂停并重新核对材料',409)
+        if session.get('website') and not changed:
             # Keep confirmed answers and choices; retain only the fresh schema so
             # newly supported controls can be reconciled through the same mapper.
             info={'executor_version':str(snapshot.get('executorVersion',''))[:30],'client_version':str(snapshot.get('coverageDetails',{}).get('clientRevision',''))[:30],'native_text_ready':snapshot.get('coverageDetails',{}).get('nativeTextBridgeReady') is True}
@@ -91,13 +104,23 @@ class SiteScan:
             return {'status':'ready','message':'已有本次材料，保留你的选择；执行前会重新读取官网。'}
         sid=session['id']
         if session.get('preparation',{}).get('scan_status')=='matching':
+            if schema_shape(session.get('form_analysis',{}))!=schema_shape(analysis):
+                self.lab.mutate(lambda state:find(state['sessions'],sid)['preparation'].update(pending_analysis=analysis))
             return {'status':'matching'}
-        save_analysis(self.lab,analysis,sid)
+        if changed:
+            self.lab.mutate(lambda state:find(state['sessions'],sid).update(form_analysis=analysis))
+        else:save_analysis(self.lab,analysis,sid)
         self.lab.mutate(lambda state:find(state['sessions'],sid).setdefault('preparation',{}).update(scan_status='matching',scan_error=''))
         def match():
             try:
-                self.preparation.match(sid)
-                self.lab.mutate(lambda state:find(state['sessions'],sid)['preparation'].update(scan_status='ready',scan_error=''))
+                while True:
+                    self.preparation.match(sid)
+                    def finish(state):
+                        current=find(state['sessions'],sid);prep=current['preparation'];pending=prep.pop('pending_analysis',None)
+                        if pending and schema_shape(current['form_analysis'])!=schema_shape(pending):
+                            current['form_analysis']=pending;return True
+                        prep.update(scan_status='ready',scan_error='');return False
+                    if not self.lab.mutate(finish):break
             except Exception as error:
                 def failed(state):
                     remaining=next((s for s in state['sessions'] if s['id']==sid),None)

@@ -32,14 +32,22 @@ class Redirect(HTTPRedirectHandler):
 class PageText(HTMLParser):
     def __init__(self):
         super().__init__(); self.hidden = 0; self.parts = []; self.links = []
+        self.metadata = {}; self.website_json = ''; self.in_website = False
     def handle_starttag(self, tag, attrs):
+        attributes = dict(attrs)
+        if tag == 'meta':
+            key = attributes.get('property') or attributes.get('name')
+            if key in ('og:site_name','og:title'): self.metadata[key] = attributes.get('content','')[:300]
+        if tag == 'script' and attributes.get('id') == 'js-websiteInfo': self.in_website = True
         if tag in ('script', 'style', 'noscript'): self.hidden += 1
         if tag == 'a':
             href = dict(attrs).get('href')
             if href: self.links.append(href)
     def handle_endtag(self, tag):
+        if tag == 'script': self.in_website = False
         if tag in ('script', 'style', 'noscript') and self.hidden: self.hidden -= 1
     def handle_data(self, value):
+        if self.in_website: self.website_json += value
         if not self.hidden and value.strip(): self.parts.append(value.strip())
 
 
@@ -55,7 +63,19 @@ def read_page(url,metadata=False):
         body='\n'.join(parser.parts)[:50000];links=[urljoin(response.url,x) for x in parser.links[:300]]
         if any(word in body for word in ('请完成安全验证','请完成验证后继续','访问过于频繁','请输入验证码')):
             raise Invalid('页面需要验证，保留来源，不能当作招聘正文')
-        return {'body':body,'links':links,'final_url':response.url} if metadata else (body,links)
+        public_meta = dict(parser.metadata)
+        # Only employer/website identity from a public ATS bootstrap, never
+        # applicant state, cookies or resume data.
+        if parser.website_json:
+            try:
+                info = json.loads(parser.website_json)
+                website = info.get('website_info', {})
+                public_meta['tenant_name'] = str(info.get('tenant_info', {}).get('tenant_name',''))[:300]
+                public_meta['website_path'] = str(website.get('path',''))[:100]
+                for item in website.get('web_ui_config', {}).get('navigation_bar_items', []):
+                    if isinstance(item.get('url'),str): links.append(urljoin(response.url,item['url']))
+            except (ValueError,TypeError,AttributeError): pass
+        return {'body':body,'links':links,'final_url':response.url,'metadata':public_meta} if metadata else (body,links)
 
 
 def model_schema():

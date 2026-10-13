@@ -3,7 +3,7 @@ function fixture(readyAt=3){
  const state={ticks:0,ready:false,events:0,time:0};
  const row={get innerHTML(){return state.ready?'completed-card':'pending-card';},querySelectorAll(){return Array(state.ready?3:1).fill({});},querySelector(){return null;}};
  const root={querySelector(){return row;},querySelectorAll(){return [{textContent:'fictional.pdf'}];}};
- const input={closest(){return root;},dispatchEvent(){state.events++;}};
+ const input={closest(selector){return selector==='.file-uploader__wrapper'?root:null;},dispatchEvent(){state.events++;}};
  const D={text:e=>e?.textContent?.trim()||'',visible:()=>true,one:es=>es[0],click(){},setTextCommitted(){},show(){},async wait(fn,ctx){
   for(let n=0;n<25;n++){ctx.check();state.ticks++;state.time+=100;state.ready=state.ticks>=readyAt;const value=fn();if(value)return value;}
   throw Error('waiting timed out');

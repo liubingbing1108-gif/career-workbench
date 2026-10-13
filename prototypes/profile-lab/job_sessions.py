@@ -3,6 +3,15 @@ import json
 from urllib.parse import urlsplit, parse_qs
 from lab import LabError
 
+def same_role_form(url,target):
+    a,b=urlsplit(url),urlsplit(target)
+    if a.scheme!='https' or b.scheme!='https' or a.netloc!=b.netloc or a.username or a.password or a.port not in (None,443):return False
+    identity=parse_qs(b.query).get('jobAdId')
+    if identity and a.scheme==b.scheme=='https' and a.netloc==b.netloc and a.path=='/form' and parse_qs(a.query).get('jobAdId')==identity:return True
+    from direct_entry import feishu_identity
+    form,role=feishu_identity(url),feishu_identity(target)
+    return bool(form and role and form[0].netloc==role[0].netloc and form[1:]==role[1:])
+
 
 class JobSessions:
     def __init__(self, lab, store, preparation):
@@ -34,23 +43,19 @@ class JobSessions:
                     def belongs(session):
                         url=(session.get('website') or session.get('target') or {}).get('url','')
                         if url==target:return True
-                        a,b=urlsplit(url),urlsplit(target)
-                        identity=parse_qs(b.query).get('jobAdId')
-                        return bool(identity and a.scheme==b.scheme=='https' and a.netloc==b.netloc and
-                                    a.path=='/form' and parse_qs(a.query).get('jobAdId')==identity)
+                        return same_role_form(url,target)
                     existing=[s for s in self.lab.state()['sessions'] if s.get('management_job_id')==job_id and belongs(s)]
                     if existing:
                         return max(existing,key=lambda s:(bool(s.get('preparation',{}).get('execution')),bool(s.get('website')),bool(s.get('form_analysis'))))
-                if data.get('application_url'):
+                supplied=data.get('application_url') or job.get('official_entry',{}).get('application_url')
+                if supplied:
+                    if data.get('application_url') and job.get('official_entry',{}).get('verification')!='browser':
+                        raise LabError('申请表尚未通过浏览器核对')
                     # The public role link stays in management. A browser-observed
                     # applicant form belongs only to this local preparation record.
-                    form=urlsplit(data['application_url']);role=urlsplit(target)
-                    identity=parse_qs(role.query).get('jobAdId')
-                    if (job.get('official_entry',{}).get('verification')!='browser' or
-                        form.scheme!='https' or form.netloc!=role.netloc or form.username or form.password or
-                        form.path!='/form' or not identity or parse_qs(form.query).get('jobAdId')!=identity):
+                    if not same_role_form(supplied,target):
                         raise LabError('申请表与已核验的官网岗位不一致')
-                    target=data['application_url']
+                    target=supplied
                 return self.preparation.open_target(target, job['role'], job_id,
                     job.get('requires_preference', False))
             url=data.get('url')
@@ -73,8 +78,7 @@ class JobSessions:
         if job.get('official_url_status')!='verified' or not target:
             raise LabError('官网投递链接尚未核验，请从管理记录重新开始投递')
         actual=(session.get('website') or session.get('target') or {}).get('url','')
-        a,b=urlsplit(actual),urlsplit(target);identity=parse_qs(b.query).get('jobAdId')
-        if actual!=target and not (identity and a.scheme==b.scheme=='https' and a.netloc==b.netloc and a.path=='/form' and parse_qs(a.query).get('jobAdId')==identity):
+        if actual!=target and not same_role_form(actual,target):
             raise LabError('当前申请表不属于这条官网投递链接，请重新开始投递')
 
     def counts(self):

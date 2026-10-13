@@ -29,9 +29,29 @@ def open_chrome(url):
 class BrowserLaunch:
     def __init__(self,lab,bridge,opener=open_chrome):
         self.lab,self.bridge,self.opener=lab,bridge,opener;self.tickets={};self.controller_seen=0
+        self.resolutions=None
 
-    def request(self,sid,base,mode='prepare',direct=False):
-        if mode not in ('prepare','focus'):raise LabError('浏览器操作无效')
+    def inspect(self,job_id,base,direct=False):
+        if not self.resolutions:raise LabError('页面核对未启用')
+        job=self.resolutions.inspection_job(job_id)
+        from official import public_https
+        url=public_https(job.get('source_url') or job.get('url',''))
+        with self.lab.lock:
+            if any(s.get('preparation',{}).get('execution',{}).get('status') in ('running','awaiting_executor') for s in self.lab.state()['sessions']):raise LabError('正在填写，请先暂停再检查其他页面',409)
+            ticket=next((k for k,v in self.tickets.items() if v.get('job_id')==job_id and v.get('revision')==job['revision'] and time.time()-v['created']<120),None)
+            if ticket:return {'ticket':ticket,'status':'opening'}
+            ticket=secrets.token_urlsafe(24)
+            self.tickets[ticket]={'job_id':job_id,'revision':job['revision'],'url':url,'mode':'inspect','created':time.time(),'claimed':False}
+        if not direct and time.time()-self.controller_seen>=8:self.opener(base+'/launch-relay?launch='+ticket)
+        return {'ticket':ticket,'status':'opening'}
+
+    def inspected(self,ticket,origin,observation):
+        item=self.tickets.get(ticket)
+        if not self.bridge.allowed_origin(origin) or not item or item.get('mode')!='inspect' or item.get('origin')!=origin or time.time()-item['created']>=300:raise LabError('页面核对连接已失效',403)
+        return self.resolutions.observe(item['job_id'],item['revision'],observation)
+
+    def request(self,sid,base,mode='prepare',direct=False,rescan=False):
+        if mode not in ('prepare','focus','verify'):raise LabError('浏览器操作无效')
         with self.lab.lock:
             session=find(self.lab.state()['sessions'],sid)
             target=session.get('website') or session.get('target') or {}
@@ -40,17 +60,17 @@ class BrowserLaunch:
             if urlsplit(url).hostname in {'mp.weixin.qq.com','www.nowcoder.com','campus.niuqizp.com'}:
                 raise LabError('这是招聘信息链接，请先在管理页明确公司岗位并查找官网入口')
             if session.get('manual_reason') and mode=='prepare':raise LabError(session['manual_reason'])
-            if mode=='prepare' and any(s.get('preparation',{}).get('execution',{}).get('status') in ('running','awaiting_executor') for s in self.lab.state()['sessions']):
+            if mode in ('prepare','verify') and any(s.get('preparation',{}).get('execution',{}).get('status') in ('running','awaiting_executor') for s in self.lab.state()['sessions']):
                 raise LabError('该官网正在填写，请先暂停再重新启动',409)
-            if mode=='prepare' and self.bridge.status(url,sid)['connected']:
+            if mode in ('prepare','verify') and not rescan and self.bridge.status(url,sid)['connected']:
                 return {'status':'ready','message':'已连接当前官网，无需打开新页面。'}
-            if mode=='prepare':
+            if mode=='prepare' and not rescan:
                 recent=next((v for v in self.tickets.values() if v['session_id']==sid and v.get('mode')==mode and time.time()-v['created']<15),None)
                 if recent and session.get('preparation',{}).get('browser',{}).get('status') not in ('failed','needs_user'):
                     return {'status':'opening','ticket':next(k for k,v in self.tickets.items() if v is recent),'message':'正在连接本次岗位，请稍候。'}
-            self.tickets={k:v for k,v in self.tickets.items() if time.time()-v['created']<300 and v['session_id']!=sid}
+            self.tickets={k:v for k,v in self.tickets.items() if time.time()-v['created']<300 and v.get('session_id')!=sid}
             ticket=secrets.token_urlsafe(24)
-            self.tickets[ticket]={'session_id':sid,'url':url,'code':self.bridge.setup(sid)['code'],'created':time.time(),'claimed':False,'mode':mode}
+            self.tickets[ticket]={'session_id':sid,'url':url,'code':self.bridge.setup(sid)['code'],'created':time.time(),'claimed':False,'mode':mode,'resume_confirmed':mode=='prepare' and bool(session.get('preparation',{}).get('preserve_unsaved_page'))}
             self.set_status(sid,'opening','正在打开Chrome并启动填写程序')
         try:
             if not direct and time.time()-self.controller_seen>=8:self.opener(base+'/launch-relay?launch='+ticket)
@@ -71,13 +91,14 @@ class BrowserLaunch:
         with self.lab.lock:
             item=self.tickets.get(ticket)
             if not item or time.time()-item['created']>=300:raise LabError('启动请求已过期，请从工作台重试',403)
-            find(self.lab.state()['sessions'],item['session_id'])
+            if item.get('mode')!='inspect':find(self.lab.state()['sessions'],item['session_id'])
             if item['claimed']:raise LabError('该启动请求已处理，请回到工作台查看进度',409)
             item['claimed']=True;item['origin']=origin
+            if item.get('mode')=='inspect':return {k:item[k] for k in ('job_id','url','mode')}
             self.set_status(item['session_id'],'connecting','填写程序已启动，正在连接官网')
-            return {k:item[k] for k in ('session_id','url','code','mode')}
+            return {k:item[k] for k in ('session_id','url','code','mode','resume_confirmed')}
 
-    def report(self,ticket,origin,status):
+    def report(self,ticket,origin,status,message=None):
         if not self.bridge.allowed_origin(origin):raise LabError('仅接受本机填写扩展',403)
         messages={'permission':'请在Chrome中完成首次自动填写授权，之后无需手动开启插件',
                   'connecting':'正在打开官网并读取申请表','ready':'官网已连接，材料准备完成后确认预览即可填写',
@@ -87,7 +108,8 @@ class BrowserLaunch:
             item=self.tickets.get(ticket)
             if not item or time.time()-item['created']>=300:raise LabError('启动请求已过期',403)
             if item.get('origin')!=origin:raise LabError('启动请求与填写扩展不匹配',403)
-            self.set_status(item['session_id'],status,messages[status]);return {'ok':True}
+            if message is not None and (not isinstance(message,str) or len(message)>500):raise LabError('浏览器问题说明无效')
+            self.set_status(item['session_id'],status,message or messages[status]);return {'ok':True}
 
     def set_status(self,sid,status,message):
         self.lab.mutate(lambda state:find(state['sessions'],sid).setdefault('preparation',{}).update(browser={'status':status,'message':message,'updated_at':time.time()}))

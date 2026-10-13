@@ -127,7 +127,7 @@ def handler(app):
                         # No browser connection exists yet. Never fabricate a query result.
                         return self.send(200, {"status": "unavailable", "changed": False, "message": "官网进度查询尚未接通，已保留原招聘进度。请打开官网查看后人工记录。"})
                     if method=='POST' and len(parts)==5 and parts[4]=='resolution-choice':
-                        return self.send(200,app.resolutions.choose(jid,body.get('url')))
+                        return self.send(200,app.resolutions.choose(jid,body.get('url'),body.get('confirm_role') is True))
                     if method in ('GET','POST') and len(parts)==5 and parts[4]=='resolution':
                         return self.send(200,app.resolutions.status(jid,start=method=='POST',retry=body.get('retry') is True))
                     if method == 'POST' and len(parts)==5 and parts[4]=='source-analysis':

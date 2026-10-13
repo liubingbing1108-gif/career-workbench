@@ -118,7 +118,7 @@ class ExecutorBridge:
                         job.update(status='running', connection=data['connection'], message='已连接，正在重新读取官网并准备填写。')
                         materials=copy.deepcopy(job['confirmed_materials'])
                         attachment=materials.get('attachment')
-                        if attachment:
+                        if attachment and not materials.get('verification_only'):
                             meta,raw=self.lab.file_bytes(attachment['id'])
                             if meta['name']!=attachment['name']:
                                 raise LabError('所选附件已变化，请重新检查预览',409)
@@ -147,7 +147,7 @@ class ExecutorBridge:
                     issues = list(dict.fromkeys(issues + manual))
                     if manual and status == 'complete':
                         status = 'needs_attention'
-                    flags={key:data.get(key,False) for key in ('saved','attachment_verified','save_acknowledged','persistence_verified')}
+                    flags={key:data.get(key,False) for key in ('saved','attachment_verified','save_acknowledged','persistence_verified','draft_supported')}
                     if any(type(value) is not bool for value in flags.values()):raise LabError('保存或附件回读标记无效')
                     counts={key:data.get(key,0) for key in ('persisted','expected_count')}
                     if any(type(v) is not int or not 0<=v<=500 for v in counts.values()):raise LabError('保存检查数量无效')
@@ -155,6 +155,8 @@ class ExecutorBridge:
                     phase=data.get('phase','review' if status in {'needs_attention','complete'} else 'filling')
                     if phase not in {'connecting','filling','saving','verifying','review'}:raise LabError('填写步骤无效')
                     job.update(status=status, phase=phase, filled=data['filled'], verified=data['verified'], message=data['message'], issues=issues,**flags,**counts)
+                    if job.get('verification_only') and job.get('after_reopen') and flags['persistence_verified'] and not flags['draft_supported'] and counts['persisted']<counts['expected_count']:
+                        next(s for s in state['sessions'] if s['id']==connection['session_id'])['preparation']['preserve_unsaved_page']=True
                     return {'accepted': True, 'stop': bool(job.get('stop_requested'))}
                 return self.lab.mutate(report)
             raise LabError('未知填写连接动作', 404)

@@ -287,7 +287,7 @@ function renderPractice(){
   const analysis=currentSession?.form_analysis;
   if(typeof updateTargetPanel==='function')updateTargetPanel(currentSession);
   if(!currentSession){$('#form-analysis').hidden=true;$('.target-bar').hidden=true;$('.practice-grid').hidden=true;return;}
-  if(currentSession?.manual_reason||(currentSession?.target&&(!analysis||!currentSession.website||preparationState.scan_status==='matching'))){$('#form-analysis').hidden=true;$('.target-bar').hidden=true;$('.practice-grid').hidden=true;return;}
+  if(currentSession?.manual_reason||(currentSession?.target&&(!analysis||!currentSession.website||['matching','failed'].includes(preparationState.scan_status)))){$('#form-analysis').hidden=true;$('.target-bar').hidden=true;$('.practice-grid').hidden=true;return;}
   $('#form-analysis').hidden=!analysis;
   $('.target-bar').hidden=!!analysis;
   $('.practice-grid').hidden=!!analysis;
@@ -415,7 +415,7 @@ $('#fill-start').onclick=safe(async()=>{
 safe(async()=>{
   await refresh();
   const health=await api('/api/health');
-  showView(/^#practice(?:\/|$)/.test(location.hash)?'practice':location.hash.startsWith('#profile/')?'profile':health.management?'management':'profile');
+  showView(/^#practice\/[\w-]+$/.test(location.hash)?'practice':location.hash.startsWith('#profile/')?'profile':health.management?'management':'profile');
   document.dispatchEvent(new Event('workbench-ready'));
   const engine=await api('/api/recognition');
   if(engine.engine.includes('测试模式'))$('#recognition-status').textContent='离线带标签样例测试模式；正式识别请用默认启动方式。';

@@ -60,6 +60,23 @@ class PreparationTests(unittest.TestCase):
         a=self.prep.start(self.sid,p['digest']);b=self.prep.start(self.sid,p['digest'])
         self.assertEqual(a['id'],b['id']);self.assertEqual(a['status'],'awaiting_executor')
         self.assertEqual(a['filled'],0);self.assertEqual(a['confirmed_materials']['rows'][0]['records'][0]['values'][0]['value'],'硕士')
+    def test_unsaved_restoration_keeps_confirmation_and_read_only_verification(self):
+        self.complete();preview=self.prep.preview(self.sid)
+        self.lab.mutate(lambda s:next(x for x in s['sessions'] if x['id']==self.sid)['preparation'].update(preserve_unsaved_page=True))
+        queued=self.prep.start(self.sid,preview['digest'])
+        self.assertTrue(queued['confirmed_materials']['preserve_unsaved_page'])
+        self.prep.pause(self.sid)
+        checked=self.prep.verify(self.sid,True)
+        self.assertTrue(checked['confirmed_materials']['verification_only'])
+        self.assertTrue(checked['confirmed_materials']['after_reopen'])
+        self.assertEqual(checked['filled'],0)
+        with self.assertRaises(LabError):self.prep.verify(self.sid)
+    def test_matching_schema_blocks_new_execution(self):
+        self.complete()
+        self.lab.mutate(lambda s:next(x for x in s['sessions'] if x['id']==self.sid)['preparation'].update(scan_status='matching'))
+        preview=self.prep.preview(self.sid)
+        self.assertTrue(any('表单匹配' in v for v in preview['pending']))
+        with self.assertRaises(LabError):self.prep.start(self.sid,preview['digest'])
     def test_unknown_reference_and_cross_category_rejected(self):
         bad=copy.deepcopy(self.maps);bad['mappings'][0]['entry_ids']=[self.lab.state()['entries'][0]['id']]
         before=self.lab.state()

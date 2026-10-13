@@ -56,5 +56,6 @@ class SourceLinksTests(unittest.TestCase):
     def test_personal_application_source_keeps_public_job_identity_without_personal_query(self):
         calls=[];model=Model({'candidates':[]});lookup=OfficialLookup(model,lambda u:calls.append(u))
         result=lookup.lookup({'company':'示例公司','role':'产品经理','source_url':'https://example.com/form?jobAdId=public-role&userId=private-user&token=secret'})
-        self.assertEqual(calls,[]);self.assertIn('public-role',model.prompts[0]);self.assertNotIn('private-user',model.prompts[0]);self.assertNotIn('secret',model.prompts[0])
-        self.assertEqual(result['source_analysis']['kind'],'job_detail')
+        self.assertEqual(calls,[]);self.assertEqual(model.prompts,[])
+        self.assertEqual(result['status'],'needs_inspection')
+        self.assertEqual(result['source_analysis']['kind'],'application_form')

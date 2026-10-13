@@ -1,9 +1,9 @@
 (() => {
  'use strict';
  const q=(s,r=document)=>[...r.querySelectorAll(s)], text=e=>e?.textContent?.trim()||'';
- const visible=e=>!!e?.isConnected&&!!e.getClientRects().length&&getComputedStyle(e).visibility!=='hidden';
+ const visible=e=>!!e?.isConnected&&!!e.getClientRects().length&&getComputedStyle(e).visibility!=='hidden'&&!e.closest('[aria-hidden=true]');
  const one=(items,name)=>{if(items.length!==1)throw Error(name+'匹配数量 '+items.length);return items[0];};
- const click=e=>{if(!visible(e)||e.disabled)throw Error('控件不可操作');e.dispatchEvent(new MouseEvent('mousedown',{bubbles:true,button:0}));e.dispatchEvent(new MouseEvent('mouseup',{bubbles:true,button:0}));e.click();};
+ const click=e=>{if(!visible(e)||e.disabled)throw Error('控件不可操作');if(typeof PointerEvent!=='undefined')e.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,composed:true,button:0,pointerType:'mouse'}));e.dispatchEvent(new MouseEvent('mousedown',{bubbles:true,button:0}));if(typeof PointerEvent!=='undefined')e.dispatchEvent(new PointerEvent('pointerup',{bubbles:true,composed:true,button:0,pointerType:'mouse'}));e.dispatchEvent(new MouseEvent('mouseup',{bubbles:true,button:0}));e.click();};
  function setText(e,value,blur=true){if(e.disabled||e.readOnly)throw Error('文本不可写');e.focus();Object.getOwnPropertyDescriptor(e.tagName==='TEXTAREA'?HTMLTextAreaElement.prototype:HTMLInputElement.prototype,'value').set.call(e,value);e.dispatchEvent(new InputEvent('input',{bubbles:true,composed:true,inputType:'insertText',data:value}));e.dispatchEvent(new Event('change',{bubbles:true,composed:true}));e.dispatchEvent(new KeyboardEvent('keyup',{key:'Unidentified',bubbles:true}));if(blur)e.blur();}
  const nativeChannel=()=>window.JobFillNativeChannel;
  async function setTextCommitted(e,value,blur=true){

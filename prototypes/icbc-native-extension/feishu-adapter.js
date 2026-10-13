@@ -41,6 +41,14 @@
   return out;
  }
  const errors=()=>q('.atsx-form-explain,.ud-formily-item-feedback').filter(visible).map(text).filter(Boolean);
+ async function readOptions(f,ctx){
+  if(f.kind!=='select'||f.customSelect)throw Error('当前选项需要按实际问题继续核对');
+  ctx.check();click(f.el);
+  try{
+   const choices=await wait(()=>{const items=q('[role=option]').filter(e=>visible(e)&&!e.className.includes('disabled')).map(text).filter(Boolean);return items.length?items:null;},ctx,4000);
+   return {state:'available',items:[...new Set(choices)]};
+  }finally{outside();}
+ }
  async function write(f,value,ctx){
   ctx.check();
   if(f.kind==='text')setText(f.el,value);
@@ -71,5 +79,5 @@
   await wait(()=>q('.resumeEditForm-item',root).length===before+1,ctx);
  }
  window.JobFillAdapters=window.JobFillAdapters||{};
- window.JobFillAdapters.feishu={id:'feishu-xd',guard,page:()=>({adapter:'feishu-xd',url:location.href,title:document.title}),fields,sections,write,addRecord,errors,show,settle:async ctx=>{outside();await settle(errors,ctx);}};
+ window.JobFillAdapters.feishu={id:'feishu-xd',guard,page:()=>({adapter:'feishu-xd',url:location.href,title:document.title}),fields,sections,readOptions,write,addRecord,errors,show,settle:async ctx=>{outside();await settle(errors,ctx);}};
 })();

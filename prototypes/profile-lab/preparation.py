@@ -120,6 +120,8 @@ class Preparation:
         deferred = set(prep.get('deferred', []))
         entries = {e['id']: e for e in self.lab.state()['entries']}
         tasks, manual = [], []
+        if prep.get('scan_status') in ('matching','failed'):
+            tasks.append({'key':'schema','label':'官网表单匹配','message':'完成重新匹配后才能核对完整预览并填写'})
         for item in plan['missing']:
             child = next((c for c in item['website_field'].get('children', []) if c['id'] == item.get('child_id')), item['website_field'])
             entry = entries.get(item.get('entry_id'))
@@ -202,11 +204,23 @@ class Preparation:
                 return previous
             if previous:
                 session['preparation'].setdefault('execution_history',[]).append({k:copy.deepcopy(v) for k,v in previous.items() if k not in {'confirmed_materials','connection'}})
+            queued_content={**content,'preserve_unsaved_page':True} if session['preparation'].get('preserve_unsaved_page') else content
             execution = {'id': uid('fill'), 'digest': digest, 'status': 'awaiting_executor',
                          'message': '材料已确认，等待连接官网填写程序；尚未向官网输入。',
-                         'confirmed_materials': content, 'filled': 0, 'verified': 0,'saved':False,'attachment_verified':False}
+                         'confirmed_materials': queued_content, 'filled': 0, 'verified': 0,'saved':False,'attachment_verified':False}
             session['preparation']['execution'] = execution
             return execution
+        return self.lab.mutate(queue)
+
+    def verify(self,session_id,after_reopen=False):
+        def queue(state):
+            session=find(state['sessions'],session_id);prep=session.get('preparation',{});previous=prep.get('execution')
+            if not previous or previous.get('status') in ('running','awaiting_executor'):raise LabError('请先完成或暂停本次填写后核对',409)
+            content=copy.deepcopy(previous['confirmed_materials'])
+            content.update(verification_only=True,after_reopen=after_reopen)
+            prep.setdefault('execution_history',[]).append({k:copy.deepcopy(v) for k,v in previous.items() if k not in {'confirmed_materials','connection'}})
+            prep['execution']={'id':uid('verify'),'digest':previous['digest'],'status':'awaiting_executor','confirmed_materials':content,'filled':0,'verified':0,'saved':False,'attachment_verified':False,'verification_only':True,'after_reopen':after_reopen,'message':'正在核对当前官网；不填写或重新上传。'}
+            return prep['execution']
         return self.lab.mutate(queue)
 
     def pause(self, session_id):

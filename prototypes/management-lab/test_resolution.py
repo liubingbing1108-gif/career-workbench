@@ -55,6 +55,16 @@ class ResolutionTests(unittest.TestCase):
         e=entry();j={'company':e['company'],'role':e['role'],'source_url':'https://example.com/slow','official_url':e['url'],'official_url_status':'verified','official_entry':e}
         def reject(_):self.fail('should not fetch a source before resuming verified job')
         self.assertEqual(OfficialLookup(reader=reject).lookup(j)['status'],'ready')
+    def test_direct_role_mismatch_requires_explicit_choice_preserves_source_and_status(self):
+        e={**entry(),'verification':'public_pages','official_role':'增长产品经理'}
+        class Lookup:
+            def lookup(_,job,progress):return {'status':'identity_mismatch','candidates':[e]}
+        tasks=ResolutionTasks(self.store,Lookup);tasks.status(self.id,True);self.finish(tasks)
+        before=self.store.get(self.id)
+        with self.assertRaises(Invalid):tasks.choose(self.id,e['url'])
+        r=tasks.choose(self.id,e['url'],True);j=r['job']
+        self.assertEqual(j['role'],'增长产品经理');self.assertEqual(j['source_url'],before['source_url']);self.assertEqual(j['application_status'],before['application_status']);self.assertEqual(j['timeline'],[])
+        self.assertEqual(tasks.status(self.id)['status'],'ready')
     def test_search_failure_reason_is_visible(self):
         class Failure(Exception):code='capacity'
         class Lookup:

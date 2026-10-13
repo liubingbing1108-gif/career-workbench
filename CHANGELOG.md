@@ -14,3 +14,6 @@
 ## Unreleased · 2026-10-13
 
 Fix job intake for explicit company/role plus dynamic application links. Preserve source URLs, bound optional page reads, retain editable drafts on recognition failures, and verify grouped-source mapping and confirmation persistence.
+
+
+直接申请页分流和公共身份核验、官网标题冲突选择、只读复核、UD/Formily分组/控件/附件完成识别、无草稿恢复与现场提交提示已加入；只读搜索壳等待及来源/人工字段保护有回归。真实平台验证范围有限，不能宣称全部适配。

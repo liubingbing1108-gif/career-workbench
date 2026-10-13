@@ -1,6 +1,6 @@
 # 填写执行器接口 v1
 
-当前注入核心版本 `1.2.13`，后台客户端 `1.2.9`，包版本 `1.3.1`，协议 `schemaVersion: 1`。安装见 [README](README.md)，结构类型见 [protocol.d.ts](protocol.d.ts)。
+当前注入核心版本 `1.2.21`，后台客户端 `1.2.10`，包版本 `1.3.2`，协议 `schemaVersion: 1`。安装见 [README](README.md)，结构类型见 [protocol.d.ts](protocol.d.ts)。
 
 ## 职责和入口
 
@@ -17,7 +17,7 @@ if (!response.ok) throw new Error(response.error.message);
 const snapshot = response.result;
 ```
 
-客户端检查用户主动调用的 HTTPS 标签页；扫描绑定该页的精确 URL，页面切换使旧扫描失效，再用 `chrome.scripting` 在隔离环境运行代码。网页本身不能通过同名全局变量调用执行器。没有网页 postMessage、external messaging 或 native-messaging。D69新增本机8768顶层内容监听转交短效启动票据，D79后台直接建立单一控制器，不再打开控制页，claim后仅向本机127.0.0.1:8768发送请求并打开该岗位HTTPS目标。原始招聘网页不能发起任意执行命令。manifest1.3.1沿用D69增加的可选HTTPS权限，仅在首次明确授权手势申请；首次启用后沿用同一HTTPS范围。
+客户端检查用户主动调用的 HTTPS 标签页；扫描绑定该页的精确 URL，页面切换使旧扫描失效，再用 `chrome.scripting` 在隔离环境运行代码。网页本身不能通过同名全局变量调用执行器。没有网页 postMessage、external messaging 或 native-messaging。D69新增本机8768顶层内容监听转交短效启动票据，D79后台直接建立单一控制器，不再打开控制页，claim后仅向本机127.0.0.1:8768发送请求并打开该岗位HTTPS目标。原始招聘网页不能发起任意执行命令。manifest1.3.2沿用D69增加的可选HTTPS权限，仅在首次明确授权手势申请；首次启用后沿用同一HTTPS范围。
 
 ## 方法
 

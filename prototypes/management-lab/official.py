@@ -10,6 +10,7 @@ from urllib.parse import urlsplit, parse_qs, urlencode, urlunsplit
 from store import Invalid
 from intake import read_page
 from public_jobs import ZhiyeJobs, role_key, location_key
+from direct_entry import DirectEntry, classify, feishu_identity
 
 
 def public_https(value):
@@ -47,11 +48,12 @@ def schema():
 
 
 class OfficialLookup:
-    def __init__(self,model=None,reader=None,ats=None,known_entries=lambda:[]):
+    def __init__(self,model=None,reader=None,ats=None,known_entries=lambda:[],direct=None):
         self.model=model
         self.reader=reader or (lambda url:read_page(url,metadata=True))
         self.sources={};self.known_entries=known_entries;self.discovery_cache={}
         self.ats=ats if ats is not None else (ZhiyeJobs() if reader is None else None)
+        self.direct=direct if direct is not None else DirectEntry(self.reader)
 
     def inspect_source(self,job,read=True):
         url=job.get('source_url') or job.get('url','')
@@ -82,6 +84,7 @@ class OfficialLookup:
         role_id=any(k.lower() in {'jobadid','jobid','positionid','recruitmentid'} for k in parse_qs(parsed.query))
         if not url:kind,label='missing','未提供来源链接'
         elif info:kind,label='recruitment_info','招聘资讯链接'
+        elif classify(url)=='application_form':kind,label='application_form','直接申请表链接'
         elif role_id or re.search(r'/(?:job|position|campus)/(?:detail|[0-9a-f-]{8,})',path):kind,label='job_detail','具体岗位链接'
         elif re.search(r'/(?:news|article|notice|post)(?:/|$)',path):kind,label='recruitment_info','招聘资讯链接'
         elif readable and job.get('role') and job['role'] in body and any(w in body for w in ('岗位职责','职位描述','任职要求')):kind,label='job_detail','具体岗位链接'
@@ -104,11 +107,20 @@ class OfficialLookup:
         if job.get('needs_review') or not job.get('company') or not job.get('role'):
             raise Invalid('请先明确一个具体公司的具体岗位；岗位方向不代替岗位')
         verified=job.get('official_url_status')=='verified' and job.get('official_url')==job.get('official_entry',{}).get('url')
+        if not verified and feishu_identity(job.get('source_url') or job.get('url','')):
+            progress('正在核对已提供的申请链接','直接读取该链接对应的公开招聘主体和岗位，复用已有官网登录现场。')
+            result=self.direct.inspect(job)
+            if result is not None:
+                result['source_analysis']={'url':job.get('source_url') or job.get('url',''),'kind':classify(job.get('source_url') or job.get('url','')),'label':'直接申请表链接' if classify(job.get('source_url') or job.get('url',''))=='application_form' else '具体岗位链接'}
+                return result
         progress('正在识别来源链接','来源用于补充线索；公司和岗位是查找依据。')
-        source=self.inspect_source(job,read=not verified)
+        source=self.inspect_source(job,read=not verified and classify(job.get('source_url') or job.get('url',''))!='application_form')
         summary={k:v for k,v in source.items() if k!='document'}
         if verified:
             return {'status':'ready','entry':job['official_entry'],'source_analysis':summary}
+        if classify(source['url']) in ('application_form','job_detail') and not (self.ats and self.ats.supports(source['url'])):
+            return {'status':'needs_inspection','candidates':[],'source_analysis':summary,
+                    'message':'先读取已提供页面的公司、岗位和登录/表单状态；尚未发送个人材料。'}
         # Reuse independently verified employer/ATS identities, not old role results.
         # Every new job still gets a fresh public detail/list lookup.
         known=[e for e in self.known_entries() if e.get('company')==job['company'] and e.get('verification') in ('public_pages','browser')]
@@ -189,6 +201,35 @@ class OfficialLookup:
             return {'status':'needs_selection','candidates':[],'source_analysis':summary,'message':'已找到公司招聘官网，但当前没有与岗位名称、地点和批次相符的在招岗位。请核对这三项信息。'}
         except Exception as error:
             return {'status':'needs_review','candidates':[],'source_analysis':summary,'message':'已找到公司招聘官网，岗位查询未完成：'+(str(error) if isinstance(error,Invalid) else '官网暂时没有返回职位信息，请稍后重试。')}
+
+    def inspect_browser(self,job,observation):
+        url=job.get('source_url') or job.get('url','')
+        public_https(url)
+        if observation.get('url')!=url:raise Invalid('页面已切换，未采用其他页面的身份信息')
+        names=observation.get('headings',[])
+        if not isinstance(names,list) or len(names)>30 or any(not isinstance(n,str) or len(n)>300 for n in names):raise Invalid('页面岗位信息无效')
+        roles=[n for n in names if role_key(n)==role_key(job['role'])]
+        if len(set(roles))!=1:
+            return {'status':'needs_review','candidates':[],'message':'已打开你的链接，但页面标题未明确对应“'+job['role']+'”。请在当前官网打开具体岗位或申请表后重试；已有登录保留。'}
+        proof=[];employer=''
+        for known in self.known_entries():
+            if known.get('company')==job['company'] and known.get('verification') in ('browser','public_pages') and urlsplit(known.get('recruitment_url','')).netloc==urlsplit(url).netloc:
+                employer=known['company_url'];proof=known.get('evidence',[])[:8];break
+        if not employer:
+            links=observation.get('employer_links',[])
+            if not isinstance(links,list) or len(links)>10:raise Invalid('官网身份链接无效')
+            for link in links:
+                try:
+                    public_https(link);page=self.reader(link)
+                    if job['company'] in page.get('body','') and any(urlsplit(u).netloc==urlsplit(url).netloc for u in page.get('links',[])):
+                        employer=link;proof=[{'url':link,'quote':job['company']}];break
+                except Exception:continue
+        if not employer:return {'status':'needs_review','candidates':[],'message':'已读取指定页面和岗位，但公司对该招聘网站的官方授权尚未核对到。登录现场已保留，未发送材料。'}
+        e={'company':job['company'],'role':job['role'],'official_role':roles[0],'location':job.get('location',''),
+           'url':url,'company_url':employer,'recruitment_url':url,'verification':'browser','verification_method':'direct_browser_and_employer',
+           'evidence':[p for p in proof if p.get('url') in (url,employer)]+[{'url':url,'quote':roles[0]}]}
+        validate_entry(job,e)
+        return {'status':'ready','entry':e}
 
     def verify_web(self,job,entry,usage):
         # Dynamic sites may be readable by native public web open, even when

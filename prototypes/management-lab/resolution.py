@@ -14,7 +14,7 @@ class ResolutionTasks:
         with self.lock:
             task=self.tasks.get(key)
             if start and (not task or retry and task.get('result') is not None):
-                task={'started':time.monotonic(),'stage':'正在识别来源链接','message':'随后按公司和岗位核对官网。','result':None}
+                task={'started':time.monotonic(),'stage':'正在检查投递链接','message':'先检查已提供页面；资讯和招聘首页再查具体岗位。','result':None}
                 # Keep only one current revision per job and bounded completed tasks.
                 self.tasks={k:v for k,v in self.tasks.items() if k[0]!=jid and (v['result'] is None or time.monotonic()-v['started']<300)}
                 self.tasks[key]=task
@@ -25,18 +25,42 @@ class ResolutionTasks:
                 return {'status':'unavailable','message':'查找已结束或岗位已修改，请重新开始。','candidates':[]}
             return task['result'] or {'status':'resolving','stage':task['stage'],'message':task['message'],'elapsed':time.monotonic()-task['started']}
 
-    def choose(self,jid,url):
+    def choose(self,jid,url,confirm_role=False):
         job=self.store.get(jid)
         with self.lock:
             task=self.tasks.get((jid,job['revision']))
             result=task and task['result']
-            entries=result.get('candidates',[]) if result and result.get('status')=='needs_selection' else []
+            entries=result.get('candidates',[]) if result and result.get('status') in ('needs_selection','identity_mismatch') else []
             entry=next((e for e in entries if e['url']==url and e.get('verification')=='public_pages'),None)
             if not entry:raise Invalid('候选已失效或尚未核验，请重新查找。')
+            if result['status']=='identity_mismatch':
+                if confirm_role is not True:raise Invalid('请明确确认采用该官网岗位名称，不自动替换原岗位。')
+                job=self.store.update(jid,job['revision'],{'role':entry['official_role'],'location':entry['location']},None)
+                entry={**entry,'role':job['role']}
             saved=self.store.set_official(jid,job['revision'],entry)
             task['result']={'status':'ready','entry':entry,'job':saved}
             self.tasks[(jid,saved['revision'])]=task
             return task['result']
+
+    def inspection_job(self,jid):
+        job=self.store.get(jid)
+        with self.lock:
+            task=self.tasks.get((jid,job['revision']))
+            if not task or (task.get('result') or {}).get('status')!='needs_inspection':raise Invalid('页面核对请求已结束，请重新开始')
+        return job
+
+    def observe(self,jid,revision,observation):
+        job=self.store.get(jid)
+        if job['revision']!=revision:raise Conflict('岗位已修改，未采用旧页面核对')
+        with self.lock:
+            task=self.tasks.get((jid,revision))
+            if not task or (task.get('result') or {}).get('status')!='needs_inspection':raise Invalid('页面核对请求已失效')
+        result=self.lookup().inspect_browser(job,observation)
+        if result['status']=='ready':result['job']=self.store.set_official(jid,revision,result['entry'])
+        with self.lock:
+            task['result']=result
+            if result.get('job'):self.tasks[(jid,result['job']['revision'])]=task
+        return result
 
     def run(self,job,key,task):
         def progress(stage,message):

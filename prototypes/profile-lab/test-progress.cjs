@@ -20,8 +20,17 @@ test('saved attachment names its official destination and the confirmation butto
  assert.equal(c.node('#execution-official').textContent,'去示例公司官网确认');
  assert.equal(c.node('#execution-attachment').textContent,'已保存到官网「简历附件」：fictional.pdf');
  assert.equal(c.node('#execution-attachment').hidden,false);
+ const modern=render({status:'needs_attention',confirmed_materials:{title:'投递简历 - 示例公司校招官网',rows:[]}});assert.equal(modern.node('#execution-official').textContent,'去示例公司官网确认');
 });
 test('an in-page attachment without persistence evidence is not labelled saved',()=>{
  const c=render({status:'running',phase:'saving',attachment_verified:true,confirmed_materials:{attachment:{name:'fictional.pdf'},rows:[]}});
  assert(c.node('#execution-attachment').textContent.includes('正在检查'));assert(!c.node('#execution-attachment').textContent.includes('已保存'));
+});
+
+test('restored unsaved form reports current page readiness without claiming saved draft',()=>{
+ const c=render({status:'needs_attention',phase:'review',verified:1,attachment_verified:true,saved:false,confirmed_materials:{preserve_unsaved_page:true,attachment:{name:'fictional.pdf'},rows:[{value:'虚构姓名'}]}});
+ assert.equal(c.node('#execution-title').textContent,'资料已填好，请在当前官网提交');
+ assert(c.node('#execution-counts').textContent.includes('请勿刷新'));
+ assert(c.node('#execution-attachment').textContent.includes('所选原件已上传至当前官网'));
+ assert(!c.steps[2].classes.has('done'));
 });

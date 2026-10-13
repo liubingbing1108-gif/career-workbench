@@ -8,5 +8,15 @@ test('external origins and subframes cannot launch; permissions remain required'
 test('concurrent different tickets are serialized and keep distinct targets',async()=>{const f=setup();await Promise.all([f.send({type:'jobfill:launch',ticket}),f.send({type:'jobfill:launch',ticket:ticket+'b'})]);assert.deepEqual(f.launches,[ticket,ticket+'b']);});
 function service(){const tabs=[{id:42,url:'https://acme.zhiye.com/form?jobAdId=one&userId=private',windowId:3,status:'complete'}],created=[],activated=[],requests=[];let timer;const ctx=vm.createContext({URL,Map,Error,Promise,setTimeout:fn=>(timer=fn,1),clearTimeout(){},JobFillClient:class{constructor(id){this.id=id;}},chrome:{tabs:{query:async()=>tabs,create:async options=>{created.push(options);return {id:80,...options};},update:async(id,options)=>activated.push([id,options])},windows:{update:async()=>{}}},fetch:async(url,options)=>{const body=JSON.parse(options.body);requests.push(body);return {ok:true,json:async()=>({session_id:'s',url:'https://acme.zhiye.com/campus/detail?jobAdId=one',code:'code',mode:body.ticket==='focus'?'focus':'prepare'})};}});vm.runInContext(fs.readFileSync(__dirname+'/service-controller.js','utf8'),ctx);return {controller:new ctx.JobFillService(),tabs,created,activated};}
 test('existing same-job form is reused even if launch target is public detail',async()=>{const f=service();await f.controller.launch(ticket);assert.equal(f.created.length,0);assert.equal(f.controller.tabId,42);assert.equal(f.activated.length,0);});
-test('focus reuses the same official page and only explicit focus activates it',async()=>{const f=service();await f.controller.launch('focus');assert.equal(f.created.length,0);assert.equal(f.activated[0][0],42);});
+test('focus reuses the same official page and only explicit focus activates it',async()=>{const f=service();await f.controller.launch('focus');assert.equal(f.created.length,0);assert.equal(f.activated[0][0],42);assert.equal(f.controller.details,undefined,'handoff must not rescan, rematch or poll materials');});
 test('a new job gets one background official page and no auxiliary page',async()=>{const f=service();f.tabs.length=0;await f.controller.launch(ticket);assert.equal(f.created.length,1);assert.equal(f.created[0].active,false);});
+
+test('read-only connection waits past search-only shell and never requests matching or writes',async()=>{
+ let connects=0,fields=[{label:'搜索职位关键词',disabled:true}];
+ const ctx=vm.createContext({URL,chrome:{tabs:{get:async()=>({status:'complete',url:'https://fixture.example/apply'})}},setTimeout(){},clearTimeout(){}});
+ vm.runInContext(fs.readFileSync(__dirname+'/service-controller.js','utf8'),ctx);
+ const c=new ctx.JobFillService();Object.assign(c,{details:{url:'https://fixture.example/apply',mode:'verify',code:'fictional'},tabId:42,client:{async call(method){assert.equal(method,'scan');return {ok:true,result:{fields}};}},request:async action=>{assert(['connect','launch-report'].includes(action));if(action==='connect')connects++;return {connection:'read-only'};}});
+ assert.equal(await c.connect(),false);assert.equal(connects,0);
+ fields=[{label:'姓名',disabled:true,currentValue:'虚构姓名'}];
+ assert.equal(await c.connect(),true);assert.equal(connects,1);assert.equal(c.prepared,true);
+});

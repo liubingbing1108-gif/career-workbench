@@ -132,5 +132,15 @@ function fake(fail=false,manual=false){
   assert.equal(result.save_acknowledged,true);assert.equal(result.persistence_verified,true);assert.equal(result.persisted,1);assert.equal(result.expected_count,2);assert.equal(result.saved,false);
   assert(result.issues.some(i=>i.includes('重新打开官网后内容为空或不同')));
  });
+ await check('read-only verification cannot fill, create records, upload or save',async()=>{
+  const calls=[],snapshot={page:{url},sections:[],fields:[field('name','虚构姓名'),field('email')],attachments:[],capabilities:{saveDraft:false}};
+  const result=await run({async call(method){calls.push(method);assert.equal(method,'scan');return {ok:true,result:snapshot};}}, {...material,verification_only:true,after_reopen:true},async()=>{});
+  assert.deepEqual(calls,['scan']);assert.equal(result.filled,0);assert.equal(result.verified,1);assert.equal(result.expected_count,2);assert.equal(result.saved,false);assert.equal(result.attachment_verified,false);
+ });
+ await check('restoring an unsaved page never reloads it or claims a saved draft',async()=>{
+  const client=fake();client.reloadAndScan=async()=>{throw Error('must not reopen restored unsaved page');};
+  const result=await run(client,{...material,attachment:null,preserve_unsaved_page:true},async()=>{});
+  assert.equal(result.verified,2);assert.equal(result.saved,false);assert.equal(result.persistence_verified,false);assert.equal(result.draft_supported,false);assert(result.issues.some(x=>x.includes('重新打开会丢失')));
+ });
  console.log(JSON.stringify({passed:passes}));
 })().catch(e=>{console.error(e);process.exitCode=1;});

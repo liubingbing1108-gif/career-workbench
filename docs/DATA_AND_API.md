@@ -25,3 +25,10 @@
 [执行器 API](../prototypes/icbc-native-extension/API.md) 与 [类型](../prototypes/icbc-native-extension/protocol.d.ts) 定义 scan、readOptions、readDateFormat、ensureRecords、validate、execute、status、verify、uploadAttachment、saveDraft、cancel。没有任意脚本或最终提交方法。
 
 受理不等于完成，complete 只代表当前计划。材料回报单列 filled、verified、save_acknowledged、persistence_verified、persisted、expected_count、attachment_verified。只有重开后的预期材料及所选附件均匹配，材料层 saved 才为真。
+
+
+直接申请页优先核对指定页面的公共公司、租户与具体岗位；资讯/首页先选具体岗位。身份/标题冲突须明确处理，原来源、人工状态和日期保留。已登录动态页无静态正文不等同需重新登录，也不直接启动漫长全网查找。未闭环禁止执行。
+
+插件独立只读复核模式不填写、上传、新增记录或暂存。异步搜索页壳不视为表单已加载。实际无草稿且重开丢失时，恢复已确认材料后保留当前页并提示本人提交，不称保存成功。当前包1.3.2/核心1.2.21/客户端1.2.10，协议v1，权限不变。有限真实平台验证不能代表任意网站、隐藏表单或跨系统均已验收。
+
+官网本人接手（mode=focus）只定位已有标签页，不重新读取表单、匹配、轮询材料或启动填写；该边界已加入虚构回归。

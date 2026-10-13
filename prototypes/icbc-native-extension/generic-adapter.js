@@ -12,8 +12,8 @@
   const roots=()=>cachedRoots;
   const all = (s, root) => root ? [...root.querySelectorAll(s)] : roots().flatMap(r=>[...r.querySelectorAll(s)]);
   const containerSelector = '.ant-form-item,.el-form-item,.atsx-form-item,.ud-formily-item,[class*="apply-field-"],[data-field-name],.form-group,.form-item,fieldset';
-  const blockSelector = '[class*="apply-block-"],.createFormSection-repeatable,fieldset,.form-cell';
-  const rowSelector = '[class*="apply-fields-"],.resumeEditForm-item,.ux-standard-form,.form-cell-inner';
+  const blockSelector = '[class*="apply-block-"],.createFormSection-repeatable,fieldset,.form-cell,[class*="applyFormModuleWrapper__"]';
+  const rowSelector = '[class*="apply-fields-"],.resumeEditForm-item,.ux-standard-form,.form-cell-inner,[class*="apply-form-array-card__"]';
   function phoenixBlocks(){return all('[id$="_addButton"]').map(add=>{const titleId=add.id.slice(0,-10);let p=add.parentElement;while(p&&p!==document.body){if([...p.children].some(c=>c.id===titleId&&!c.querySelector('input,textarea')))return p;p=p.parentElement;}return null;}).filter(Boolean);}
   const blockFor=el=>el.closest(blockSelector)||phoenixBlocks().find(b=>b.contains(el));
   function guard() {
@@ -21,7 +21,7 @@
     if (all('input[type=password]').some(visible)) throw Error('登录或密码页面由本人处理');
   }
   function sectionLabel(root) {
-    const title = root.querySelector('[class*="blockTitle-"],.createFormSection-text,legend,h2,h3,[role=heading],.tit-wrap .tit p,.tit-wrap .tit');
+    const title = root.querySelector('[class*="blockTitle-"],.createFormSection-text,.applyFormModuleWrapper-text,legend,h2,h3,[role=heading],.tit-wrap .tit p,.tit-wrap .tit');
     return (text(title)||text([...root.children].find(c=>c.id&&!c.querySelector('input,textarea')))).replace(/[\ue000-\uf8ff]/g,'').replace(/(添加|新增)$/,'').trim();
   }
   function blocks() {return [...new Set([...all(blockSelector).filter(visible).filter(e=>!e.parentElement?.closest(blockSelector)),...phoenixBlocks()])];}
@@ -29,8 +29,9 @@
     const a = all('button,[role=button],.formOperate-addBtn,.createFormSection-addBtn,.add-more-btn,[id$="_addButton"]',root).filter(e=>visible(e)&&!e.disabled&&/^(添加|新增)(.{0,80})?$/.test(text(e).replace(/[\ue000-\uf8ff]/g,'').trim()));
     return a.length===1 ? a[0] : null;
   }
-  function sections() {return blocks().map(b=>({sectionId:idFor(b,'section'),label:sectionLabel(b),description:text(b.querySelector('.tit-wrap,.createFormSection-text,legend,[class*="blockTitle-"]')).slice(0,3000),count:all(rowSelector,b).filter(visible).length,canAdd:!!addButton(b)&&! /声明|隐私|协议|照片|附件|家庭/.test(sectionLabel(b))&&(all(rowSelector,b).length>0||b.matches('.form-cell'))}));}
+  function sections() {return blocks().map(b=>({sectionId:idFor(b,'section'),label:sectionLabel(b),description:text(b.querySelector('.tit-wrap,.createFormSection-text,.applyFormModuleWrapper-desc,legend,[class*="blockTitle-"]')).slice(0,3000),count:all(rowSelector,b).filter(visible).length,canAdd:!!addButton(b)&&! /声明|隐私|协议|照片|附件|家庭/.test(sectionLabel(b))&&(all(rowSelector,b).length>0||b.matches('.form-cell,[class*="applyFormModuleWrapper__"]'))}));}
   function labelFor(el, item) {
+    const udLabel=item?.getAttribute('data-form-field-i18n-name')||text(item?.querySelector('.ud-formily-item-label'));if(udLabel)return udLabel.replace(/\s*\*\s*/g,'').trim();
     const aria = el.getAttribute('aria-label'); if (aria) return aria;
     const labelled = el.getAttribute('aria-labelledby');
     if (labelled) {const names=labelled.split(/\s+/).map(id=>text(el.getRootNode().getElementById?.(id))).filter(Boolean); if(names.length)return names.join(' ');}
@@ -41,6 +42,7 @@
     return text(heading) || item?.getAttribute('data-field-name') || el.getAttribute('placeholder') || el.getAttribute('name') || '';
   }
   const widget = el => {
+    const ud=el.closest('.ud__select');if(ud)return {driver:'ud-select',root:ud};
     const autocomplete=el.closest('.phoenix-auto-complete-container');if(autocomplete)return {driver:'phoenix-autocomplete',root:autocomplete};
     const sugar=el.closest('[class*="sd-Select-container"]');
     if(sugar){
@@ -59,6 +61,7 @@
     return null;
   };
   function current(f) {
+    if(f.driver==='ud-select')return text(f.root.querySelector('.ud__select__selector__selected-item,.ud__select__selector__content')).replace(/请选择.*/,'').trim()||f.root.querySelector('input')?.value||'';
     if(f.driver==='ant-date')return f.root.querySelector('input')?.value||'';
     if(f.driver==='sugar-month'){const v=f.parts.map(e=>text(e.querySelector('[class*="sd-Input-display-value-"]')));return v.every(Boolean)?v[0]+'-'+v[1].padStart(2,'0'):'';}
     if(f.driver==='native-select') return f.el.multiple ? [...f.el.selectedOptions].map(text) : text(f.el.selectedOptions[0]);
@@ -97,15 +100,20 @@
       }else if(el.type==='checkbox'){driver='checkbox';kind='checkbox';const option=text(el.closest('label,.phoenix-checkbox'));if(option&&option!==label)label+='（'+option+'）';}
       else if(el.isContentEditable){driver='contenteditable';kind='text';}
       else if(['date','month'].includes(el.type))kind=el.type;
-      else if(el.readOnly){driver='unsupported';kind='unsupported';}
+      else if(el.readOnly&&!w){driver='unsupported';kind='unsupported';}
+      if(w?.driver==='ud-select'&&!el.matches('.ud__select__selector__search__input'))kind='autocomplete';
+      if(el.closest('.throne-biz-date-range-picker-input')){
+        const pair=all('input',el.closest('.throne-biz-date-range-picker-wrapper')).filter(visible);
+        kind='month';label+='（'+(pair.indexOf(el)===0?'开始':'结束')+'）';
+      }
       const block=blockFor(el),row=el.closest(rowSelector);
       const controls=item?all('input,textarea,select',item).filter(visible):[];
       const componentIndex=controls.indexOf(el);
       const description=[el.getAttribute('placeholder'),text(item?.querySelector('.ant-form-extra,.el-form-item__error,[class*=description]'))].filter(Boolean).join('；');
-      const sensitive=/密码|验证码|证件|身份证|护照|隐私|协议|承诺|声明|银行账号|账户密码|上传|照片|附件|搜索/.test(label+' '+(el.placeholder||''))||['file','password','search'].includes(el.type);
+      const sensitive=/密码|验证码|证件|身份证|护照|隐私|协议|承诺|声明|银行账号|账户密码|上传|照片|附件/.test(label)||!w&&(/搜索/.test(label+' '+(el.placeholder||''))||el.type==='search')||['file','password'].includes(el.type);
       const disabled=!!el.disabled||el.getAttribute('aria-disabled')==='true'||!!el.closest('.ant-select-disabled,.el-select.is-disabled,.phoenix-select--disabled,[class*="sd-Input-disabled"]')||sensitive||driver==='unsupported'||!label;
       const constraints={};if(el.maxLength>0)constraints.maxLength=el.maxLength;if(['date','month'].includes(kind))constraints.format=kind==='date'?'YYYY-MM-DD':'YYYY-MM';
-      const f={id:idFor(canonical),label:label||'未命名控件',el:canonical,input:el,root:canonical,parts:w?.parts,item,driver,group,kind,sectionId:block?idFor(block,'section'):'page',recordId:row?idFor(row,'row'):'',required:!!el.required||el.getAttribute('aria-required')==='true'||!!item?.querySelector('.ant-form-item-required,.el-form-item.is-required,[class*=required],.form-item__required'),disabled,description,constraints,
+      const f={id:idFor(canonical),label:label||'未命名控件',el:canonical,input:el,root:canonical,parts:w?.parts,item,driver,group,kind,sectionId:block?idFor(block,'section'):'page',recordId:row?idFor(row,'row'):'',required:!!el.required||el.getAttribute('aria-required')==='true'||text(item?.querySelector('.ud-formily-item-label')).includes('*')||!!item?.querySelector('.ant-form-item-required,.el-form-item.is-required,[class*=required],[class*=asterisk],.form-item__required'),disabled,description,constraints,
        context:{section: block?sectionLabel(block):'',componentIndex,placeholder:el.getAttribute('placeholder')||'',tag:el.tagName,type:el.type||'',driver},
        blockedReason:sensitive?'需本人处理的身份/认证/协议/附件或非简历搜索字段':driver==='phoenix-calendar'&&kind==='unsupported'?'日期选择器尚未打开，系统需要重新识别后填写':driver==='unsupported'?'自定义日期或只读控件尚未识别':!label?'缺少可靠标签':disabled?'网页标记不可编辑':'',
        options:{state:'requires-opening',items:[]}};
@@ -117,7 +125,7 @@
     }
     return out;
   }
-  const optionSelectors='[role=option],.ant-select-dropdown-menu-item,.ant-select-item-option,.atsx-select-dropdown-menu-item,.el-select-dropdown__item,.phoenix-selectList__listItem,[class*="sd-Menu-content-item-"]';
+  const optionSelectors='[role=option],.ud__select__list__item,.ant-select-dropdown-menu-item,.ant-select-item-option,.atsx-select-dropdown-menu-item,.el-select-dropdown__item,.phoenix-selectList__listItem,[class*="sd-Menu-content-item-"]';
   function optionsFor(f) {
     const owner=f.input.getAttribute('aria-controls')||f.input.getAttribute('aria-owns')||f.root.getAttribute('aria-controls');
     const popup=owner?f.input.getRootNode().getElementById?.(owner):null;
@@ -126,6 +134,11 @@
   }
   const constantPanel=()=>all('.constant-main-selector-container').find(visible);
   async function closeMenu(f,ctx) {
+    if(f.driver==='ud-select'){
+      const outside=f.item?.querySelector('.ud-formily-item-label')||document.body;
+      click(outside);f.input.blur();
+      await wait(()=>!optionsFor(f).length,ctx,3000);return;
+    }
     const panel=constantPanel();if(panel){click(one(all('.phoenix-button__content',panel).filter(e=>text(e)==='取消'),'关闭选择窗口'));await wait(()=>!visible(panel),ctx);return;}
     if(f.root.contains(document.activeElement))document.activeElement.blur();
     const target=f.root.querySelector('input')||f.input;target.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',code:'Escape',keyCode:27,which:27,bubbles:true}));target.dispatchEvent(new KeyboardEvent('keyup',{key:'Escape',code:'Escape',keyCode:27,which:27,bubbles:true}));
@@ -135,7 +148,7 @@
   async function readOptions(f,ctx) {
     if(f.options.state==='enumerated')return f.options;
     if(!['select','multiselect'].includes(f.kind)||f.disabled)throw Error('这个控件不提供候选读取');
-    const before=JSON.stringify(current(f));click(f.input);
+    const before=JSON.stringify(current(f));if(f.driver==='ud-select')click(document.body);click(f.input);
     try {await wait(()=>optionsFor(f).length||constantPanel(),ctx);if(constantPanel())return {state:'requires-search',items:[],complete:false};return {state:'visible-options',items:optionsFor(f).map(text),complete:false};}
     finally {await closeMenu(f,ctx);if(JSON.stringify(current(f))!==before)throw Error('读取选项意外改变字段');}
   }
@@ -208,10 +221,13 @@
     else if(f.driver==='radio'){click(one(f.group.filter(e=>!e.disabled&&(text(e.closest('label'))||e.value)===expected),'单选选项'));}
     else if(f.driver==='contenteditable'){
       f.el.focus();f.el.textContent=expected;f.el.dispatchEvent(new InputEvent('input',{bubbles:true,inputType:'insertText',data:expected}));f.el.dispatchEvent(new Event('change',{bubbles:true}));f.el.blur();
-    }else if(['sugar','ant','element','aria','phoenix'].includes(f.driver)){
+    }else if(['sugar','ant','element','aria','phoenix','ud-select'].includes(f.driver)){
       if(expected===''&&f.driver==='ant'){click(one(all('.ant-select-selection__clear,.ant-select-clear',f.root),'下拉清除按钮'));await wait(()=>current(f)==='',ctx);return;}
       if(f.kind==='multiselect')throw Error('自定义多选需要对应选项状态驱动，当前不猜测追加');
+      if(f.driver==='ud-select')click(document.body);
       click(f.input);
+      // Search-only school widgets have no options until the confirmed query.
+      if(f.driver==='ud-select'&&f.kind==='autocomplete'&&!f.input.readOnly)await setText(f.input,expected,false);
       await wait(()=>optionsFor(f).length||constantPanel(),ctx);
       const panel=constantPanel();
       if(panel){
@@ -249,7 +265,12 @@
     const before=all(rowSelector,b).length;const button=addButton(b);if(!button)throw Error('没有唯一明确的新增按钮');click(button);
     await wait(()=>all(rowSelector,b).length===before+1,ctx);
   }
-  function attachments(){return all('.file-uploader__wrapper').filter(visible).map(root=>{const item=root.closest(containerSelector);return {attachmentId:idFor(root,'attachment'),label:text(item?.querySelector('.form-item__text')),required:!!item?.querySelector('.form-item__required'),fileNames:all('.file-uploader__list-view > *',root).map(text).filter(Boolean),input:root.querySelector('input[type=file]')};}).filter(a=>a.input&&a.label);}
+  function uploadNames(root){return [...new Set(all('.atsx-upload-list-item-name,[class*=fileName],[class*=file-name],a[download],a[title],span,p,div',root).filter(e=>e.matches('a[download],a[title]')||e.children.length===0).map(e=>e.getAttribute('download')||e.getAttribute('title')||text(e)).filter(v=>/\.(pdf|docx?|pptx?|png|jpe?g|html)$/i.test(v)))];}
+  function attachments(){
+    const phoenix=all('.file-uploader__wrapper').filter(visible).map(root=>{const item=root.closest(containerSelector);return {attachmentId:idFor(root,'attachment'),label:text(item?.querySelector('.form-item__text')),required:!!item?.querySelector('.form-item__required'),fileNames:all('.file-uploader__list-view > *',root).map(text).filter(Boolean),input:root.querySelector('input[type=file]')};}).filter(a=>a.input&&a.label);
+    const ud=all('[class*=uploadResume__]').filter(visible).filter(root=>!root.parentElement?.closest('[class*=uploadResume__]')&&root.querySelector('input[type=file]')&&sectionLabel(root.closest(blockSelector)||root)==='简历').map(root=>({attachmentId:idFor(root,'attachment'),label:'简历附件',required:true,fileNames:uploadNames(root),input:root.querySelector('input[type=file]'),root}));
+    return [...phoenix,...ud];
+  }
   async function uploadAttachment(attachment,file,ctx){
     const present=attachment.fileNames.length===1&&attachment.fileNames[0]===file.fileName;
     if(!present){
@@ -261,6 +282,12 @@
     // observed Phoenix PDF card gains preview/download/delete only when ready.
     let stable=null,previous='';
     try{await wait(()=>{
+      const modern=attachment.root||attachment.input.closest('[class*=uploadResume__]');
+      if(modern){
+        const names=uploadNames(modern),done=modern.querySelector('.atsx-upload-list-item-done')||/上次上传/.test(text(modern))&&/更新|删除/.test(text(modern))||all('button,[role=button],a',modern).some(e=>/预览|下载|删除/.test(text(e)||e.getAttribute('aria-label')||e.getAttribute('title')||''));
+        if(names.length!==1||names[0]!==file.fileName||!done||modern.querySelector('[role=progressbar],.atsx-upload-list-item-uploading,.atsx-upload-list-item-error')){stable=null;return false;}
+        if(stable===null)stable=performance.now();return performance.now()-stable>=700;
+      }
       const root=attachment.input.closest('.file-uploader__wrapper'),row=root?.querySelector('.file-uploader__list-view');
       const names=root?all('.file-uploader__list-view > *',root).map(text).filter(Boolean):[];
       const markup=row?.innerHTML||'';
@@ -283,6 +310,7 @@
   window.JobFillAdapters=window.JobFillAdapters||{};
   window.JobFillAdapters.generic={id:'generic-dom',guard,page:()=>({adapter:'generic-dom',url:location.href,title:document.title}),fields,sections,write,validate,readOptions,readDateFormat,addRecord,errors,show,
     needsCommit:f=>f.driver==='phoenix-autocomplete'&&f.root.contains(document.activeElement)&&optionsFor(f).length>0,attachments,uploadAttachment,canSaveDraft:()=>!!draftButton(),saveDraft,
-    coverage:()=>({frames:all('iframe').length,openShadowRoots:roots().length-1,frameContentsScanned:false,clientRevision:window.JobFillClientRevision||'',nativeTextBridgeReady:D.nativeTextBridgeReady}),
+    coverage:()=>({frames:all('iframe').length,openShadowRoots:roots().length-1,frameContentsScanned:false,clientRevision:window.JobFillClientRevision||'',nativeTextBridgeReady:D.nativeTextBridgeReady,
+      controlStructure:[...new Set([...all('input[type=file]'),...all('input,textarea,[role=combobox]').filter(visible)].slice(0,50).map(el=>{const parents=[];for(let n=0;el&&n<16;n++,el=el.parentElement)parents.push(el.tagName+'.'+String(el.className||'').split(' ')[0]);return parents.join(' > ');} )),...all('[class*=applyFormModuleWrapper]').map(e=>String(e.className)+' children='+[...e.children].map(x=>x.tagName+'.'+String(x.className||'').split(' ')[0]).join(','))].slice(0,30)}),
     settle:async ctx=>{document.activeElement?.blur();await D.settle(errors,ctx);}};
 })();

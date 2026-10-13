@@ -15,6 +15,16 @@ function jobFillNativeSetter(marker,value,blur,url){
  return {value:e.value,method:nativeEdit?'native-edit':'native-setter'};
 }
 globalThis.JobFillClient=class {
+ async inspectEntry(){
+  const tab=await chrome.tabs.get(this.tabId);if(!tab.url?.startsWith('https:'))throw Error('请在对应HTTPS官网核对');
+  const result=await chrome.scripting.executeScript({target:{tabId:this.tabId},func:()=>({
+   url:location.href,title:document.title,
+   headings:[...document.querySelectorAll('h1,h2,h3,[class*="job-title"],[class*="position-title"]')].filter(e=>e.getClientRects().length).map(e=>e.textContent.trim().slice(0,300)).filter(Boolean).slice(0,30),
+   employer_links:[...document.querySelectorAll('a[href]')].filter(a=>/官网|官方网站|Official Website/i.test(a.textContent)).map(a=>a.href).filter(u=>u.startsWith('https:')).slice(0,10),
+   state:document.querySelector('input[type=password]')?'login':document.querySelector('input:not([type=hidden]),textarea')?'form':'detail'
+  })});
+  if(result.length!==1)throw Error('页面核对目标不唯一');return result[0].result;
+ }
  async reloadAndScan(expectedUrl){
   const tab=await chrome.tabs.get(this.tabId);if(tab.url!==expectedUrl)throw Error('官网已切换，未刷新');
   await chrome.tabs.reload(this.tabId,{bypassCache:true});
@@ -34,7 +44,7 @@ globalThis.JobFillClient=class {
   const tab=await chrome.tabs.get(this.tabId),u=new URL(tab.url||'');
   if(u.protocol!=='https:')throw Error('执行器仅在用户主动调用的 HTTPS 页面运行');
   this.activeUrl=tab.url;
-  await chrome.scripting.executeScript({target:{tabId:this.tabId},func:channel=>{window.JobFillNativeChannel=channel;window.JobFillClientRevision='1.2.9';},args:[this.channel]});
+  await chrome.scripting.executeScript({target:{tabId:this.tabId},func:channel=>{window.JobFillNativeChannel=channel;window.JobFillClientRevision='1.2.10';},args:[this.channel]});
   await chrome.scripting.executeScript({target:{tabId:this.tabId},files:['executor-core.js','dom-utils.js','generic-adapter.js','feishu-adapter.js','icbc-adapter.js','bootstrap.js']});
   const results=await chrome.scripting.executeScript({target:{tabId:this.tabId},func:(m,p)=>window.JobFillExecutor.dispatch(m,p),args:[method,payload]});
   if(results.length!==1)throw Error('执行目标不唯一');return results[0].result;

@@ -47,6 +47,17 @@
  function compareSaved(expected,snapshot){
   return expected.map(e=>{const matches=snapshot.fields.filter(f=>JSON.stringify(identify(snapshot,f))===JSON.stringify(e.identity));return {label:e.display,passed:matches.length===1&&JSON.stringify(matches[0].currentValue)===JSON.stringify(e.value)};});
  }
+ function inspectMaterials(materials,snapshot){
+  if(materials.url!==snapshot.page.url)throw Error('核对页面与已确认材料不一致');
+  const checks=[];
+  for(const row of materials.rows){
+   const section=findSection(snapshot,row),members=snapshot.fields.filter(f=>f.sectionId===section?.sectionId),records=[...new Set(members.map(f=>f.recordId).filter(Boolean))];
+   const check=(label,value,index)=>{if(!value)return;const found=index===null?snapshot.fields.filter(f=>f.label===label):members.filter(f=>f.recordId===records[index]&&f.label===label);checks.push({label:row.label+' · '+(index===null?'':index+1+' · ')+label,passed:found.length===1&&JSON.stringify(found[0].currentValue)===JSON.stringify(value)});};
+   if(row.records)row.records.forEach((r,i)=>r.values.forEach(v=>check(v.label,v.value,i)));else check(row.label,row.value,null);
+  }
+  const attachment=materials.attachment&&(snapshot.attachments||[]).some(a=>a.fileNames?.length===1&&a.fileNames[0]===materials.attachment.name);
+  return {checks,attachment_verified:!!attachment};
+ }
  async function readDates(client,snapshot){
   // New education/internship rows have empty date controls; inspect them too.
   const tried=new Set();
@@ -70,6 +81,13 @@
    await call('cancel');throw Error('执行超时，已停止后续动作');
   };
   let snapshot=await call('scan');if(snapshot.page.url!==materials.url)throw Error('招聘页面已切换');
+  if(materials.verification_only){
+   const checked=inspectMaterials(materials,snapshot),count=checked.checks.filter(c=>c.passed).length;
+   const persisted=materials.after_reopen?count:0,persistence_verified=materials.after_reopen===true;
+   const result={filled:0,verified:count,expected_count:checked.checks.length,persisted,persistence_verified,saved:persistence_verified&&count===checked.checks.length&&(!materials.attachment||checked.attachment_verified),attachment_verified:checked.attachment_verified,draft_supported:!!snapshot.capabilities?.saveDraft,save_acknowledged:false,issues:checked.checks.filter(c=>!c.passed).map(c=>c.label+'：当前页面为空或不同')};
+   if(materials.attachment&&!checked.attachment_verified)result.issues.push('当前页面没有已确认的简历附件');
+   await report({status:'needs_attention',phase:'review',...result,message:(persistence_verified?'重新打开后':'当前官网')+'核对 '+count+' / '+checked.checks.length+' 项。未填写、上传或提交。'});return result;
+  }
   const baseline=new Map(snapshot.fields.map(f=>[f.fieldId,JSON.stringify(f.currentValue)]));
   const rememberNew=()=>{for(const f of snapshot.fields)if(!baseline.has(f.fieldId))baseline.set(f.fieldId,JSON.stringify(f.currentValue));};
   // Only create record counts selected in the confirmed material, using fresh scans.
@@ -148,10 +166,11 @@
   phase='verifying';await report({status:'running',filled,verified,saved:false,save_acknowledged,attachment_verified,issues,message:'正在核对官网内容是否真正保存'});
   const checks=compareSaved(expected,snapshot);verified=checks.filter(c=>c.passed).length;
   for(const c of checks.filter(c=>!c.passed))issues.push(c.label+'：官网没有保留这项内容，请重新填写。');
-  if(save_acknowledged&&client.reloadAndScan){
+  const canCheckAutomatic=!materials.preserve_unsaved_page&&!snapshot.capabilities?.saveDraft&&checks.every(c=>c.passed)&&(!materials.attachment||attachment_verified);
+  if((save_acknowledged||canCheckAutomatic)&&client.reloadAndScan){
    try{
     if(shouldStop())throw Error('已停止');
-    await report({status:'running',filled,verified,saved:false,save_acknowledged,attachment_verified,issues,message:'官网已回应暂存，正在重新打开同一页面检查内容是否保留'});
+    await report({status:'running',filled,verified,saved:false,save_acknowledged,attachment_verified,issues,message:save_acknowledged?'官网已回应暂存，正在重新打开同一页面检查内容是否保留':'此页面没有暂存按钮，正在重新打开同页核对是否自动保留内容'});
     snapshot=await client.reloadAndScan(materials.url);
     const stored=compareSaved(expected,snapshot);persisted=stored.filter(c=>c.passed).length;persistence_verified=true;
     attachment_verified=!materials.attachment?false:(snapshot.attachments||[]).some(a=>a.fileNames?.length===1&&a.fileNames[0]===materials.attachment.name);
@@ -159,14 +178,14 @@
     for(const c of stored.filter(c=>!c.passed))issues.push(c.label+'：重新打开官网后内容为空或不同，尚未保存成功。');
     if(materials.attachment&&!attachment_verified)issues.push('简历附件：重新打开官网后未看到所选文件，请重新上传。');
    }catch(e){issues.push('保存检查未完成：'+e.message+'。请保留官网页面。');}
-  }else issues.push(save_acknowledged?'官网回应暂存，但尚未重新打开核对，不能确认内容已保存。':'尚未保存到官网。请在官网点击“暂存”或“保存”，确认成功后再离开。');
+  }else issues.push(save_acknowledged?'官网回应暂存，但尚未重新打开核对，不能确认内容已保存。':snapshot.capabilities?.saveDraft?'尚未保存到官网。请在官网点击“暂存”或“保存”，确认成功后再离开。':materials.preserve_unsaved_page?'此官网没有草稿保存，重新打开会丢失内容；请保留当前页面并由本人提交。':'此页面没有暂存按钮，尚未核对重新打开后内容是否保留；最终提交仍由本人完成。');
   for(const f of snapshot.fields.filter(f=>f.required&&!f.currentValue&&!f.disabled))issues.push(f.label+'：官网仍需补充。');
   issues=[...new Set(issues)];
-  const message=saved?'已重新打开官网，'+persisted+' 项内容仍在，草稿保存已确认。':persistence_verified?'重新打开官网后仅保留 '+persisted+' / '+expected.length+' 项，请处理下方未保存内容。':'已核对 '+verified+' 项，尚未确认官网保存。';
-  const result={filled,verified,saved,save_acknowledged,persistence_verified,persisted,expected_count:expected.length,attachment_verified,issues};
+  const message=materials.preserve_unsaved_page?'已恢复并核对 '+verified+' / '+expected.length+' 项'+(attachment_verified?'及所选附件':'')+'。此官网页没有草稿保存，请保留当前页面'+(verified===expected.length&&(!materials.attachment||attachment_verified)?'供你本人提交。':'并处理下方未完成项。'):saved?'已重新打开官网，'+persisted+' 项内容及所选附件仍在。':persistence_verified?'重新打开官网后仅保留 '+persisted+' / '+expected.length+' 项，请处理下方未保存内容。':'已核对 '+verified+' 项，尚未确认官网保存。';
+  const result={filled,verified,saved,save_acknowledged,persistence_verified,persisted,expected_count:expected.length,attachment_verified,draft_supported:!!snapshot.capabilities?.saveDraft,issues};
   await report({status:'needs_attention',phase:'review',...result,message});
   return result;
  }
- const api={compile,run,compareSaved,identify};
+ const api={compile,run,compareSaved,identify,inspectMaterials};
  if(typeof module!=='undefined')module.exports=api;else globalThis.JobFillMaterials=api;
 })();

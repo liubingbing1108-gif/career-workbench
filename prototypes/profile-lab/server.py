@@ -31,6 +31,7 @@ def make_server(lab, port=0, mapper=None, management_app=None, management_handle
     preparation = Preparation(lab, application)
     bridge = ExecutorBridge(lab, SiteScan(lab, preparation).accept)
     launcher = BrowserLaunch(lab,bridge,browser_opener)
+    if management_app:launcher.resolutions=management_app.resolutions
     job_sessions = JobSessions(lab, management_app.store, preparation) if management_app else None
     if job_sessions:
         management_app.delete_job = job_sessions.delete
@@ -158,11 +159,14 @@ def make_server(lab, port=0, mapper=None, management_app=None, management_handle
                     method=action.rsplit('/',1)[-1]
                     if method=='launch-claim':result=launcher.claim(data.get('ticket'),origin)
                     elif method=='launch-next':result=launcher.next(origin,data.get('connection'))
-                    elif method=='launch-report':result=launcher.report(data.get('ticket'),origin,data.get('status'))
+                    elif method=='launch-report':result=launcher.report(data.get('ticket'),origin,data.get('status'),data.get('message'))
+                    elif method=='entry-report':result=launcher.inspected(data.get('ticket'),origin,data.get('observation'))
                     else:result = bridge.call(method, origin, data)
                 elif action == '/api/browser-launch':
                     if job_sessions:job_sessions.validate_destination(data['session_id'])
-                    result=launcher.request(data['session_id'],'http://'+self.headers['Host'],data.get('mode','prepare'),direct=data.get('direct') is True)
+                    result=launcher.request(data['session_id'],'http://'+self.headers['Host'],data.get('mode','prepare'),direct=data.get('direct') is True,rescan=data.get('rescan') is True)
+                elif action == '/api/entry-inspection':
+                    result=launcher.inspect(data['job_id'],'http://'+self.headers['Host'],direct=data.get('direct') is True)
                 elif action == "/api/form-analysis":
                     result = save_analysis(lab, data['analysis'], data.get('session_id'))
                 elif action == "/api/preparation/open":
@@ -195,6 +199,9 @@ def make_server(lab, port=0, mapper=None, management_app=None, management_handle
                             if job.get('needs_review'):raise LabError('请在投递管理核对公司和具体岗位后开始填写')
                             if job.get('official_url_status')!='verified':raise LabError('官网入口尚未核验，招聘信息链接不能用于填写')
                     result = preparation.start(data['session_id'], data['digest'])
+                elif action == '/api/preparation/verify':
+                    if job_sessions:job_sessions.validate_destination(data['session_id'])
+                    result=preparation.verify(data['session_id'],data.get('after_reopen') is True)
                 elif action == "/api/preparation/pause":
                     result = preparation.pause(data['session_id'])
                 elif action == "/api/import":

@@ -5,7 +5,7 @@
   else root.JobFillExecutorCore = api;
 })(typeof globalThis === 'object' ? globalThis : this, () => {
   'use strict';
-  const VERSION = '1.2.13';
+  const VERSION = '1.2.21';
   const clone = x => JSON.parse(JSON.stringify(x));
   const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
   const empty = v => v === '' || (Array.isArray(v) && !v.length);
