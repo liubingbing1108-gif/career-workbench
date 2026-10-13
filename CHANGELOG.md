@@ -10,3 +10,7 @@
 - 可移植离线／界面测试、CI、隐私白名单导出及通用开发交接文档。
 
 当前仓库私有，暂未选择开源许可证；不包含个人运行资料。完整跨平台与全部招聘网站覆盖仍待验证。
+
+## Unreleased · 2026-10-13
+
+Fix job intake for explicit company/role plus dynamic application links. Preserve source URLs, bound optional page reads, retain editable drafts on recognition failures, and verify grouped-source mapping and confirmation persistence.

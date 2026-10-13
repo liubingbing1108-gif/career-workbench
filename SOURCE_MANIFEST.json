@@ -63,6 +63,7 @@
     "prototypes/management-lab/store.py",
     "prototypes/management-lab/test_http.py",
     "prototypes/management-lab/test_intake_migration.py",
+    "prototypes/management-lab/test_intake_resilience.py",
     "prototypes/management-lab/test_integration.js",
     "prototypes/management-lab/test_management.py",
     "prototypes/management-lab/test_migration_scope.py",

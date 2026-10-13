@@ -33,6 +33,23 @@ finally:server.server_close();f.tearDown()
   assert.equal(await page.locator('[data-choice-entry]').count(),3);
   assert.equal(await page.locator('[data-prep-version]').count(),3);
   await page.reload();await page.locator('#prep-live-preview').waitFor();
+  await page.getByRole('button',{name:'投递管理',exact:true}).click();
+  const link='https://sample.jobs.feishu.cn/123456/resume/1234567890123456789/apply';
+  await frame.locator('#intake-text').fill(link+'\n示例科技 用户增长产品经理（平台运营）');
+  await frame.locator('#intake-preview').click();
+  await frame.getByRole('dialog',{name:'确认录入岗位'}).waitFor();
+  assert.equal(await frame.locator('[data-input-key="company"]').inputValue(),'示例科技');
+  assert.equal(await frame.locator('[data-input-key="role"]').inputValue(),'用户增长产品经理（平台运营）');
+  assert.equal(await frame.locator('[data-input-key="source_url"]').inputValue(),link);
+  assert.equal((await(await fetch(base+'/management/api/jobs')).json()).jobs.length,2);
+  await frame.locator('#confirm-input').click();
+  await frame.getByRole('row',{name:'查看 示例科技 用户增长产品经理（平台运营） 详情',exact:true}).waitFor();
+  await page.reload();
+  await frame.getByRole('row',{name:'查看 示例科技 用户增长产品经理（平台运营） 详情',exact:true}).waitFor();
+  const saved=(await(await fetch(base+'/management/api/jobs')).json()).jobs.find(j=>j.company==='示例科技');
+  assert.equal(saved.source_url,link);assert.equal(saved.official_url,'');assert.deepEqual(saved.timeline,[]);
+  assert.equal(saved.application_status,'未投递');assert.equal(saved.role,'用户增长产品经理（平台运营）');
+  assert.equal((await(await fetch(base+'/api/state')).json()).sessions.length,before.sessions.length);
   await page.setViewportSize({width:390,height:844});assert(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth+1));
   assert.deepEqual(errors,[]);console.log('PASS unified origin, two tabs, real table/detail navigation, one local table, left/right preview, managed session reuse and all record versions, reload, mobile width; 0 page errors');
  }finally{if(browser)await browser.close();server.kill('SIGTERM');}

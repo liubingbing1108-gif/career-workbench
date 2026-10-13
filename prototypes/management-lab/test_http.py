@@ -39,6 +39,23 @@ class HTTPTests(unittest.TestCase):
             status,data=self.request("GET","/api/bootstrap")
             self.assertEqual(status,200);self.assertNotIn('source',data)
             self.assertFalse(data["remote_write_enabled"]);cli.assert_not_called()
+
+    def test_explicit_dynamic_link_preview_confirm_and_readback(self):
+        url='https://sample.jobs.feishu.cn/123456/resume/1234567890123456789/apply'
+        with patch.object(self.app.intake,'read_sources',side_effect=AssertionError('unexpected network')):
+            status,preview=self.request('POST','/api/preview/text',{'text':url+'\n示例科技 用户增长产品经理（平台运营）'})
+        self.assertEqual(status,200)
+        self.assertEqual(self.app.store.list_jobs(),[])
+        candidate=preview['candidates'][0]
+        self.assertEqual((candidate['company'],candidate['role']),('示例科技','用户增长产品经理（平台运营）'))
+        body={'source':'text','batch_id':preview['batch_id'],'selections':[{'id':candidate['id']}],'request_id':'dynamic-link-confirmed-fixture'}
+        status,result=self.request('POST','/api/import',body)
+        self.assertEqual(status,200)
+        self.assertTrue(self.request('POST','/api/import',body)[1]['replayed'])
+        status,job=self.request('GET','/api/jobs/'+result['ids'][0])
+        self.assertEqual(status,200);self.assertEqual(job['source_url'],url)
+        self.assertEqual(job['official_url'],'');self.assertFalse(job['needs_review'])
+        self.assertEqual(job['application_status'],'未投递');self.assertEqual(job['timeline'],[])
     def test_cross_origin_or_missing_token_cannot_mutate(self):
         self.assertEqual(self.request("POST","/api/preview/text",{"text":"x"},token=False)[0],403)
         self.assertEqual(self.request("POST","/api/preview/text",{"text":"x"},origin="https://example.com")[0],403)
