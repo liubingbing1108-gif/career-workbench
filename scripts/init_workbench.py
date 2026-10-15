@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Explicit first-run initialization. Never overwrites an existing runtime."""
 import json
+from contextlib import closing
 from pathlib import Path
 import sys
 
@@ -24,7 +25,7 @@ def initialize(root=ROOT):
     import sqlite3
     for relative in ('profile/lab.sqlite', 'management/management.sqlite3'):
         path = runtime / relative
-        with sqlite3.connect(path) as db:
+        with closing(sqlite3.connect(path)) as db:
             if db.execute('PRAGMA integrity_check').fetchone()[0] != 'ok':
                 raise ValueError('初始化核对失败，保留现场，请按恢复文档检查。')
         path.chmod(0o600)

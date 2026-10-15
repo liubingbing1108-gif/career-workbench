@@ -1,4 +1,5 @@
 import importlib.util
+from contextlib import closing
 from pathlib import Path
 import sqlite3
 import tempfile
@@ -14,7 +15,7 @@ class FirstRunTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as folder:
             config = module.initialize(folder)
             profile = Path(folder) / '.runtime/profile/lab.sqlite'
-            with sqlite3.connect(profile) as db:
+            with closing(sqlite3.connect(profile)) as db:
                 import json
                 state = json.loads(db.execute('SELECT body FROM state').fetchone()[0])
             self.assertFalse(state['files'])

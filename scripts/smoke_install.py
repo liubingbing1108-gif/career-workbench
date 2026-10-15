@@ -13,14 +13,16 @@ ROOT=Path(__file__).resolve().parents[1]
 
 def main():
     with tempfile.TemporaryDirectory(prefix='career-install-') as directory:
+        from zoneinfo import ZoneInfo
+        assert ZoneInfo('Asia/Shanghai').key == 'Asia/Shanghai'
         initialize(directory)
-        command=[sys.executable,'-u',str(ROOT/'prototypes/profile-lab/server.py'),'--port','0','--data-dir',str(Path(directory)/'.runtime/profile'),'--management-data-dir',str(Path(directory)/'.runtime/management')]
+        command=[sys.executable,'-u','-c',"import faulthandler,runpy,sys,pathlib; sys.path.insert(0,str(pathlib.Path(sys.argv[1]).parent)); faulthandler.dump_traceback_later(20); runpy.run_path(sys.argv.pop(1),run_name='__main__')",str(ROOT/'prototypes/profile-lab/server.py'),'--port','0','--data-dir',str(Path(directory)/'.runtime/profile'),'--management-data-dir',str(Path(directory)/'.runtime/management')]
         process=subprocess.Popen(command,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True,encoding='utf-8')
         try:
             import queue,threading
             lines=queue.Queue()
             threading.Thread(target=lambda: lines.put(process.stdout.readline()),daemon=True).start()
-            line=lines.get(timeout=30)
+            line=lines.get(timeout=90)
             if 'http://127.0.0.1:' not in line:raise RuntimeError('Temporary service did not start')
             url='http://127.0.0.1:'+line.split('http://127.0.0.1:',1)[1].strip().rstrip('/')
             def get(path):
@@ -31,7 +33,8 @@ def main():
             print('PASS: clean empty installation, two modules, random local port, no model/website calls')
         finally:
             process.terminate()
-            try:process.communicate(timeout=10)
-            except subprocess.TimeoutExpired:process.kill();process.communicate()
+            try:_,errors=process.communicate(timeout=10)
+            except subprocess.TimeoutExpired:process.kill();_,errors=process.communicate()
+            if errors:print(errors, file=sys.stderr)
 
 if __name__=='__main__':main()

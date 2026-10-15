@@ -2,3 +2,4 @@
 pypdf==6.10.0
 jsonschema==4.26.0
 markitdown[pdf,docx,pptx,xlsx,xls]==0.1.8
+tzdata==2026.5
