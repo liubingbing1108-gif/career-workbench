@@ -31,11 +31,29 @@ class PreparationTests(unittest.TestCase):
         self.manifest=dict(url='https://example.com/apply',title='虚构岗位',fields=fields,execution='external')
         self.maps=dict(mappings=maps,engine='虚构语义输出')
         self.app.install_mapping(self.sid,self.manifest,self.maps)
+    def test_mapping_connection_failure_preserves_diagnostics_without_resume_import_copy(self):
+        from recognizer import RecognitionError
+        from unittest.mock import Mock
+        self.app.mapper=Mock()
+        self.app.mapper.map.side_effect=RecognitionError('原文件已保留','connection_failed',{'model_catalog_failed':True})
+        before=self.lab.state()
+        with self.assertRaises(LabError) as ctx:self.app.scan(self.sid,self.manifest)
+        self.assertIn('官网表单已读取',str(ctx.exception));self.assertNotIn('原文件',str(ctx.exception))
+        self.assertEqual(ctx.exception.diagnostics,{'model_catalog_failed':True})
+        self.assertEqual(self.lab.state(),before)
+
     def tearDown(self):
         self.lab.db.close();self.temp.cleanup()
     def complete(self):
         self.app.edit_answer(self.sid,'new','商务会话','update')
         self.prep.settings(self.sid,'')
+    def test_unread_optional_sections_cannot_silently_disappear_from_readiness(self):
+        self.complete()
+        self.lab.mutate(lambda s:next(x for x in s['sessions'] if x['id']==self.sid)['form_analysis']['sections'].append(
+            dict(id='unread-awards',label='获奖',repeatable=True,record_count=0,can_add=True,fields=[],note='')))
+        content=self.prep.preview(self.sid)
+        self.assertTrue(any(t['key']=='unread-sections' and '获奖' in t['message'] for t in content['tasks']))
+        self.assertEqual(self.prep.start(self.sid,content['digest'])['status'],'awaiting_executor')
     def test_auto_set_excludes_unrelated_record_and_converts_without_profile_write(self):
         before=copy.deepcopy(self.lab.state()['entries'])
         p=self.app.plan(self.sid);self.assertEqual(len(p['automatic'][0]['selected']),1)
@@ -45,16 +63,42 @@ class PreparationTests(unittest.TestCase):
         self.assertTrue(self.app.plan(self.sid)['missing'][0]['blocking'])
         self.complete();s=self.lab.state();field=next(f for f in s['fields'] if f['label']=='语言程度')
         self.assertEqual(field['options'],['入门','商务会话'])
-        self.assertEqual(len([v for v in s['answer_versions'] if v['field_id']==field['id']]),1)
+        self.assertEqual(len([v for v in s['answer_versions'] if v['field_id']==field['id']]),0)
         self.assertFalse(self.prep.current(self.sid)['pending'])
-    def test_preview_blocks_missing_and_attachment_undecided(self):
-        p=self.prep.preview(self.sid);self.assertEqual(len(p['pending']),2)
-        with self.assertRaises(LabError):self.prep.start(self.sid,p['digest'])
-        self.assertIsNone(self.prep.view(self.sid)['execution'])
+    def test_preview_allows_missing_and_skips_unselected_attachment(self):
+        p=self.prep.preview(self.sid);self.assertFalse(p['pending']);self.assertEqual(len(p['skipped']),2)
+        execution=self.prep.start(self.sid,p['digest'])
+        self.assertEqual(execution['status'],'awaiting_executor')
+        self.assertIsNone(execution['confirmed_materials']['attachment'])
+        self.assertFalse(any(r['website_id']=='new' for r in execution['confirmed_materials']['rows']))
+        self.assertEqual(execution['confirmed_materials']['rows'][0]['records'][0]['values'][0]['value'],'硕士')
     def test_modified_material_rejects_old_preview(self):
         self.complete();p=self.prep.preview(self.sid)
         self.app.edit_answer(self.sid,'new','入门','session')
         with self.assertRaisesRegex(LabError,'材料已变化'):self.prep.start(self.sid,p['digest'])
+
+    def test_partial_fill_excludes_invalid_required_value_and_ambiguous_collection(self):
+        self.lab.save_profile([dict(entry_id=self.edu['id'],field_id='graduation_date',value='2027')])
+        manifest=copy.deepcopy(self.manifest);maps=copy.deepcopy(self.maps)
+        manifest['fields'].append(dict(id='languages',label='语言能力',collection=True,children=[dict(id='language-name',label='语言')]))
+        maps['mappings'].append(dict(website_id='languages',status='ambiguous',reason='无法确定语言与考试分组',category=None,field_id=None,members=[]))
+        self.app.install_mapping(self.sid,manifest,maps)
+        before=copy.deepcopy(self.lab.state()['entries'])
+        preview=self.prep.preview(self.sid)
+        self.assertFalse(preview['pending'])
+        self.assertTrue(any(t.get('website_id')=='languages' for t in preview['tasks']))
+        self.assertTrue(any(r['website_id']=='languages' and r['value']=='' for r in preview['rows']))
+        execution=self.prep.start(self.sid,preview['digest'])
+        rows=execution['confirmed_materials']['rows']
+        self.assertEqual(len(rows),1)
+        self.assertEqual([(v['website_id'],v['value']) for v in rows[0]['records'][0]['values']],[('degree','硕士')])
+        self.assertEqual(self.lab.state()['entries'],before)
+
+    def test_unconfirmed_edit_still_requires_material_review(self):
+        self.lab.mutate(lambda s:next(x for x in s['sessions'] if x['id']==self.sid).setdefault('preparation',{}).update(drafts={'fictional':{'value':'新草稿'}}))
+        preview=self.prep.preview(self.sid)
+        self.assertTrue(any(t['key']=='draft' for t in preview['tasks']))
+        with self.assertRaises(LabError):self.prep.start(self.sid,preview['digest'])
     def test_confirm_queues_once_and_never_reports_filled(self):
         self.complete();p=self.prep.preview(self.sid)
         a=self.prep.start(self.sid,p['digest']);b=self.prep.start(self.sid,p['digest'])
@@ -118,3 +162,43 @@ class PreparationTests(unittest.TestCase):
         maps['mappings'][0]['requires_records_when']=dict(website_id='new',equals='商务会话',message='虚构条件要求至少一条记录')
         self.app.install_mapping(self.sid,self.manifest,maps);self.complete()
         self.assertTrue(any(i['kind']=='count' and i['blocking'] for i in self.app.plan(self.sid)['missing']))
+
+    def test_remove_blank_optional_child_and_scalar_persists_without_affecting_shared_values(self):
+        manifest=copy.deepcopy(self.manifest);maps=copy.deepcopy(self.maps)
+        manifest['fields'][1].pop('decision_required')
+        manifest['fields'][0]['children'].append(dict(id='advisor',label='导师',required=False))
+        maps['mappings'][0]['members'].append(dict(website_id='advisor',field_id=None,new_field=dict(label='导师',category='education',type='text')))
+        self.app.install_mapping(self.sid,manifest,maps)
+        before=copy.deepcopy(self.lab.state()['entries'])
+        self.prep.settings(self.sid,'')
+        for item in self.app.plan(self.sid)['missing']:
+            self.assertFalse(item['blocking'])
+            key=self.prep.missing_key(item)
+            self.prep.remove_optional(self.sid,key)
+            self.prep.remove_optional(self.sid,key)  # replay is safe
+        current=self.prep.current(self.sid)
+        self.assertFalse(current['pending'])
+        self.assertEqual(len(current['removed_optional']),2)
+        self.assertFalse(any(r['website_id']=='new' for r in current['rows']))
+        self.assertFalse(any(v['website_id']=='advisor' for r in current['rows'] for e in r.get('records',[]) for v in e['values']))
+        self.assertEqual(self.lab.state()['entries'],before)
+        self.assertEqual(Preparation(self.lab,self.app).current(self.sid),current)
+        # If the website now requires the field, an old optional deletion cannot hide it.
+        manifest['fields'][0]['children'][-1]['required']=True
+        self.app.install_mapping(self.sid,manifest,maps)
+        self.assertTrue(self.prep.current(self.sid)['skipped'])
+        required=next(i for i in self.app.plan(self.sid)['missing'] if i.get('child_id')=='advisor')
+        with self.assertRaises(LabError):self.prep.remove_optional(self.sid,self.prep.missing_key(required))
+
+    def test_remove_optional_clears_only_its_answer_draft(self):
+        manifest=copy.deepcopy(self.manifest);manifest['fields'][1].pop('decision_required')
+        self.app.install_mapping(self.sid,manifest,self.maps)
+        item=next(i for i in self.app.plan(self.sid)['missing'] if i['website_field']['id']=='new')
+        parts=(self.sid,item.get('group_id'),item.get('entry_id'),item.get('field_id') or item.get('child_id') or 'new')
+        key='/'.join('undefined' if v is None else str(v) for v in parts)
+        self.prep.draft(self.sid,key,'未确认的虚构编辑')
+        self.prep.draft(self.sid,self.sid+'/unrelated','其他草稿')
+        self.prep.remove_optional(self.sid,self.prep.missing_key(item))
+        drafts=self.prep.view(self.sid)['drafts']
+        self.assertIsNone(drafts[key]['value'])
+        self.assertEqual(drafts[self.sid+'/unrelated']['value'],'其他草稿')

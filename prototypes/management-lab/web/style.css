@@ -167,3 +167,5 @@ textarea { resize: vertical; }
 .table-wrap th:nth-child(1){width:10%}.table-wrap th:nth-child(2){width:17%}.table-wrap th:nth-child(3){width:8%}.table-wrap th:nth-child(4){width:10%}.table-wrap th:nth-child(5){width:6%}.table-wrap th:nth-child(6){width:7%}.table-wrap th:nth-child(7){width:7%}.table-wrap th:nth-child(8){width:11%}.table-wrap th:nth-child(9){width:9%}.table-wrap th:nth-child(10){width:7%}.table-wrap th:nth-child(11){width:8%}
 .role-name{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;line-height:1.6}
 .table-wrap .table-note{max-width:100%}
+
+.manual-application{margin:16px 0;padding:14px;border:1px solid #dce4f3;border-radius:8px}.manual-application label{display:block;font-weight:600}.manual-application input{display:block;width:100%;box-sizing:border-box;margin:8px 0;padding:10px;border:1px solid #cbd5e1;border-radius:6px}#query-result{font-size:13px;line-height:1.5}

@@ -25,6 +25,15 @@ class UnifiedTests(unittest.TestCase):
     def setUp(self):
         self.tmp=tempfile.TemporaryDirectory();self.lab=Lab(Path(self.tmp.name)/'profile');self.app=Application(self.lab);self.prep=Preparation(self.lab,self.app)
     def tearDown(self):self.lab.db.close();self.tmp.cleanup()
+    def test_restart_keeps_newest_pending_optional_schema_after_failed_mapping(self):
+        s=self.prep.open_target('https://example.com/apply')
+        newest=scan_analysis(snapshot(),'https://example.com/apply')
+        self.lab.mutate(lambda state:next(x for x in state['sessions'] if x['id']==s['id'])['preparation'].update(scan_status='failed',pending_analysis=newest))
+        SiteScan(self.lab,self.prep)
+        saved=next(x for x in self.lab.state()['sessions'] if x['id']==s['id'])
+        self.assertEqual(saved['form_analysis'],newest)
+        self.assertEqual(saved['preparation']['scan_status'],'failed')
+        self.assertNotIn('pending_analysis',saved['preparation'])
     def test_same_job_reuses_preparation_but_other_jobs_keep_independent_materials(self):
         s=self.prep.open_target('https://example.com/apply','虚构职位','job-1');before=copy.deepcopy(self.lab.state()['entries'])
         again=self.prep.open_target('https://example.com/apply','虚构','job-1')
@@ -83,6 +92,13 @@ class UnifiedTests(unittest.TestCase):
         for thread in scan.threads:thread.join(3)
         session=next(x for x in self.lab.state()['sessions'] if x['id']==s['id'])
         self.assertEqual(session['preparation']['scan_status'],'ready');self.assertTrue(session['website']);self.assertEqual(before,self.lab.state()['entries']);self.assertNotIn('execution',session['preparation'])
+        # A failed rematch retains the new schema and old material map. Reading
+        # the same schema again must retry mapping instead of reusing that map.
+        self.lab.mutate(lambda state:next(x for x in state['sessions'] if x['id']==s['id'])['preparation'].update(scan_status='failed',scan_error='fixture timeout'))
+        retried=scan.accept('https://example.com/apply',snapshot(),s['id'])
+        self.assertEqual(retried['status'],'matching')
+        for worker in scan.threads:worker.join(3)
+        self.assertEqual(next(x for x in self.lab.state()['sessions'] if x['id']==s['id'])['preparation']['scan_status'],'ready')
     def test_single_listener_mounts_management_with_token_and_origin_checks(self):
         root=Path(__file__).resolve().parents[1]/'management-lab';sys.path.insert(0,str(root))
         spec=importlib.util.spec_from_file_location('unified_management_test',root/'server.py');module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)

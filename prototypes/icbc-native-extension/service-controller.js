@@ -6,6 +6,7 @@ class JobFillService {
   const result=await response.json();if(!response.ok)throw Error(result.error||'填写连接中断');return result;
  }
  async target(details){
+  if(details.mode==='progress')return chrome.tabs.create({url:details.url,active:false});
   const role=new URL(details.url),job=role.searchParams.get('jobAdId');
   const candidates=await chrome.tabs.query({url:role.origin+'/*'});
   const matches=candidates.filter(t=>{try{const u=new URL(t.url);return t.url===details.url||job&&u.searchParams.get('jobAdId')===job&&['/form','/campus/detail','/social/detail'].includes(u.pathname);}catch{return false;}});
@@ -18,6 +19,20 @@ class JobFillService {
   try{
    const details=await this.request('launch-claim',{ticket});
    const tab=await this.target(details);
+   if(details.mode==='progress'){
+    // A separate query tab protects any unsaved application form.
+    let observation;
+    try{observation=await new JobFillClient(tab.id).queryProgress(details);}
+    catch{observation={status:'unavailable'};}
+    try{
+     const result=await this.request('progress-report',{ticket,observation});
+     if(observation.status==='needs_user'){await chrome.tabs.update(tab.id,{active:true});await chrome.windows.update(tab.windowId,{focused:true});}
+     return {ok:true,result};
+    }finally{
+     if(observation.status!=='needs_user')await chrome.tabs.remove(tab.id).catch(()=>{});
+     if(this.details&&!this.stopped)this.schedule(2000);
+    }
+   }
    if(details.mode==='inspect'){
     // This branch has no connection code, scan receiver or material polling.
     // Preserve an existing filling controller while inspecting the supplied URL.
@@ -35,7 +50,8 @@ class JobFillService {
    if(details.mode==='focus'){await chrome.tabs.update(tab.id,{active:true});await chrome.windows.update(tab.windowId,{focused:true});await this.request('launch-report',{ticket,status:'ready'}).catch(()=>{});return {ok:true};}
    this.ticket=ticket;this.details=details;this.stopped=false;
    this.tabId=tab.id;this.client=new JobFillClient(tab.id);
-   this.connection=null;this.url=null;this.prepared=false;this.schedule(0);return {ok:true};
+   this.client.saveLocalDraft=snapshot=>this.captureDraft(snapshot);
+   this.connection=null;this.url=null;this.prepared=false;this.draftBaseline=null;this.draftDocument=null;this.schedule(0);return {ok:true};
   }finally{this.launching=false;}
  }
  schedule(ms=1000){clearTimeout(this.timer);this.timer=setTimeout(()=>this.tick(),ms);}
@@ -55,13 +71,20 @@ class JobFillService {
    if(!this.connection)this.connection=(await this.request('connect',{code:this.details.code})).connection;
    this.connectedUrl=this.url;this.prepared=true;await this.request('launch-report',{ticket:this.ticket,status:'ready'}).catch(()=>{});return true;
   }
-  // Expose an empty internship editor to read its actual schema. No user value
-  // is entered; subsequent executions create only the confirmed total count.
-  const emptyInternship=scan.result.sections?.find(s=>s.label==='实习经历'&&s.count===0&&s.canAdd);
-  if(emptyInternship){
-   const requestId=crypto.randomUUID();const created=await this.client.call('ensureRecords',{schemaVersion:1,requestId,snapshotId:scan.result.snapshotId,sections:[{sectionId:emptyInternship.sectionId,count:1}]});
+  if(!this.connection)this.connection=(await this.request('connect',{code:this.details.code})).connection;
+  this.connectedUrl=this.url;
+  // Back up existing answers before exposing empty editors. This scan never
+  // reloads the page or queues filling, including explicit re-reads of a draft.
+  await this.captureDraft(scan.result);
+  // Optional sections are also useful applicant material. Expose their empty
+  // editors to discover actual fields, without entering any personal answers.
+  const emptySections=(scan.result.sections||[]).filter(s=>s.count===0&&s.canAdd).slice(0,20);
+  for(const section of emptySections){
+   const requestId=crypto.randomUUID();const created=await this.client.call('ensureRecords',{schemaVersion:1,requestId,snapshotId:scan.result.snapshotId,sections:[{sectionId:section.sectionId,count:1}]});
    if(!created.ok)throw Error(created.error.message);
-   for(let n=0;n<30;n++){const progress=await this.client.call('status',{requestId});if(!progress.ok)throw Error(progress.error.message);if(progress.result.status==='complete')break;if(progress.result.status!=='running')throw Error(progress.result.error?.message||'实习区块尚未展开');await new Promise(r=>setTimeout(r,100));}
+   let complete=false;
+   for(let n=0;n<30;n++){const progress=await this.client.call('status',{requestId});if(!progress.ok)throw Error(progress.error.message);if(progress.result.status==='complete'){complete=true;break;}if(progress.result.status!=='running')throw Error(progress.result.error?.message||`${section.label}尚未展开`);await new Promise(r=>setTimeout(r,100));}
+   if(!complete)throw Error(`${section.label}展开超时，请重新读取官网表单`);
    scan=await this.client.call('scan');if(!scan.ok)throw Error(scan.error.message);
   }
   if(!this.connection)this.connection=(await this.request('connect',{code:this.details.code})).connection;this.connectedUrl=this.url;
@@ -72,14 +95,31 @@ class JobFillService {
    }
   }
   scan=await this.client.call('scan');if(!scan.ok)throw Error(scan.error.message);
-  const options=new Map();
+  const options=new Map(),optionDiagnostics=[];
   for(const field of scan.result.fields.filter(f=>!f.disabled&&f.kind==='select'&&f.options?.state==='requires-opening')){
-   const result=await this.client.call('readOptions',{snapshotId:scan.result.snapshotId,fieldId:field.fieldId});if(result.ok)options.set(field.fieldId,result.result);
+   const result=await this.client.call('readOptions',{snapshotId:scan.result.snapshotId,fieldId:field.fieldId});
+   if(result.ok)options.set(field.fieldId,result.result);
+   else optionDiagnostics.push(`${field.label}选项读取未完成：${result.error?.message||'未知原因'}`);
   }
   scan=await this.client.call('scan');if(!scan.ok)throw Error(scan.error.message);
   for(const f of scan.result.fields)if(options.has(f.fieldId))f.options=options.get(f.fieldId);
+  scan.result.coverageDetails={...scan.result.coverageDetails,controlStructure:[...optionDiagnostics,...(scan.result.coverageDetails?.controlStructure||[])]};
   const snapshot={...scan.result,fields:scan.result.fields.map(({currentValue,...field})=>field)};
   await this.request('scan',{snapshot});await this.request('launch-report',{ticket:this.ticket,status:'ready'}).catch(()=>{});this.connectedUrl=this.url;this.prepared=true;return true;
+ }
+ async captureDraft(existingSnapshot=null){
+  if(this.details.mode==='verify')return;
+  const document=await this.client.documentKey();if(document?.url!==this.url)return;
+  const scan=existingSnapshot?{ok:true,result:existingSnapshot}:await this.client.call('scan');if(!scan.ok||scan.result.page.url!==this.url)return;
+  const snapshot=scan.result,initial=document.key!==this.draftDocument||!this.draftBaseline;
+  const fields=snapshot.fields.filter(f=>!f.disabled&&['text','email','tel','textarea','select','autocomplete','radio','multiselect','date','month','year','number'].includes(f.kind)&&(typeof f.currentValue==='string'||f.kind==='multiselect'&&Array.isArray(f.currentValue)&&f.currentValue.every(v=>typeof v==='string'))&&!/密码|验证码|协议|声明|登录|密钥|令牌|password|captcha|consent|login|secret|token|otp/i.test(f.label)).map(f=>{
+   const section=snapshot.sections.find(s=>s.sectionId===f.sectionId),records=[...new Set(snapshot.fields.filter(x=>x.sectionId===f.sectionId).map(x=>x.recordId).filter(Boolean))];
+   return {fieldId:f.fieldId,label:f.label,kind:f.kind,currentValue:f.currentValue,sectionId:f.sectionId||'page',section:section?.label||f.context?.section||'个人信息',record:f.recordId?records.indexOf(f.recordId):-1};
+  });
+  const key=f=>JSON.stringify([f.section,f.record,f.label]),baseline=new Map(fields.map(f=>[key(f),JSON.stringify(f)]));
+  const changes=fields.filter(f=>initial||this.draftBaseline.get(key(f))!==JSON.stringify(f));
+  if(changes.length)await this.request('draft',{initial,fields:changes});
+  this.draftDocument=document.key;this.draftBaseline=baseline;
  }
  async tick(){
   if(this.stopped||this.running)return;
@@ -97,7 +137,10 @@ class JobFillService {
     catch(e){await report({...counts,status:this.stopped?'paused':'failed',issues:[...(counts.issues||[]),e.message],message:'填写已停止，请查看未完成事项。'}).catch(()=>{});}
     finally{this.running=false;}
    }
-   this.schedule();
+   // Read-only capture while idle; scanning during an execute would invalidate
+   // the executor's current snapshot. Confirmed materials already cover that run.
+   await this.captureDraft();
+   this.schedule(2000);
   }catch(e){
    await this.request('launch-report',{ticket:this.ticket,status:'failed',message:('官网读取未完成：'+e.message).slice(0,500)}).catch(()=>{});
    // A disconnected controller never opens new pages by itself.

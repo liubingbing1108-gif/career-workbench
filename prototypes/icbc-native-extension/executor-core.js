@@ -5,7 +5,7 @@
   else root.JobFillExecutorCore = api;
 })(typeof globalThis === 'object' ? globalThis : this, () => {
   'use strict';
-  const VERSION = '1.2.21';
+  const VERSION = '1.2.36';
   const clone = x => JSON.parse(JSON.stringify(x));
   const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
   const empty = v => v === '' || (Array.isArray(v) && !v.length);
@@ -32,7 +32,7 @@
       return {
         schemaVersion: 1, executorVersion: VERSION, sessionId, snapshotId: snapshot.id,
         page: adapter.page(), capabilities: { fill: true, ensureRecords: !!adapter.addRecord, openSection: !!adapter.openSection, saveDraft: !!adapter.saveDraft&&(!adapter.canSaveDraft||adapter.canSaveDraft()), upload: !!adapter.uploadAttachment, submit: false },
-        attachments:clone(attachments.map(({input,...item})=>item)),
+        attachments:clone(attachments.map(({input,root,...item})=>item)),
         sections: clone(sections), fields: fields.map(f => ({ fieldId: f.id, label: f.label, kind: f.kind, sectionId: f.sectionId || '', recordId: f.recordId || '', required: !!f.required, disabled: !!f.disabled, description: f.description || '', context: f.context || {}, blockedReason: f.blockedReason || '', constraints: f.constraints || {}, options: f.options || { state: 'not-enumerated', items: [] }, currentValue: clone(f.current) })),
         scanElapsedMs:Math.round(performance.now()-began), coverage: 'currently-accessible-fields', coverageDetails: adapter.coverage?.() || {}, validation: adapter.errors()
       };
@@ -42,8 +42,8 @@
       if (!snapshot || id !== snapshot.id || snapshot.page !== page()) fail('STALE_SNAPSHOT', '页面或扫描已改变，请重新扫描');
       return snapshot;
     }
-    function locate(saved) {
-      const f = fresh().find(x => x.id === saved.id);
+    function locate(saved, fields = fresh()) {
+      const f = fields.find(x => x.id === saved.id);
       if (!f || f.el !== saved.el || f.kind !== saved.kind || f.label !== saved.label) fail('STALE_FIELD', '字段被重建或移动，请重新扫描：' + saved.label);
       return f;
     }
@@ -61,14 +61,14 @@
       if (f.kind === 'date' && (!/^\d{4}-\d{2}-\d{2}$/.test(value) || (!Number.isFinite(Date.parse(value + 'T00:00:00Z')) || new Date(value + 'T00:00:00Z').toISOString().slice(0, 10) !== value))) fail('INVALID_DATE', '日期须为有效 YYYY-MM-DD');
       adapter.validate?.(f, value);
     }
-    function checkAssignment(a) {
+    function checkAssignment(a, fields) {
       keys(a, ['fieldId', 'value', 'overwrite', 'sourceRef']);
       if (!['emptyOnly', 'ifUnchanged', undefined].includes(a.overwrite)) fail('INVALID_REQUEST', 'overwrite 无效');
       if (a.sourceRef !== undefined && typeof a.sourceRef !== 'string') fail('INVALID_REQUEST', 'sourceRef 须为字符串');
       const saved = snapshot.fields.find(f => f.id === a.fieldId);
       if (!saved) fail('UNKNOWN_FIELD', '只允许扫描返回的字段标识：' + a.fieldId);
       if (saved.disabled) fail('READ_ONLY_FIELD', '字段不可写：' + saved.label);
-      const f = locate(saved); validateValue(f, a.value);
+      const f = locate(saved, fields); validateValue(f, a.value);
       if (!same(f.current, saved.current)) fail('VALUE_CHANGED', '扫描后该字段已被修改：' + f.label);
       if (!same(f.current, a.value) && !empty(f.current) && a.overwrite !== 'ifUnchanged') fail('EXISTING_VALUE', '已有值默认保留：' + f.label);
       return { saved, assignment: clone(a) };
@@ -79,7 +79,8 @@
       requireSnapshot(plan.snapshotId);
       if (!Array.isArray(plan.assignments) || !plan.assignments.length || plan.assignments.length > 500) fail('INVALID_REQUEST', 'assignments 需要 1–500 项');
       if (new Set(plan.assignments.map(a => a.fieldId)).size !== plan.assignments.length) fail('DUPLICATE_FIELD', '同一计划不能重复写同一字段');
-      const tasks = plan.assignments.map(checkAssignment);
+      const fields = fresh();
+      const tasks = plan.assignments.map(a=>checkAssignment(a, fields));
       return tasks;
     }
     function cached(method, args) {
@@ -123,9 +124,10 @@
           j.results.push({ fieldId: f.id, label: f.label, sourceRef: a.sourceRef, status: same(f.current, a.value) ? 'unchanged' : 'filled', expected: a.value, actual, elapsedMs: Math.round(performance.now() - began) });
         }
         await adapter.settle(ctx);
-        for (const r of j.results) if (!same(fresh().find(f => f.id === r.fieldId)?.current, r.expected)) fail('READBACK_MISMATCH', '整组回读失败：' + r.label);
+        const finalFields = fresh();
+        for (const r of j.results) if (!same(finalFields.find(f => f.id === r.fieldId)?.current, r.expected)) fail('READBACK_MISMATCH', '整组回读失败：' + r.label);
         j.preserved = 0;
-        for (const f of untouched) {if (!same(locate(f).current, f.current)) fail('UNPLANNED_CHANGE', '未计划字段发生变化：' + f.label);j.preserved++;}
+        for (const f of untouched) {if (!same(locate(f, finalFields).current, f.current)) fail('UNPLANNED_CHANGE', '未计划字段发生变化：' + f.label);j.preserved++;}
         j.validation = adapter.errors(); if (j.validation.length) fail('WEBSITE_VALIDATION', '网站存在可见校验提示', j.validation);
       },preflightMs);
     }

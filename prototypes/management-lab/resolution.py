@@ -55,7 +55,7 @@ class ResolutionTasks:
         with self.lock:
             task=self.tasks.get((jid,revision))
             if not task or (task.get('result') or {}).get('status')!='needs_inspection':raise Invalid('页面核对请求已失效')
-        result=self.lookup().inspect_browser(job,observation)
+        result=self.lookup().inspect_browser({**job,'source_url':job.get('official_url') or job.get('source_url') or job.get('url','')},observation)
         if result['status']=='ready':result['job']=self.store.set_official(jid,revision,result['entry'])
         with self.lock:
             task['result']=result

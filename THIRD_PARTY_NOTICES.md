@@ -1,9 +1,9 @@
 # 第三方依赖
 
-项目未内嵌第三方付费浏览器插件。浏览器原生 API 和招聘平台 DOM 类名用于互操作；历史调研材料不随源码分发。
+本项目采用[MIT](LICENSE)。不内嵌受限第三方浏览器插件、浏览器、模型客户端或模型权重。招聘平台DOM类名只用于互操作，私人调研材料不分发。
 
-直接运行依赖：pypdf（BSD-3-Clause）、jsonschema（MIT）。开发依赖：ReportLab（BSD）、python-docx（MIT）、Playwright（Apache-2.0）。它们由包管理器安装，许可证以已安装包和上游发行文件为准；传递依赖同样保留各自许可。Node 完整依赖版本见 package-lock.json，Python 直接依赖见 requirements 文件，已验证开发环境的完整版本见 requirements-dev.lock。
+直接运行依赖：MarkItDown（MIT）、pypdf（BSD-3-Clause）、jsonschema（MIT）。开发依赖：ReportLab（BSD）、python-docx（MIT）、Playwright（Apache-2.0）。由包管理器安装，传递依赖分别保留其发行许可；Python依赖见requirements文件，Node见package-lock.json。源码ZIP不捆绑依赖二进制。
 
-Codex CLI 或其他 Agent、Chrome 浏览器需用户另行安装，其账号、服务条款及费用由使用者自行配置。本仓库不重新分发这些客户端、模型或凭据。
+MarkItDown会安装文档解析、格式识别等传递依赖；开发锁用于Python3.12+，运行依赖由Python3.11+解析兼容版本。安装后可用pip show查看包许可证与上游信息。
 
-本项目源码当前尚未选择开源许可证；不得将依赖许可证视为整个项目已采用同一许可证。
+Codex或自选Agent和Chrome需使用者另行安装、登录，其服务条款及费用由使用者自行配置。本仓库不重新分发账号、密钥或登录态。

@@ -26,6 +26,8 @@ class App:
         self.intake = JobIntake()
         self.official = OfficialLookup(known_entries=lambda:[j['official_entry'] for j in self.store.list_jobs() if j.get('official_url_status')=='verified' and j.get('official_entry')])
         self.resolutions = ResolutionTasks(self.store,lambda:self.official)
+        self.start_progress = None
+        self.progress_status = None
 
     def jobs(self):
         counts = self.preparation_counts()
@@ -34,6 +36,7 @@ class App:
     def enrich(self, job, counts=None):
         extra = (self.preparation_counts() if counts is None else counts).get(job['id'], {})
         return {**job, 'preparation_count': extra.get('preparation_count', 0),
+                'continuation': extra.get('continuation') if job.get('application_status') != '已投递' else None,
                 'execution_count': job['execution_count'] + extra.get('execution_count', 0)}
 
 
@@ -122,10 +125,14 @@ def handler(app):
                         return self.send(200, app.store.update(jid, body.get("revision"), body.get("patch", {}), body.get("timeline")))
                     if method == "DELETE" and len(parts) == 4:
                         return self.send(200, app.delete_job(jid, body.get("revision"), body.get("confirmed")))
-                    if method == "POST" and len(parts) == 5 and parts[4] == "query":
+                    if method == 'POST' and len(parts)==5 and parts[4]=='application-url':
+                        return self.send(200,app.store.set_application_url(jid,body.get('revision'),body.get('url')))
+                    if method in ('POST','GET') and len(parts)==5 and parts[4]=='query':
                         app.store.get(jid)
-                        # No browser connection exists yet. Never fabricate a query result.
-                        return self.send(200, {"status": "unavailable", "changed": False, "message": "官网进度查询尚未接通，已保留原招聘进度。请打开官网查看后人工记录。"})
+                        if not app.start_progress:
+                            return self.send(200,{'status':'unavailable','changed':False,'message':'请从统一工作台打开此岗位，连接Chrome查询官网进度。'})
+                        result=app.start_progress(jid,'http://'+self.headers['Host']) if method=='POST' else app.progress_status(jid)
+                        return self.send(200,result)
                     if method=='POST' and len(parts)==5 and parts[4]=='resolution-choice':
                         return self.send(200,app.resolutions.choose(jid,body.get('url'),body.get('confirm_role') is True))
                     if method in ('GET','POST') and len(parts)==5 and parts[4]=='resolution':

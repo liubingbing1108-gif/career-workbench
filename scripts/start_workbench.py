@@ -28,6 +28,14 @@ def main():
     parser=argparse.ArgumentParser(description='Start the existing local Career Workbench. Initialize new installations separately.')
     parser.add_argument('--restart',action='store_true',help='Restart the verified local service (macOS/Linux only)')
     args=parser.parse_args()
+    paths=RUNTIME/'locations.json'
+    configured=json.loads(paths.read_text()).get('python') if paths.exists() else None
+    bundled=Path.home()/'.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3'
+    python=sys.executable if sys.prefix!=sys.base_prefix else configured or (str(bundled) if bundled.exists() else sys.executable)
+    if args.restart or not health():
+        check=subprocess.run([python,'-c','import markitdown, pypdf, jsonschema'],capture_output=True)
+        if check.returncode:
+            raise SystemExit('运行环境缺少文档转换依赖，请使用已安装 requirements.txt 的 Python 启动；现有服务未停止。')
     if args.restart and os.name=='nt':
         raise SystemExit('Windows 请先关闭原工作台服务，再运行启动命令。')
     if args.restart:
@@ -42,7 +50,6 @@ def main():
                     time.sleep(.1)
     if health():
         print('已运行：http://127.0.0.1:8768/');return
-    paths=RUNTIME/'locations.json'
     if not paths.exists():
         raise SystemExit('缺少原资料目录配置，拒绝启动空白资料库。请恢复 .runtime/locations.json。')
     locations=json.loads(paths.read_text())
@@ -50,10 +57,6 @@ def main():
     for key,filename in [('profile','lab.sqlite'),('management','management.sqlite3')]:
         if not (Path(locations[key])/filename).is_file():
             raise SystemExit('未找到原资料目录，未创建空白资料。')
-    # Prefer the explicitly activated environment. Preserve desktop installations
-    # that previously used its bundled Python, without requiring it on other hosts.
-    bundled=Path.home()/'.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3'
-    python=sys.executable if sys.prefix!=sys.base_prefix or not bundled.exists() else str(bundled)
     command=[python,str(ROOT/'prototypes/profile-lab/server.py'),'--port','8768','--data-dir',locations['profile'],'--management-data-dir',locations['management']]
     RUNTIME.mkdir(exist_ok=True)
     for name in ['server.out.log','server.err.log']:

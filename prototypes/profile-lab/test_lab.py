@@ -29,8 +29,8 @@ class ProfileLabTests(unittest.TestCase):
 
     def test_blank_form_exists_without_resume_and_manual_values_work(self):
         state = self.lab.state()
-        self.assertEqual(len(state["categories"]), 18)
-        self.assertEqual(len(state["fields"]), 13)
+        self.assertEqual(len(state["profile_modules"]), 14)
+        self.assertGreater(len(state["fields"]), 200)
         self.assertFalse(state["files"])
         entry = next(e for e in state["entries"] if e["category"] == "basic")
         self.assertFalse(entry["values"])
@@ -74,16 +74,19 @@ class ProfileLabTests(unittest.TestCase):
         self.assertEqual(materials["values"]["name"], "Alex Example")
         self.assertEqual(materials["values"]["city"], "示例城市")
 
-    def test_partial_repeated_entry_import_does_not_create_a_second_entry(self):
+    def test_partial_repeated_entry_rejected_then_complete_set_saved_once(self):
         preview = self.lab.upload("sample.txt", (SAMPLES / "sample.txt").read_bytes())
         employment = [c["id"] for c in preview["candidates"] if c["category"]=="employment"]
-        self.lab.commit_import(preview["id"], employment[:2], {})
-        self.lab.commit_import(preview["id"], employment[2:], {})
+        before=self.lab.state()
+        with self.assertRaisesRegex(LabError,'完整资料组'):
+            self.lab.commit_import(preview["id"], employment[:2], {})
+        self.assertEqual(self.lab.state(),before)
+        self.lab.commit_import(preview["id"], employment, {})
         self.assertEqual(len([e for e in self.lab.state()["entries"] if e["category"]=="employment"]), 1)
         self.assertEqual(len(self.lab.state()["versions"]), 1)
 
     def test_dynamic_field_definition_and_temporary_answer_have_separate_scope(self):
-        self.lab.add_field({"id":"availability_date","label":"可到岗日期","category":"preferences","type":"date"})
+        self.lab.add_field({"id":"availability_date","label":"可到岗日期","category":"additional","type":"date"})
         a, b = self.lab.new_session()["id"], self.lab.new_session()["id"]
         self.lab.answer(a, "availability_date", "2027-07-01")
         self.assertEqual(self.lab.materials(a)["values"]["availability_date"], "2027-07-01")
@@ -95,7 +98,7 @@ class ProfileLabTests(unittest.TestCase):
         self.assertTrue(any(f["id"]=="availability_date" for f in self.lab.state()["fields"]))
 
     def test_explicit_save_to_profile_reuses_answer_in_later_session(self):
-        self.lab.add_field({"id":"availability_date","label":"可到岗日期","category":"preferences","type":"date"})
+        self.lab.add_field({"id":"availability_date","label":"可到岗日期","category":"additional","type":"date"})
         a = self.lab.new_session()["id"]
         self.lab.answer(a, "availability_date", "2027-07-01", True)
         self.assertEqual(self.lab.materials(self.lab.new_session()["id"])["values"]["availability_date"], "2027-07-01")
@@ -136,13 +139,13 @@ class ProfileLabTests(unittest.TestCase):
         self.assertEqual(self.lab.state(), before)
 
     def test_new_category_fields_and_manual_versions_do_not_need_a_resume(self):
-        self.lab.add_field({"id":"certificate_level","label":"等级","category":"certificates","type":"select","options":["一级","二级"]})
+        self.lab.add_field({"id":"custom_certificate_grade","label":"测试自定义等级","category":"certificates","type":"select","options":["一级","二级"]})
         one = self.lab.mutate(lambda state:self.lab.new_entry(state,"certificates"))
         two = self.lab.mutate(lambda state:self.lab.new_entry(state,"certificates"))
         self.assertNotEqual(one["id"],two["id"])
-        self.lab.save_profile([{"entry_id":one["id"],"field_id":"certificate_level","value":"一级"}])
+        self.lab.save_profile([{"entry_id":one["id"],"field_id":"custom_certificate_grade","value":"一级"}])
         with self.assertRaises(LabError):
-            self.lab.save_profile([{"entry_id":two["id"],"field_id":"certificate_level","value":"三级"}])
+            self.lab.save_profile([{"entry_id":two["id"],"field_id":"custom_certificate_grade","value":"三级"}])
         entry = self.lab.mutate(lambda state:self.lab.new_entry(state,"employment"))
         version = self.lab.create_version(entry["id"], "description", "Manual fictional description")
         self.assertEqual(version["content"], "Manual fictional description")

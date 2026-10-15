@@ -107,6 +107,9 @@ class ExecutorBridge:
                 if not self.scan_receiver:
                     raise LabError('扫描接收未启用', 503)
                 return self.scan_receiver(connection['url'], data.get('snapshot'), connection['session_id'])
+            if action == 'draft':
+                from official_draft import save_official_draft
+                return save_official_draft(self.lab, connection['session_id'], connection['url'], data)
             if action == 'poll':
                 def take(state):
                     for session in state['sessions']:
@@ -144,8 +147,9 @@ class ExecutorBridge:
                     if not isinstance(issues, list) or any(not isinstance(i, str) or len(i) > 1000 for i in issues) or len(issues) > 500:
                         raise LabError('执行问题格式无效')
                     manual = [i['label'] + '：已选择由本人在官网填写' for i in job['confirmed_materials'].get('manual', [])]
-                    issues = list(dict.fromkeys(issues + manual))
-                    if manual and status == 'complete':
+                    skipped = [i['label'] + '：本次留空或跳过，可在官网补充' for i in job['confirmed_materials'].get('skipped', [])]
+                    issues = list(dict.fromkeys(issues + manual + skipped))
+                    if (manual or skipped) and status == 'complete':
                         status = 'needs_attention'
                     flags={key:data.get(key,False) for key in ('saved','attachment_verified','save_acknowledged','persistence_verified','draft_supported')}
                     if any(type(value) is not bool for value in flags.values()):raise LabError('保存或附件回读标记无效')

@@ -105,14 +105,50 @@ class RequirementSetTests(unittest.TestCase):
         p=self.start([dict(id='major',label='高中专业',required=True)],
                      [mapping('major','major','education',requirement('hs','one',filters=[condition('degree',['高中'],'education_level')]))])
         self.assertFalse(p['ready']);self.assertFalse(p['payload'])
-    def test_complete_collection_cannot_be_arbitrarily_deselected(self):
+    def test_default_all_respects_selection_and_explicit_coverage(self):
         f,m=self.collection('edu','education',education_rule('edu'));self.start([f],[m]);before=self.lab.state()
-        with self.assertRaises(LabError):self.app.select_entries(self.sid,'education',[self.rows['本科']['id']],'edu')
-        self.assertEqual(self.lab.state(),before)
+        self.app.select_entries(self.sid,'education',[self.rows['本科']['id']],'edu')
+        plan=self.app.plan(self.sid)
+        self.assertTrue(plan['ready'])
+        self.assertEqual([e['degree'] for e in self.answer(plan,'edu')],['本科'])
+        self.assertEqual(self.lab.state()['entries'],before['entries'])
+        self.app.select_entries(self.sid,'education',[self.rows['硕士']['id']],'edu')
+        plan=self.app.plan(self.sid)
+        self.assertFalse(plan['ready'])
+        self.assertTrue(any(i['kind']=='coverage' for i in plan['missing']))
+
+    def test_new_project_child_reuses_existing_data_and_scoped_edits(self):
+        for fid,label,kind in [('project_name','项目名称','text'),('project_started','开始日期','partial_date'),('project_description','项目描述','versioned_text')]:
+            if not any(f['id']==fid for f in self.lab.state()['fields']):
+                self.lab.add_field(dict(id=fid,label=label,category='projects',type=kind))
+        project=self.entry('projects',project_name='虚构校园项目',project_started='2023-11')
+        self.lab.create_version(project['id'],'project_description','虚构项目描述')
+        children=[dict(id='name',label='项目名称',required=True),dict(id='description',label='项目描述',required=True)]
+        f,m=self.collection('projects','projects',requirement('projects'),children)
+        labels={f['id']:f['label'] for f in self.lab.state()['fields']}
+        m['members']=[dict(website_id=c['id'],field_id=None,new_field=dict(label=labels[fid],category='projects',type='text')) for c,fid in zip(children,['project_name','project_description'])]
+        p=self.start([f],[m]);self.assertTrue(p['ready'])
+        self.assertEqual(self.answer(p,'projects'),[dict(project_name='虚构校园项目',project_description='虚构项目描述')])
+        before=copy.deepcopy(self.lab.state()['entries'])
+        self.app.edit_answer(self.sid,'projects','本次项目名称','session',entry_id=project['id'],child_id='name')
+        self.app.install_mapping(self.sid,dict(url='http://localhost/fiction',fields=[f]),dict(mappings=[m]))
+        self.assertEqual(self.answer(self.app.plan(self.sid),'projects')[0]['project_name'],'本次项目名称')
+        self.assertEqual(self.lab.state()['entries'],before)
+
+    def test_new_child_ambiguous_label_does_not_guess_a_field(self):
+        if not any(f['id']=='project_name' for f in self.lab.state()['fields']):
+            if not any(f['id']=='project_name' for f in self.lab.state()['fields']): self.lab.add_field(dict(id='project_name',label='项目名称',category='projects',type='text'))
+        if not any(f['id']=='project_other_name' for f in self.lab.state()['fields']): self.lab.add_field(dict(id='project_other_name',label='第二名称',category='projects',type='text'))
+        self.lab.mutate(lambda s:next(f for f in s['fields'] if f['id']=='project_other_name').update(aliases=['项目名称']))
+        self.entry('projects',project_name='虚构项目')
+        f,m=self.collection('projects','projects',requirement('projects'),[dict(id='name',label='项目名称',required=True)])
+        m['members']=[dict(website_id='name',field_id=None,new_field=dict(label='项目名称',category='projects',type='text'))]
+        with self.assertRaisesRegex(LabError,'多个资料位置'):
+            self.start([f],[m])
     def test_default_scalar_version_reused_without_decision(self):
-        self.lab.add_field(dict(id='travel',label='接受出差',category='preferences',type='text'))
+        if not any(f['id']=='travel' for f in self.lab.state()['fields']): self.lab.add_field(dict(id='travel',label='接受出差',category='preferences',type='text'))
         entry=self.entry('preferences',travel='是');self.lab.create_version(entry['id'],'travel','接受出差')
-        p=self.start([dict(id='travel',label='是否接受出差',required=True)],[mapping('travel','travel','preferences')])
+        p=self.start([dict(id='travel',label='是否接受出差',required=True)],[mapping('travel','travel','preferences',requirement('intent','one'))])
         self.assertEqual(p['decisions'],[]);self.assertEqual(self.answer(p,'travel'),'是')
     def test_full_time_scope_does_not_include_internships_or_need_choice(self):
         self.entry('employment',company='实习单位',employment_type='实习')
@@ -155,7 +191,8 @@ class RequirementSetTests(unittest.TestCase):
         with self.assertRaises(LabError):self.app.edit_answer(self.sid,'mentor','甲老师','update',entry_id=self.rows['本科']['id'])
         result=self.app.edit_answer(self.sid,'mentor','甲老师','update');fid=result['field']['id']
         state=self.lab.state();self.assertEqual(result['entry_id'],self.rows['硕士']['id'])
-        self.assertEqual(next(e for e in state['entries'] if e['id']==self.rows['硕士']['id'])['values'][fid],'甲老师')
+        self.assertNotIn(fid,next(e for e in state['entries'] if e['id']==self.rows['硕士']['id'])['values'])
+        self.assertEqual(self.answer(self.app.plan(self.sid),'mentor'),'甲老师')
         self.assertNotIn(fid,next(e for e in state['entries'] if e['id']==self.rows['本科']['id'])['values'])
         self.assertTrue(self.app.plan(self.sid)['ready'])
     def test_new_child_field_and_session_only_value_do_not_leak(self):
@@ -175,9 +212,14 @@ class RequirementSetTests(unittest.TestCase):
         intern=self.entry('employment',company='实习单位',employment_type='实习');full=self.entry('employment',company='全职单位',employment_type='全职')
         f,m=self.collection('work','employment',requirement('work','choose'));self.start([f],[m]);self.app.select_entries(self.sid,'employment',[intern['id']],'work')
         m['requirement']=requirement('work',filters=[condition('employment_type',['full_time'],'employment_type')]);self.app.mapper=Mapper([m])
-        self.app.scan(self.sid,dict(url='http://localhost/fiction',fields=[f]));self.assertEqual(self.answer(self.app.plan(self.sid),'work')[0]['company'],'全职单位')
+        self.app.scan(self.sid,dict(url='http://localhost/fiction',fields=[f]))
+        plan=self.app.plan(self.sid)
+        self.assertFalse(plan['ready'])
+        self.assertTrue(any(i['kind']=='selection' for i in plan['missing']))
+        self.app.select_entries(self.sid,'employment',[full['id']],'work')
+        self.assertEqual(self.answer(self.app.plan(self.sid),'work')[0]['company'],'全职单位')
     def test_obtained_highest_uses_explicit_completion_status(self):
-        self.lab.add_field(dict(id='education_status',label='就读状态',category='education',type='text'))
+        if not any(f['id']=='education_status' for f in self.lab.state()['fields']): self.lab.add_field(dict(id='education_status',label='就读状态',category='education',type='text'))
         self.lab.save_profile([dict(entry_id=e['id'],field_id='education_status',value='在读' if level=='硕士' else '已毕业') for level,e in self.rows.items()])
         rule=education_rule('completed',selection='highest');rule['filters'].append(condition('education_status',['completed'],'study_status'))
         p=self.start([dict(id='school',label='已取得最高学历院校',required=True)],[mapping('school','school','education',rule)])
@@ -197,22 +239,22 @@ class RequirementSetTests(unittest.TestCase):
         self.app.edit_answer(self.sid,'edu','否','session',entry_id=master['id'],field_id='has_award')
         self.assertTrue(self.app.plan(self.sid)['ready'])
     def test_contact_ambiguity_can_be_resolved_without_mixing_people(self):
-        for fid,label in [('person_name','姓名'),('person_phone','手机号')]:self.lab.add_field(dict(id=fid,label=label,category='family',type='text'))
-        first=self.entry('family',person_name='甲',person_phone='100');second=self.entry('family',person_name='乙',person_phone='200')
+        # Family fields are predeclared by the approved profile contract.
+        first=self.entry('family',family_name='甲',family_phone='100');second=self.entry('family',family_name='乙',family_phone='200')
         rule=requirement('contact','one',max_items=1)
         p=self.start([dict(id='name',label='紧急联系人姓名',required=True),dict(id='phone',label='紧急联系人电话',required=True)],
-                     [mapping('name','person_name','family',rule),mapping('phone','person_phone','family',rule)])
+                     [mapping('name','family_name','family',rule),mapping('phone','family_phone','family',rule)])
         self.assertFalse(p['ready']);self.assertTrue(p['decisions'])
         self.app.select_entries(self.sid,'family',[second['id']],'contact');p=self.app.plan(self.sid)
         self.assertTrue(p['ready']);self.assertEqual((self.answer(p,'name'),self.answer(p,'phone')),('乙','200'))
     def test_language_records_are_not_versions_or_forced_choices(self):
-        self.lab.add_field(dict(id='language_name',label='考试',category='language',type='text'))
+        if not any(f['id']=='language_name' for f in self.lab.state()['fields']): self.lab.add_field(dict(id='language_name',label='考试',category='language',type='text'))
         self.entry('language',language_name='CET4');self.entry('language',language_name='CET6')
         f,m=self.collection('all','language',requirement('languages'))
         p=self.start([f,dict(id='cet6',label='六级考试')],[m,mapping('cet6','language_name','language',requirement('cet6','one',filters=[condition('language_name',['CET6'])]))])
         self.assertEqual(len(self.answer(p,'all')),2);self.assertEqual(self.answer(p,'cet6'),'CET6');self.assertFalse(p['decisions'])
     def test_project_choice_depends_on_website_requirement(self):
-        self.lab.add_field(dict(id='project_name',label='项目',category='projects',type='text'))
+        if not any(f['id']=='project_name' for f in self.lab.state()['fields']): self.lab.add_field(dict(id='project_name',label='项目',category='projects',type='text'))
         first=self.entry('projects',project_name='项目甲');second=self.entry('projects',project_name='项目乙')
         specs=[self.collection('all','projects',requirement('all')),self.collection('representative','projects',requirement('representative','choose',max_items=1))]
         p=self.start([f for f,m in specs],[m for f,m in specs]);self.assertEqual(len(self.answer(p,'all')),2);self.assertEqual(len(p['decisions']),1)

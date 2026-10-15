@@ -90,10 +90,10 @@ class IncrementApplicationTests(unittest.TestCase):
     def test_new_website_field_update_creates_first_version_and_reuses_later(self):
         app,sid=self.app();result=app.edit_answer(sid,'f','新答案','update')
         fid=result['field']['id'];state=self.lab.state();self.assertTrue(any(f['id']==fid for f in state['fields']))
-        self.assertEqual(len([v for v in state['answer_versions'] if v['field_id']==fid]),1)
+        self.assertEqual(len([v for v in state['answer_versions'] if v['field_id']==fid]),0)
         item=next(i for i in app.plan(sid)['payload'] if i['website_field']['id']=='f');self.assertEqual(item['value'],'新答案')
         later=self.lab.new_session()['id'];app.mapper=FixtureMapper({'f':(fid,'additional')});app.scan(later,{'url':'http://localhost/later','fields':[{'id':'f','label':'新增问题F'}]})
-        self.assertEqual(app.plan(later)['automatic'][0]['value'],'新答案')
+        self.assertNotIn('新答案',str(app.plan(later)['payload']))
     def test_session_answer_creates_definition_but_not_shared_answer(self):
         app,sid=self.app();result=app.edit_answer(sid,'f','仅本次','session');fid=result['field']['id']
         self.assertEqual(next(i for i in app.plan(sid)['payload'] if i['website_field']['id']=='f')['value'],'仅本次')
@@ -103,13 +103,15 @@ class IncrementApplicationTests(unittest.TestCase):
         app,sid=self.app();result=app.edit_answer(sid,'f','临时答案','session')
         app.edit_answer(sid,'f','正式答案','update')
         self.assertEqual(next(i for i in app.plan(sid)['payload'] if i['website_field']['id']=='f')['value'],'正式答案')
-        self.assertEqual(next(v for v in self.lab.state()['answer_versions'] if v['field_id']==result['field']['id'])['content'],'正式答案')
+        self.assertFalse(any(v['field_id']==result['field']['id'] for v in self.lab.state()['answer_versions']))
 
-    def test_scalar_three_edit_actions_apply_selected_version_and_save_scope(self):
-        app,sid=self.app();res=app.edit_answer(sid,'f','初版','update');fid=res['field']['id'];version=next(v for v in self.lab.state()['answer_versions'] if v['field_id']==fid)
-        app.edit_answer(sid,'f','本次','session',version['id'],version['revision']);self.assertEqual(next(i for i in app.plan(sid)['payload'] if i['website_field']['id']=='f')['value'],'本次')
-        app.edit_answer(sid,'f','另存','new',version['id']);self.assertEqual(len([v for v in self.lab.state()['answer_versions'] if v['field_id']==fid]),2)
-        app.edit_answer(sid,'f','更新','update',version['id'],1);self.assertEqual(next(v for v in self.lab.state()['answer_versions'] if v['id']==version['id'])['content'],'更新')
+    def test_scalar_legacy_save_modes_remain_session_only(self):
+        app,sid=self.app();before=self.lab.state()['entries']
+        for mode in ['session','update','new']:
+            res=app.edit_answer(sid,'f',mode+'本次值',mode)
+            self.assertEqual(next(i for i in app.plan(sid)['payload'] if i['website_field']['id']=='f')['value'],mode+'本次值')
+            self.assertFalse(any(v['field_id']==res['field']['id'] for v in self.lab.state()['answer_versions']))
+        self.assertEqual(self.lab.state()['entries'],before)
     def test_basic_multiple_versions_reuse_default_without_reconfirmation(self):
         self.lab.upload('a.txt',b'Name: A');self.resolve();self.lab.upload('b.txt',b'Name: B');self.resolve()
         app,sid=self.app();self.assertFalse(any(i['website_field']['id']=='a' for i in app.plan(sid)['decisions']))
@@ -123,8 +125,8 @@ class IncrementApplicationTests(unittest.TestCase):
     def test_website_length_limit_applies_to_edit_of_existing_version(self):
         app,sid=self.app();res=app.edit_answer(sid,'f','短文','update');fid=res['field']['id']
         self.lab.mutate(lambda s:next(f for f in next(x for x in s['sessions'] if x['id']==sid)['website']['fields'] if f['id']=='f').update(maxLength=3))
-        version=next(v for v in self.lab.state()['answer_versions'] if v['field_id']==fid);before=self.lab.state()
-        with self.assertRaises(LabError):app.edit_answer(sid,'f','超过三个字','update',version['id'],version['revision'])
+        before=self.lab.state()
+        with self.assertRaises(LabError):app.edit_answer(sid,'f','超过三个字','update')
         self.assertEqual(before,self.lab.state())
 
     def test_bad_mapper_and_old_revision_cannot_mutate(self):

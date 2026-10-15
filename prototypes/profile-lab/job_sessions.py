@@ -6,6 +6,7 @@ from lab import LabError
 def same_role_form(url,target):
     a,b=urlsplit(url),urlsplit(target)
     if a.scheme!='https' or b.scheme!='https' or a.netloc!=b.netloc or a.username or a.password or a.port not in (None,443):return False
+    if url==target:return True
     identity=parse_qs(b.query).get('jobAdId')
     if identity and a.scheme==b.scheme=='https' and a.netloc==b.netloc and a.path=='/form' and parse_qs(a.query).get('jobAdId')==identity:return True
     from direct_entry import feishu_identity
@@ -16,6 +17,37 @@ def same_role_form(url,target):
 class JobSessions:
     def __init__(self, lab, store, preparation):
         self.lab, self.store, self.preparation = lab, store, preparation
+        preparation.confirmation_view = self.confirmation_view
+
+    def confirmation_view(self, session):
+        from store import Missing
+        jid = session.get('management_job_id')
+        if not jid:
+            return None
+        try:
+            job = self.store.get(jid)
+        except Missing:
+            return None
+        return {'session_id': session['id'], **{key: job.get(key) for key in ('id', 'revision', 'application_status', 'application_confirmed_at', 'timeline')}}
+
+    def confirm_application(self, sid, revision, confirmed):
+        from lab import find
+        from store import Missing, Conflict
+        if confirmed is not True:
+            raise LabError('请本人确认已在官网完成投递')
+        with self.lab.lock:
+            session = find(self.lab.state()['sessions'], sid)
+            if not session.get('management_job_id'):
+                raise LabError('本次准备未关联投递管理岗位')
+            if session.get('preparation', {}).get('execution', {}).get('status') in {'running', 'awaiting_executor'}:
+                raise LabError('填写仍在进行，请先暂停并到官网确认', 409)
+            try:
+                self.validate_destination(sid)
+                return self.store.confirm_application(session['management_job_id'], revision)
+            except Missing as error:
+                raise LabError(str(error), 404)
+            except Conflict as error:
+                raise LabError(str(error), 409)
 
     def open(self, data):
         with self.lab.lock:
@@ -43,21 +75,33 @@ class JobSessions:
                     def belongs(session):
                         url=(session.get('website') or session.get('target') or {}).get('url','')
                         if url==target:return True
-                        return same_role_form(url,target)
+                        binding=session.get('preparation_destination',{})
+                        return same_role_form(url,target) or binding.get('official_url')==target and binding.get('application_url')==url
                     existing=[s for s in self.lab.state()['sessions'] if s.get('management_job_id')==job_id and belongs(s)]
                     if existing:
                         return max(existing,key=lambda s:(bool(s.get('preparation',{}).get('execution')),bool(s.get('website')),bool(s.get('form_analysis'))))
                 supplied=data.get('application_url') or job.get('official_entry',{}).get('application_url')
+                notice=''
+                official_target=target
                 if supplied:
-                    if data.get('application_url') and job.get('official_entry',{}).get('verification')!='browser':
-                        raise LabError('申请表尚未通过浏览器核对')
-                    # The public role link stays in management. A browser-observed
-                    # applicant form belongs only to this local preparation record.
+                    # Preparing a user-selected form is allowed even when the
+                    # public job URL uses another identity or platform route.
+                    from official import public_https
+                    from store import Invalid
+                    try:public_https(supplied)
+                    except (Invalid,ValueError) as error:raise LabError(str(error))
                     if not same_role_form(supplied,target):
-                        raise LabError('申请表与已核验的官网岗位不一致')
+                        notice='申请表与岗位入口不同，已按指定申请表继续准备。'
                     target=supplied
-                return self.preparation.open_target(target, job['role'], job_id,
+                session=self.preparation.open_target(target, job['role'], job_id,
                     job.get('requires_preference', False))
+                def bind(state):
+                    from lab import find
+                    current=find(state['sessions'],session['id'])
+                    current['preparation_destination']={'official_url':official_target,'application_url':target}
+                    current['destination_notice']=notice
+                    return current
+                return self.lab.mutate(bind)
             url=data.get('url')
             try:
                 parsed=urlsplit(url.strip())
@@ -78,7 +122,9 @@ class JobSessions:
         if job.get('official_url_status')!='verified' or not target:
             raise LabError('官网投递链接尚未核验，请从管理记录重新开始投递')
         actual=(session.get('website') or session.get('target') or {}).get('url','')
-        if actual!=target and not same_role_form(actual,target):
+        binding=session.get('preparation_destination',{})
+        selected=binding.get('official_url')==target and binding.get('application_url')==actual
+        if actual!=target and not selected and not same_role_form(actual,target):
             raise LabError('当前申请表不属于这条官网投递链接，请重新开始投递')
 
     def counts(self):
@@ -89,6 +135,13 @@ class JobSessions:
                 summary = result.setdefault(job_id, {'preparation_count': 0, 'execution_count': 0})
                 summary['preparation_count'] += 1
                 summary['execution_count'] += bool(session.get('preparation', {}).get('execution'))
+                prep = session.get('preparation', {})
+                status = prep.get('execution', {}).get('status')
+                summary['continuation'] = {'session_id': session['id'], 'label':
+                    '填写进行中' if status in ('running', 'awaiting_executor') else
+                    '已暂停，可继续' if status == 'paused' else
+                    '中断待继续' if status == 'failed' else
+                    '待官网确认' if status in ('complete', 'needs_attention') else '草稿待继续'}
         return result
 
     def delete(self, job_id, revision, confirmed):

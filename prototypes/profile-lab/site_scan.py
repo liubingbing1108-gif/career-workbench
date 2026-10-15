@@ -82,8 +82,11 @@ class SiteScan:
         def recover(state):
             for session in state['sessions']:
                 prep=session.get('preparation',{})
-                if prep.get('scan_status')=='matching':prep.update(scan_status='failed',scan_error='资料匹配因服务重载中断，请重新读取本次官网后继续。')
-        if any(s.get('preparation',{}).get('scan_status')=='matching' for s in lab.state()['sessions']):lab.mutate(recover)
+                if prep.get('scan_status') in ('matching','failed'):
+                    pending=prep.pop('pending_analysis',None)
+                    if pending:session['form_analysis']=pending
+                    prep.update(scan_status='failed',scan_error='资料匹配因服务重载中断，请重新读取本次官网后继续。')
+        if any(s.get('preparation',{}).get('scan_status')=='matching' or s.get('preparation',{}).get('pending_analysis') for s in lab.state()['sessions']):lab.mutate(recover)
 
     def accept(self,url,snapshot,session_id=None):
         analysis=validate_analysis(scan_analysis(snapshot,url))
@@ -96,7 +99,7 @@ class SiteScan:
         self.lab.mutate(lambda state:find(state['sessions'],session['id']).setdefault('preparation',{}).update(scan_diagnostics=diagnostics))
         changed=session.get('website') and schema_shape(session.get('form_analysis',{}))!=schema_shape(analysis)
         if changed and session.get('preparation',{}).get('execution',{}).get('status') in ('running','awaiting_executor'):raise LabError('官网问题已变化，请先暂停并重新核对材料',409)
-        if session.get('website') and not changed:
+        if session.get('website') and not changed and session.get('preparation',{}).get('scan_status') not in ('failed','matching'):
             # Keep confirmed answers and choices; retain only the fresh schema so
             # newly supported controls can be reconciled through the same mapper.
             info={'executor_version':str(snapshot.get('executorVersion',''))[:30],'client_version':str(snapshot.get('coverageDetails',{}).get('clientRevision',''))[:30],'native_text_ready':snapshot.get('coverageDetails',{}).get('nativeTextBridgeReady') is True}
@@ -107,7 +110,7 @@ class SiteScan:
             if schema_shape(session.get('form_analysis',{}))!=schema_shape(analysis):
                 self.lab.mutate(lambda state:find(state['sessions'],sid)['preparation'].update(pending_analysis=analysis))
             return {'status':'matching'}
-        if changed:
+        if session.get('website'):
             self.lab.mutate(lambda state:find(state['sessions'],sid).update(form_analysis=analysis))
         else:save_analysis(self.lab,analysis,sid)
         self.lab.mutate(lambda state:find(state['sessions'],sid).setdefault('preparation',{}).update(scan_status='matching',scan_error=''))
@@ -124,7 +127,10 @@ class SiteScan:
             except Exception as error:
                 def failed(state):
                     remaining=next((s for s in state['sessions'] if s['id']==sid),None)
-                    if remaining:remaining['preparation'].update(scan_status='failed',scan_error=str(error)[:500])
+                    if remaining:
+                        prep=remaining['preparation'];pending=prep.pop('pending_analysis',None)
+                        if pending:remaining['form_analysis']=pending
+                        prep.update(scan_status='failed',scan_error=str(error)[:500],scan_error_code=getattr(error,'code',''),scan_failure_diagnostics=getattr(error,'diagnostics',{}))
                 self.lab.mutate(failed)
         thread=threading.Thread(target=match,daemon=True);self.threads.append(thread);thread.start()
         return {'status':'matching','message':'已读取官网，正在匹配资料；完成后工作台自动显示待确认内容。'}

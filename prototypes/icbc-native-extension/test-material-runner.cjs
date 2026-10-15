@@ -112,7 +112,7 @@ function fake(fail=false,manual=false){
    if(method==='scan'){r.result.capabilities={saveDraft:true};if(afterSave)r.result.fields[0].currentValue='';}
    return r;
   }};
-  const result=await run(client,material,async()=>{});assert.equal(result.saved,false);assert.equal(result.verified,1);assert(result.issues.some(i=>i.includes('官网没有保留')));
+  const result=await run(client,material,async()=>{});assert.equal(result.saved,false);assert.equal(result.verified,1);assert(result.issues.some(i=>i.includes('当前页面内容为空')));
  });
  await check('saved values are compared by section record and label after IDs change',()=>{
   const before={sections:[{sectionId:'old',label:'教育经历'}],fields:[{...field('a','学校甲'),label:'学校',sectionId:'old',recordId:'old-row-1'},{...field('b','学校乙'),label:'学校',sectionId:'old',recordId:'old-row-2'}]};

@@ -12,6 +12,8 @@ def classify(url):
     p = urlsplit(url); path = (p.path+'/'+p.fragment.split('?')[0].lstrip('/')).lower()
     if any(p.hostname==h or (p.hostname or '').endswith('.'+h) for h in ('mp.weixin.qq.com','nowcoder.com','niuqizp.com')):
         return 'recruitment_info'
+    if re.search(r'/(?:candidatehome/resume|resume/(?:edit|fill)|application/(?:edit|fill))(?:/|$)',path):
+        return 'application_form'
     if re.search(r'/(?:resume/[^/]+/apply|form|apply|application)(?:/|$)',path):
         return 'application_form'
     if re.search(r'/(?:position|job|campus|social)/(?:detail|[0-9a-f-]{8,})(?:/|$)',path) or any(k.lower() in {'jobadid','jobid','positionid'} for k in parse_qs(p.query)):

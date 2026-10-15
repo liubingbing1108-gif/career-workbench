@@ -58,3 +58,12 @@ class BridgeTests(unittest.TestCase):
         self.bridge.call('report',self.origin,{**base,'job_id':'manual-job','status':'complete','filled':2,'verified':2,'message':'独立字段完成','issues':[]})
         job=self.lab.state()['sessions'][0]['preparation']['execution']
         self.assertEqual(job['status'],'needs_attention');self.assertIn('虚构待补项',job['issues'][0])
+
+    def test_partial_fill_keeps_skipped_items_visible_after_completion(self):
+        token=self.connect();base=dict(connection=token,url=self.url)
+        self.lab.mutate(lambda s:s['sessions'][0].update(preparation={'execution':{'id':'partial-job','status':'awaiting_executor','confirmed_materials':{'url':self.url,'rows':[],'skipped':[{'label':'语言能力'}]}}}))
+        self.bridge.call('poll',self.origin,base)
+        self.bridge.call('report',self.origin,{**base,'job_id':'partial-job','status':'complete','filled':2,'verified':2,'message':'已有资料完成','issues':[]})
+        job=self.lab.state()['sessions'][0]['preparation']['execution']
+        self.assertEqual(job['status'],'needs_attention')
+        self.assertEqual(job['issues'],['语言能力：本次留空或跳过，可在官网补充'])

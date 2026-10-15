@@ -5,7 +5,7 @@ const tick=()=>new Promise(r=>setImmediate(r));
 function harness(){
  const nodes=new Map(),listeners={},requests=[],opened=[],launches=[];
  const node=s=>{if(!nodes.has(s))nodes.set(s,{hidden:false,innerHTML:'',textContent:'',value:'',append(){},contentWindow:{postMessage(){}},close(){},parentElement:{}});return nodes.get(s);};
- const c={console,Map,URLSearchParams,AbortController,DOMException,setTimeout,clearTimeout,setInterval(){},location:{origin:'http://test',hash:'',search:''},history:{replaceState(){}},document:{createElement:()=>({}),body:{classList:{add(){}}}},state:{sessions:[]},currentView:'management',refreshRevision:0,sessionId:null,preparationState:{},answerDrafts:new Map(),$:node,$$:()=>[],escapeHtml:String,safe:f=>f,showExecutionDialog(){},updatePreparationProgress(){},refresh:async()=>{},
+ const c={console,Map,URLSearchParams,AbortController,DOMException,setTimeout,clearTimeout,setInterval(){},location:{origin:'http://test',hash:'',search:''},history:{replaceState(){}},document:{createElement:()=>({querySelector:selector=>node("created:"+selector)}),body:{classList:{add(){}}}},state:{sessions:[]},currentView:'management',refreshRevision:0,sessionId:null,preparationState:{},answerDrafts:new Map(),$:node,$$:()=>[],escapeHtml:String,safe:f=>f,showExecutionDialog(){},updatePreparationProgress(){},refresh:async()=>{},
  window:{addEventListener:(n,f)=>{(listeners[n]??=[]).push(f);},scrollTo(){}},
  showView(view){c.currentView=view;(listeners['workbench:view-change']||[]).forEach(f=>f({detail:view}));},
  fetch:async(url,options)=>{if(url.endsWith('/bootstrap'))return {ok:true,json:async()=>({token:'test'})};const d=defer();requests.push({url,options,...d});return d.promise;},
@@ -43,4 +43,12 @@ test('a scanned form that is still matching shows progress, never an empty page'
  const h=harness();h.c.preparationState={scan_status:'matching'};
  h.c.updateTargetPanel({id:'b',target:{url:'https://example.com/role'},form_analysis:{sections:[]}});
  assert.equal(h.node('#target-waiting').hidden,false);assert(h.node('#target-waiting').innerHTML.includes('正在匹配你的资料'));
+});
+
+test('mapping failure takes priority over an old browser login prompt',()=>{
+ const h=harness();h.c.preparationState={scan_status:'failed',scan_error:'资料匹配服务连接失败',browser:{status:'needs_user'}};
+ h.c.updateTargetPanel({id:'b',target:{url:'https://example.com/role'},form_analysis:{sections:[]}});
+ assert(h.node('#target-waiting').innerHTML.includes('资料匹配未完成'));
+ assert(!h.node('#target-waiting').innerHTML.includes('官网需要你继续'));
+ assert(!h.node('#target-waiting').innerHTML.includes('去官网处理'));
 });

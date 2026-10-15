@@ -23,6 +23,13 @@ class LaunchTests(unittest.TestCase):
         details=self.launch.claim(ticket,self.origin);self.assertEqual(details['session_id'],self.session['id'])
         self.assertEqual(details['url'],'https://example.com/apply')
         with self.assertRaises(LabError):self.launch.claim(ticket,self.origin)
+    def test_retry_renews_connection_without_rescanning_confirmed_materials(self):
+        self.lab.mutate(lambda s:s['sessions'][0]['preparation'].update(execution={'status':'failed','confirmed_materials':{'rows':[]}}))
+        with patch.object(self.bridge,'status',return_value={'connected':True}):
+            result=self.launch.request(self.session['id'],'http://127.0.0.1:8768',reconnect=True)
+        details=self.launch.claim(result['ticket'],self.origin)
+        self.assertTrue(details['resume_confirmed'])
+        self.assertEqual(details['url'],'https://example.com/apply')
     def test_expired_or_untrusted_launch_cannot_disclose_connection(self):
         ticket=self.ticket()
         with self.assertRaises(LabError):self.launch.claim(ticket,'https://evil.example')
@@ -64,6 +71,16 @@ class LaunchTests(unittest.TestCase):
         self.assertEqual(self.launch.request(self.session['id'],'http://127.0.0.1:8768')['status'],'ready')
         fresh=self.launch.request(self.session['id'],'http://127.0.0.1:8768',rescan=True)
         self.assertIn('ticket',fresh);self.assertNotEqual(fresh['ticket'],ticket)
+
+    def test_explicit_rescan_reads_optional_sections_even_when_unsaved_page_is_preserved(self):
+        self.lab.mutate(lambda s:s['sessions'][0]['preparation'].update(preserve_unsaved_page=True))
+        first=self.ticket()
+        self.assertTrue(self.launch.claim(first,self.origin)['resume_confirmed'])
+        fresh=self.launch.request(self.session['id'],'http://127.0.0.1:8768',rescan=True)
+        self.assertFalse(self.launch.claim(fresh['ticket'],self.origin)['resume_confirmed'])
+        prep=self.lab.state()['sessions'][0]['preparation']
+        self.assertTrue(prep['preserve_unsaved_page'])
+        self.assertNotIn('execution',prep)
 
     def test_connected_controller_receives_launch_and_focus_without_opening_pages(self):
         ticket=self.ticket();details=self.launch.claim(ticket,self.origin)

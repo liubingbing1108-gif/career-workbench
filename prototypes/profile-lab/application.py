@@ -1,10 +1,13 @@
 """Website requirements -> scoped record sets -> versions -> validated answers."""
+from profile_schema import available as profile_available
+from profile_hierarchy import visible as profile_field_visible, mapping_fields
 import copy
 import json
 import re
 from recognizer import RecognitionError
 from lab import LabError, all_versions, default_version, find, category, put_answer, uid, validate_value
 from requirements import validate_requirement, resolve_set, matches, requirement
+from language_mapping import normalize as normalize_language, normalize_session, applicable as language_applicable, value as language_value
 
 
 def website_value(value, transform=None, options=None):
@@ -12,6 +15,9 @@ def website_value(value, transform=None, options=None):
     from requirements import normalized
     if not value or not transform:
         return value
+    if transform == 'is_full_time':
+        explicit={'全日制':'是','非全日制':'否','full-time':'是','full time':'是','part-time':'否','part time':'否'}
+        return explicit.get(str(value).strip().casefold(),'')
     if transform == 'education_level':
         level = normalized(value, 'education_level')
         converted = {1: '初中', 2: '高中', 3: '大专', 4: '本科', 5: '硕士', 6: '博士'}.get(level, value)
@@ -39,11 +45,12 @@ def entry_material(state, session, entry, group=None):
     selected_versions = session['selected_versions'] if legacy else session.get('scoped_versions', {}).get(group, {})
     overrides = session['overrides'] if legacy else session.get('scoped_overrides', {}).get(group, {})
     for field in state['fields']:
-        if field['category'] != entry['category']:
+        if field['category'] != entry['category'] or not profile_field_visible(state,entry,field['id'],session):
             continue
         key = entry['id'] + '/' + field['id']
         versions = all_versions(state, entry['id'], field['id'])
         selected = next((v for v in versions if v['id'] == selected_versions.get(key)), default_version(state, entry, field['id']))
+        versions = [v for v in versions if not v.get('profile_deleted') or (selected and v['id']==selected['id'])]
         value = selected['content'] if selected else entry['values'].get(field['id'], '')
         value = overrides.get(key, overrides.get(field['id'], value) if not category(entry['category'])[2] else value)
         values[field['id']] = value
@@ -72,6 +79,18 @@ class Application:
     def __init__(self, lab, mapper=None):
         self.lab, self.mapper = lab, mapper
 
+    @staticmethod
+    def mapping_error(error):
+        messages={
+            'connection_failed':'官网表单已读取，但资料匹配服务连接失败。已读取的字段和你的资料已保留，可重试资料匹配，无需到官网操作。',
+            'capacity':'官网表单已读取，资料匹配服务暂时繁忙。字段和资料已保留，可稍后重试。',
+            'auth_failed':'官网表单已读取，但工作台的模型登录验证失败。需要恢复本机模型连接，无需重新登录招聘网站。',
+            'timeout':'官网表单已读取，资料匹配超时。字段和资料已保留，可重试。'}
+        failure=LabError(messages.get(error.code,'官网表单已读取，但资料匹配未完成。字段和资料已保留，可重试。'),502)
+        failure.code=error.code
+        failure.diagnostics=error.diagnostics
+        return failure
+
     def scan(self, session_id, manifest):
         if not re.match(r'^https?://', manifest.get('url', '')):
             raise LabError('请提供具体表单链接')
@@ -87,9 +106,9 @@ class Application:
         if self.mapper is None:
             raise LabError('未配置语义映射器', 503)
         try:
-            output = self.mapper.map(fields, self.lab.state()['fields'])
+            output = self.mapper.map(fields, mapping_fields(self.lab.state()))
         except RecognitionError as error:
-            raise LabError(str(error), 502)
+            raise self.mapping_error(error)
         if output.get('website_fields'):
             manifest = {**manifest, 'fields': output['website_fields']}
             fields = manifest['fields']
@@ -99,8 +118,8 @@ class Application:
             # object-scope validation, and never include personal answers.
             from mapping import WebsiteMapper
             if error.status!=502 or not isinstance(self.mapper,WebsiteMapper):raise
-            try:corrected=self.mapper.map(fields,self.lab.state()['fields'],str(error))
-            except RecognitionError as failure:raise LabError(str(failure),502)
+            try:corrected=self.mapper.map(fields,mapping_fields(self.lab.state()),str(error))
+            except RecognitionError as failure:raise self.mapping_error(failure)
             return self.install_mapping(session_id,manifest,corrected)
 
     def install_mapping(self, session_id, manifest, output):
@@ -121,7 +140,9 @@ class Application:
             groups = {}
             for m in mappings:
                 website = find(fields, m['website_id'])
-                if m.get('transform') not in {None,'education_level','academic_degree_level','month','year'}:
+                self._legacy_scope(state, m, website)
+                normalize_language(state, website, m)
+                if m.get('transform') not in {None,'education_level','academic_degree_level','is_full_time','month','year'}:
                     raise LabError('不支持的字段转换',502)
                 cat = m.get('category')
                 definition = m.get('new_field')
@@ -161,6 +182,10 @@ class Application:
                     raise LabError('单项字段缺少资料位置', 502)
                 if definition:
                     self._check_definition(definition, cat)
+                    if not m.get('field_id') and not website.get('collection'):
+                        existing = self._existing_field(state, definition)
+                        if existing:
+                            m.update(field_id=existing['id'], status='mapped', new_field=None)
                 if category(cat)[2]:
                     rule = validate_requirement(m.get('requirement'), cat, state['fields'])
                     m['requirement'] = rule
@@ -168,27 +193,40 @@ class Application:
                         raise LabError('同一网站资料组的范围不一致', 502)
                     groups[rule['group']] = (cat, rule)
                 elif m.get('requirement'):
-                    raise LabError('单项资料不能套用重复记录范围', 502)
+                    raise LabError(f"{website['label']}（{cat}）是单项资料，requirement 必须为 null，不能套用重复记录范围", 502)
                 children, members = website.get('children', []), m.setdefault('members', [])
                 if {c['id'] for c in children} != {c['website_id'] for c in members} or len(children) != len(members):
                     raise LabError('未完整对应集合子字段', 502)
                 for member in members:
-                    if member.get('transform') not in {None, 'education_level', 'academic_degree_level', 'month', 'year'}:
+                    if member.get('transform') not in {None, 'education_level', 'academic_degree_level', 'is_full_time', 'month', 'year'}:
                         raise LabError('不支持的字段转换')
                     if member.get('field_id'):
                         if find(state['fields'], member['field_id'])['category'] != cat:
                             raise LabError('集合子字段不属于同一对象', 502)
                     elif member.get('new_field'):
                         self._check_definition(member['new_field'], cat)
+                        # A proposed new field may duplicate the established schema.
+                        # Reuse only an exact, unique label/alias in this object.
+                        existing = self._existing_field(state, member['new_field'])
+                        if existing:
+                            member['field_id'] = existing['id']
+                            member['new_field'] = None
                     else:
                         raise LabError('集合子字段含义未确定', 502)
                     if member.get('required_when'):
                         validate_requirement(requirement('condition', filters=member['required_when']), cat, state['fields'])
             old_website = session.get('website', {})
+            old_fields = {f['id']:f for f in old_website.get('fields', [])}
             # Wording and a model's renamed group ID do not erase a user's
             # choices. Reuse the established group for the same website object.
             for m in mappings:
                 previous = next((p for p in old_website.get('mappings', []) if p['website_id'] == m['website_id'] and p.get('category') == m.get('category') and p.get('requirement')), None)
+                if not previous and m.get('requirement'):
+                    current_field=find(fields,m['website_id'])
+                    peers=[p for p in old_website.get('mappings',[]) if p.get('category')==m.get('category') and p.get('requirement')
+                           and old_fields.get(p['website_id'],{}).get('label')==current_field['label']
+                           and bool(old_fields.get(p['website_id'],{}).get('collection'))==bool(current_field.get('collection'))]
+                    if len(peers)==1:previous=peers[0]
                 if previous and m.get('requirement'):
                     old_group, new_group = group_id(previous), group_id(m)
                     for peer in mappings:
@@ -196,7 +234,6 @@ class Application:
                             peer['requirement']['group'] = old_group
             groups = {group_id(m): (m['category'], m['requirement']) for m in mappings if m.get('requirement')}
             old_rules = {group_id(m): m.get('requirement') for m in old_website.get('mappings', [])}
-            old_fields = {f['id']:f for f in old_website.get('fields', [])}
             for mapping in mappings:
                 cat=mapping.get('category')
                 if not cat or category(cat)[2] or not mapping.get('field_id'):
@@ -228,17 +265,81 @@ class Application:
             # Changed scopes are revalidated by resolve_set. Retain explicit
             # choices instead of silently falling back to selecting every row.
             for group, (_, rule) in groups.items():
-                if old_website.get('contract_version') == 2 and group in old_rules and {k:v for k,v in old_rules[group].items() if k != 'summary'} != {k:v for k,v in rule.items() if k != 'summary'}:
+                if old_website.get('contract_version') == 2 and group in old_rules and {k:v for k,v in (old_rules[group] or {}).items() if k != 'summary'} != {k:v for k,v in rule.items() if k != 'summary'}:
                     session.setdefault('preparation', {}).pop('preview', None)
+            self._carry_synonymous_answers(state, session, mappings)
             session['website'] = {**copy.deepcopy(manifest), 'mappings': mappings, 'contract_version': 2,
                                   'engine': output.get('engine', '虚构夹具映射')}
             return session['website']
         return self.lab.mutate(save)
 
     @staticmethod
+    def _carry_synonymous_answers(state, session, mappings):
+        """Rebinding a proven synonym preserves this application's text and drafts."""
+        for mapping in mappings:
+            old = next((m for m in session.get('website', {}).get('mappings', [])
+                        if m['website_id'] == mapping['website_id'] and m.get('category') == mapping.get('category')), None)
+            if not old or group_id(old) != group_id(mapping):
+                continue
+            for target in mapping.get('members') or [mapping]:
+                source = next((m for m in old.get('members') or [old] if m['website_id'] == target['website_id']), None)
+                fid = target.get('field_id')
+                if not source or not fid or fid == source.get('field_id'):
+                    continue
+                field = find(state['fields'], fid)
+                prior = find(state['fields'], source['field_id']) if source.get('field_id') else source.get('new_field') or {}
+                labels = lambda f: {s.strip().casefold() for s in [f.get('label', ''), *f.get('aliases', [])] if s}
+                if not labels(field) & labels(prior):
+                    continue
+                group = group_id(mapping); prep = session.setdefault('preparation', {})
+                for entry in state['entries']:
+                    if entry['category'] != mapping.get('category'):
+                        continue
+                    old_key = session['id']+'/'+group+'/'+entry['id']+'/'+(source.get('field_id') or source['website_id'])
+                    new_key = session['id']+'/'+group+'/'+entry['id']+'/'+fid
+                    drafts = prep.get('drafts', {}); draft = drafts.get(old_key)
+                    if draft and draft.get('value') is not None:
+                        current = drafts.get(new_key, {})
+                        if current.get('value') not in (None, draft['value']):
+                            raise LabError('同义字段存在不同编辑草稿，请先核对', 409)
+                        drafts[new_key] = dict(value=draft['value'], revision=current.get('revision', 0)+1)
+                        drafts[old_key] = dict(value=None, revision=draft['revision']+1)
+                    values = entry_material(state, session, entry, group)['values']
+                    value = values.get(source.get('field_id'), '')
+                    if value:
+                        if values.get(fid) not in ('', value):
+                            raise LabError('同义字段已有不同内容，请先核对', 409)
+                        session.setdefault('scoped_overrides', {}).setdefault(group, {})[entry['id']+'/'+fid] = value
+                    child = target['website_id'] if mapping.get('members') else ''
+                    old_issue = '/'.join([mapping['website_id'], entry['id'], child, source.get('field_id') or '', 'value'])
+                    new_issue = '/'.join([mapping['website_id'], entry['id'], child, fid, 'value'])
+                    for key in ('deferred', 'omitted_optional', 'removed_optional'):
+                        if old_issue in prep.get(key, []):
+                            prep[key] = list(dict.fromkeys(new_issue if k == old_issue else k for k in prep[key]))
+                prep.pop('preview', None)
+
+    @staticmethod
+    def _existing_field(state, definition):
+        label = definition['label'].strip().casefold()
+        matches = [f for f in state['fields'] if f['category'] == definition['category'] and
+                   label in {s.strip().casefold() for s in [f['label'], *f.get('aliases', [])]}]
+        # Multiple existing locations require semantic review, not another field.
+        if len(matches) > 1:
+            raise LabError('同义字段对应多个资料位置，请明确字段对应关系', 409)
+        return matches[0] if matches else None
+
+    @staticmethod
     def _check_definition(definition, cat):
         if definition.get('category') != cat or not definition.get('label') or definition.get('type') not in {'text', 'multiline', 'partial_date', 'date', 'number', 'select', 'versioned_text'}:
             raise LabError('新字段归属或类型无效', 502)
+
+    @staticmethod
+    def _legacy_scope(state, mapping, website):
+        # Read and write must resolve pre-library scalar questions identically.
+        legacy = state.get('profile_legacy_single_entries', {}).get(mapping.get('category'), [])
+        if len(legacy) == 1 and not mapping.get('requirement') and not website.get('collection'):
+            mapping['requirement'] = requirement(mapping['website_id'], selection='one')
+            mapping['entry_ids'] = list(legacy)
 
     def _group(self, state, session, mapping, website_fields):
         cat, rule = mapping['category'], copy.deepcopy(mapping['requirement'])
@@ -247,20 +348,28 @@ class Application:
         if any(find(website_fields, m['website_id']).get('required') for m in peers):
             rule['min_items'] = max(1, rule['min_items'] or 0)
         drafts = session.get('group_drafts', {}).get(group, [])
-        entries = [entry_material(state, session, e, group) for e in state['entries'] if e['category'] == cat and not e.get('application_excluded') and
+        removed = session.get('material_controls', {}).get('removed_records', {}).get(group, [])
+        entries = [entry_material(state, session, e, group) for e in state['entries'] if e['category'] == cat and profile_available(e,session) and not e.get('application_excluded') and
+                   (language_applicable(e, mapping) or e['id'] in drafts) and
                    e['id'] not in session['website'].get('excluded_entry_ids',[]) and
                    ('entry_ids' not in mapping or e['id'] in mapping['entry_ids'] or e['id'] in drafts) and
-                   (e['values'] or e['id'] in drafts or any(v['entry_id'] == e['id'] for v in state['versions'] + state['answer_versions']))]
-        selected, options, issues = resolve_set(entries, rule, session.get('group_choices', {}).get(group, mapping.get('recommended_ids')))
+                   (e['values'] or e['id'] in drafts or e['id'] in mapping.get('entry_ids', []) or any(v['entry_id'] == e['id'] for v in state['versions'] + state['answer_versions']))]
+        ids = session.get('group_choices', {}).get(group, mapping.get('recommended_ids'))
+        selection_rule = {**rule, 'selection':'choose'} if rule['selection']=='all' and ids is not None else rule
+        selected, options, issues = resolve_set([e for e in entries if e['id'] not in removed], selection_rule, ids)
+        # "all" is the initial selection, not evidence that every stored row is
+        # mandatory. Explicit coverage, scope and count constraints are checked
+        # by resolve_set against the user's current selection.
         # New rows stay editable while their scope fields are being completed.
         for entry in entries:
-            if entry['id'] in drafts and entry not in selected and not any(entry['values'].values()):
+            if entry['id'] not in removed and entry['id'] in drafts and entry not in selected and not any(entry['values'].values()) and (ids is None or entry['id'] in ids):
                 selected.append(entry)
         return selected, options, issues, rule
 
     def select_entries(self, session_id, cat, entry_ids, group=None):
         def select(state):
             session = find(state['sessions'], session_id)
+            normalize_session(state, session)
             mappings = [m for m in session.get('website', {}).get('mappings', []) if m.get('category') == cat and m.get('requirement')]
             groups = {group_id(m) for m in mappings}
             if group is None:
@@ -270,11 +379,11 @@ class Application:
             else:
                 target = group
             mapping = next((m for m in mappings if group_id(m) == target), None)
-            if not mapping or mapping['requirement']['selection'] not in {'choose', 'one', 'highest'}:
+            if not mapping or mapping['requirement']['selection'] not in {'all', 'choose', 'one', 'highest'}:
                 raise LabError('网站要求完整或指定资料，此集合不提供任意勾选')
             if len(set(entry_ids)) != len(entry_ids):
                 raise LabError('经历选择重复')
-            if mapping['requirement']['selection'] in {'one', 'highest'} and len(entry_ids) != 1:
+            if mapping['requirement']['selection'] in {'one', 'highest'} and len(entry_ids) > 1:
                 raise LabError('此问题需要确定一个对象')
             _, options, _, _ = self._group(state, session, mapping, session['website']['fields'])
             if any(eid not in {e['id'] for e in options} for eid in entry_ids):
@@ -289,8 +398,9 @@ class Application:
     def plan(self, session_id):
         state = self.lab.state()
         session = find(state['sessions'], session_id)
+        normalize_session(state, session)
         website = session.get('website')
-        result = {'website': website, 'decisions': [], 'automatic': [], 'missing': [], 'payload': [], 'session': session}
+        result = {'website': website, 'decisions': [], 'automatic': [], 'missing': [], 'payload': [], 'material_items': [], 'session': session}
         if not website:
             return result
         if website.get('contract_version') != 2:
@@ -302,8 +412,13 @@ class Application:
         emitted = set()
         for m in website['mappings']:
             field = find(website['fields'], m['website_id'])
+            # Prior scalar mappings retain their original object after the
+            # library starts allowing multiple records. Newly added records
+            # cannot silently replace the material of an existing application.
+            self._legacy_scope(state, m, field)
             group = group_id(m)
             item = {'website_field': field, 'mapping': m, 'group_id': group}
+            result['material_items'].append(item)
             if m['status'] == 'ambiguous':
                 self._missing(result, item, m.get('reason') or '网站问题含义尚未确定', editable=False)
                 continue
@@ -318,10 +433,11 @@ class Application:
                 eligible={e['id'] for e in options}
                 item['catalog']=[]
                 for stored in state['entries']:
-                    if stored['category']!=cat or stored['id'] in website.get('excluded_entry_ids',[]) or stored.get('application_excluded'):
+                    if stored['id'] in session.get('material_controls', {}).get('removed_records', {}).get(group, []):continue
+                    if stored['category']!=cat or stored['id'] in website.get('excluded_entry_ids',[]) or stored.get('application_excluded') or not profile_available(stored,session):
                         continue
                     material=entry_material(state,session,stored,group)
-                    if not any(material['values'].values()):continue
+                    if not any(material['values'].values()) and not stored.get('set_versions') and stored['id'] not in session.get('group_drafts', {}).get(group, []):continue
                     unknown=[i['field_id'] for i in issues if i.get('entry_id')==stored['id'] and i.get('field_id')]
                     material['eligibility']='eligible' if stored['id'] in eligible else 'needs_scope' if unknown else 'outside_scope'
                     material['scope_fields']=unknown
@@ -337,6 +453,8 @@ class Application:
                     result['decisions'].append(item)
                 if field.get('collection'):
                     item['value'] = []
+                    if not selected and not options and not issues and not field.get('required'):
+                        self._missing(result,item,'暂无适用资料，建议补充或明确本次不填',editable=False,kind='count',blocking=False)
                     for entry in selected:
                         projected = {}
                         choices = []
@@ -345,7 +463,9 @@ class Application:
                             child = next((c for c in field.get('children', []) if c['id'] == member['website_id']), None)
                             fid = member.get('field_id')
                             child = child or {'id': member['website_id'], 'label': find(state['fields'], fid)['label']}
-                            value = entry['values'].get(fid, '')
+                            value, alias_error = language_value(entry, member, session, group)
+                            definition=next((f for f in state['fields'] if f['id']==fid),{})
+                            if definition.get('widget') in {'file','files'}:value=''
                             if not fid:
                                 value = session.get('new_answers', {}).get(group + '/' + entry['id'] + '/' + child['id'], '')
                             value = website_value(value, member.get('transform'), child.get('options'))
@@ -363,19 +483,19 @@ class Application:
                                 for c, outcome in zip(conditions, evaluations):
                                     if outcome is None:
                                         self._missing(result, item, '需补充条件判断资料', entry['id'], c['field_id'], editable=True, kind='scope')
-                            error = value_error(value, constraints)
+                            error = alias_error or value_error(value, constraints)
                             if value and child.get('type') in {'month', 'year'} and not re.fullmatch(r'\d{4}-\d{2}' if child['type'] == 'month' else r'\d{4}', str(value)):
                                 error = child['label'] + '需要明确的' + ('年月' if child['type'] == 'month' else '年份')
                             if error:
                                 self._missing(result, item, error, entry['id'], fid, child['id'], True, blocking=bool(constraints.get('required')))
-                            elif not fid:
-                                self._missing(result, item, '可选补充：' + child['label'], entry['id'], None, child['id'], True)
+                            elif not str(value).strip() and any(c['id'] == child['id'] for c in field.get('children', [])) and not (conditions and any(v is False for v in evaluations)):
+                                self._missing(result, item, '建议补充：' + child['label'], entry['id'], fid, child['id'], True)
                         entry['answer_choices'] = choices
                         entry['answer_values'] = projected
                         item['value'].append(projected)
                     bucket = 'decisions' if rule['selection'] == 'choose' or (rule['selection'] in {'one', 'highest'} and len(options) > 1) else 'automatic'
                     result[bucket].append(item)
-                    if not issues and not any(x['website_field']['id'] == field['id'] for x in result['missing']):
+                    if not issues and not any(x['website_field']['id'] == field['id'] and x['blocking'] for x in result['missing']):
                         result['payload'].append(item)
                     continue
                 index = field.get('row_index')
@@ -389,15 +509,16 @@ class Application:
                     continue
                 entry = selected[index or 0]
             else:
-                entry = next((entry_material(state, session, e, group) for e in state['entries'] if e['category'] == cat and e['id'] not in website.get('excluded_entry_ids',[])), None)
+                entry = next((entry_material(state, session, e, group) for e in state['entries'] if e['category'] == cat and profile_available(e,session) and (not next((f.get('entry_id') for f in state['fields'] if f['id']==m.get('field_id')),None) or e['id']==next(f['entry_id'] for f in state['fields'] if f['id']==m.get('field_id'))) and e['id'] not in website.get('excluded_entry_ids',[])), None)
             fid = m.get('field_id')
             choice = next((c for c in entry['choices'] if c['field']['id'] == fid), None) if entry else None
             value = choice['content'] if choice else session.get('new_answers', {}).get(group + '/' + (entry['id'] if entry else '') + '/' + field['id'], '')
+            if choice and choice['field'].get('widget') in {'file','files'}:value=''
             value = website_value(value,m.get('transform'),field.get('options'))
             item.update(value=value, choice=choice, entry_id=entry['id'] if entry else None)
             error = value_error(value, field)
-            if error or (m['status'] == 'new' and not value):
-                self._missing(result, item, error or ('请确认：' if field.get('decision_required') else '补充（可留空）：') + field['label'], item['entry_id'], fid, editable=True, blocking=bool(field.get('decision_required')))
+            if error or not str(value).strip():
+                self._missing(result, item, error or ('请确认：' if field.get('decision_required') else '建议补充：') + field['label'], item['entry_id'], fid, editable=True, blocking=bool(field.get('decision_required')))
             elif not any(x['group_id'] == group for x in result['missing']):
                 result['automatic'].append(item)
                 result['payload'].append(item)
@@ -434,31 +555,39 @@ class Application:
                 answer = next(iter(answers))
                 if not value_error(answer, site):
                     item['previous_answer'] = answer
+        from material_sets import MaterialSets
+        MaterialSets(self).apply_controls(state, result)
+        MaterialSets(self).decorate(state, result)
         return result
 
     @staticmethod
-    def _missing(result, item, message, entry_id=None, field_id=None, child_id=None, editable=False, kind='value', blocking=False):
+    def _missing(result, item, message, entry_id=None, field_id=None, child_id=None, editable=False, kind='value', blocking=None):
         result['missing'].append({**item, 'message': message, 'entry_id': entry_id, 'field_id': field_id,
                                   'child_id': child_id, 'editable': editable, 'kind': kind,
-                                  'blocking': blocking or bool(item['website_field'].get('required')) or kind != 'value'})
+                                  'blocking': bool(blocking) or (not child_id and bool(item['website_field'].get('required'))) or (blocking is None and kind != 'value')})
 
     def add_entry(self, session_id, website_id):
         def add(state):
             session = find(state['sessions'], session_id)
+            normalize_session(state, session)
             m = next((m for m in session['website']['mappings'] if m['website_id'] == website_id), None)
             if m is None:
                 raise LabError('网站问题不存在')
             if not m.get('requirement') or not category(m['category'])[2]:
                 raise LabError('此问题不支持新增资料记录')
             entry = self.lab.new_entry(state, m['category'])
+            if m.get('record_kind') == 'language_ability':
+                entry['record_type'] = 'ability'
             group = group_id(m)
             session.setdefault('group_drafts', {}).setdefault(group, []).append(entry['id'])
             return entry
         return self.lab.mutate(add)
 
     def _answer_target(self, state, session, website_id, entry_id=None, field_id=None, child_id=None):
+        normalize_session(state, session)
         website = find(session['website']['fields'], website_id)
         mapping = next(m for m in session['website']['mappings'] if m['website_id'] == website_id)
+        self._legacy_scope(state, mapping, website)
         if mapping['status'] == 'ambiguous':
             raise LabError('请先明确网站问题的资料范围，不能保存任意文本代替')
         member, constraint = mapping, website
@@ -482,6 +611,8 @@ class Application:
             constraint = constraint or {'id': field_id, 'label': find(state['fields'], field_id)['label']}
         cat = mapping.get('category') or 'additional'
         if category(cat)[2]:
+            if not mapping.get('requirement'):
+                raise LabError('此问题缺少资料范围，请重新读取网站要求', 409)
             if not entry_id:
                 selected, _, _, _ = self._group(state, session, mapping, session['website']['fields'])
                 index = website.get('row_index')
@@ -500,9 +631,11 @@ class Application:
             if entry_id not in permitted:
                 raise LabError('此记录不属于该网站问题的范围')
         else:
-            entry = self.lab.new_entry(state, cat)
+            owner=next((f.get('entry_id') for f in state['fields'] if f['id']==member.get('field_id')),None)
+            entry = find(state['entries'],owner) if owner else self.lab.new_entry(state, cat)
         fid = member.get('field_id')
         definition = find(state['fields'], fid) if fid else None
+        if definition and definition.get('entry_id') and definition['entry_id']!=entry['id']:raise LabError('字段属于另一条资料，不能跨记录保存')
         return mapping, member, constraint, entry, definition
 
     def select_version(self, session_id, website_id, version_id, entry_id=None, field_id=None, child_id=None):
@@ -525,13 +658,15 @@ class Application:
         def save(state):
             session = find(state['sessions'], session_id)
             m, member, website, entry, field = self._answer_target(state, session, website_id, entry_id, field_id, child_id)
+            from profile_group_versions import enabled as versions_enabled
+            effective_mode=mode if versions_enabled(state,entry) else 'session'
             error = value_error(website_value(value, member.get('transform'),website.get('options')), {**website, 'required': False})
             if error:
                 raise LabError(error)
             if field is None:
                 definition = member.get('new_field') or {'label': website['label'], 'category': entry['category'], 'type': 'text'}
                 self._check_definition(definition, entry['category'])
-                field = next((f for f in state['fields'] if f['category'] == entry['category'] and f['label'] == definition['label']), None)
+                field = self._existing_field(state, definition)
                 if field is None:
                     options = [o.get('value', o.get('label')) if isinstance(o, dict) else o for o in website.get('options', [])]
                     # Unopened custom dropdowns expose no domain. Store the user
@@ -548,14 +683,14 @@ class Application:
             validate_value(field, value)
             versions = all_versions(state, entry['id'], field['id'])
             version = find(versions, version_id) if version_id else default_version(state, entry, field['id'])
-            if mode == 'update' and version and expected_revision is not None and version['revision'] != expected_revision:
+            if effective_mode == 'update' and version and expected_revision is not None and version['revision'] != expected_revision:
                 raise LabError('此版本已经更新，请刷新后重新编辑', 409)
             key, group = entry['id'] + '/' + field['id'], group_id(m)
             overrides = session.setdefault('scoped_overrides', {}).setdefault(group, {})
-            if mode == 'session':
+            if effective_mode == 'session':
                 overrides[key] = value
             else:
-                target = put_answer(state, entry, field, value, 'replace' if mode == 'update' else 'new',
+                target = put_answer(state, entry, field, value, 'replace' if effective_mode == 'update' else 'new',
                                     version['id'] if version else None, name=name or '官网补充版本')
                 session.setdefault('scoped_versions', {}).setdefault(group, {})[key] = target['id']
                 overrides.pop(key, None)

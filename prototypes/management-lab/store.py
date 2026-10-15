@@ -8,7 +8,8 @@ import re
 from pathlib import Path
 import sqlite3
 import uuid
-from datetime import date
+from datetime import date, datetime
+from zoneinfo import ZoneInfo
 from urllib.parse import urlsplit
 
 STAGES = ["待筛选", "笔试", "测评", "一面", "二面", "三面", "终面", "待结果", "Offer", "未通过", "流程结束", "主动放弃"]
@@ -242,6 +243,51 @@ class Store:
                     db.execute("INSERT INTO dates VALUES (?,?,?,?)", (str(uuid.uuid4()), job_id, item["label"].strip(), item["day"]))
             payload = {k: v for k, v in job.items() if k not in ("id", "revision", "timeline", "execution_count")}
             db.execute("UPDATE jobs SET revision=revision+1,payload=? WHERE id=?", (json.dumps(payload, ensure_ascii=False), job_id))
+            return self._get(db, job_id)
+
+    def set_application_url(self, job_id, revision, url):
+        from official import public_https
+        from urllib.parse import urlunsplit
+        url=public_https(str(url or '').strip())
+        job=self.get(job_id)
+        if job.get('needs_review') or not job.get('company') or not job.get('role'):
+            raise Invalid('请先填写公司和岗位名称')
+        p=urlsplit(url);origin=urlunsplit((p.scheme,p.netloc,'/','',''))
+        entry={'company':job['company'],'role':job['role'],'url':url,'application_url':url,
+               'company_url':origin,'recruitment_url':url,'verification':'user_provided',
+               'verification_method':'user_pasted_application_form',
+               'evidence':[{'url':url,'quote':'本人指定此招聘表单用于当前岗位'}]}
+        return self.set_official(job_id,revision,entry)
+
+    def apply_progress(self, job_id, revision, stage, url):
+        with self.connect() as db:
+            db.execute('BEGIN IMMEDIATE')
+            job=self._get(db,job_id)
+            if job['revision']!=revision:raise Conflict('查询期间岗位已修改，未覆盖当前进度，请重试')
+            before=job.get('recruitment_stage','')
+            job['recruitment_stage']=stage
+            job['last_progress_query']={'url':url,'stage':stage,'checked_at':datetime.now(ZoneInfo('Asia/Shanghai')).isoformat()}
+            payload={k:v for k,v in job.items() if k not in ('id','revision','timeline','execution_count')}
+            db.execute('UPDATE jobs SET revision=revision+1,payload=? WHERE id=?',(json.dumps(payload,ensure_ascii=False),job_id))
+            return {'status':'complete','changed':before!=stage,'stage':stage,'message':'官网当前进度：'+stage,'job':self._get(db,job_id)}
+
+    def confirm_application(self, job_id, revision):
+        """Explicit local acknowledgement; never infer submission from browser progress."""
+        with self.connect() as db:
+            db.execute('BEGIN IMMEDIATE')
+            job = self._get(db, job_id)
+            if job.get('application_confirmed_at') and job['application_status'] == '已投递':
+                return job
+            if job['revision'] != revision:
+                raise Conflict('岗位已修改，请重新核对后确认投递')
+            now = datetime.now(ZoneInfo('Asia/Shanghai'))
+            if not any(item['label'] == '投递日期' for item in job['timeline']):
+                db.execute('INSERT INTO dates VALUES (?,?,?,?)',
+                           (str(uuid.uuid4()), job_id, '投递日期', now.date().isoformat()))
+            job.update(application_status='已投递', application_confirmed_at=now.isoformat())
+            payload = {k: v for k, v in job.items() if k not in ('id', 'revision', 'timeline', 'execution_count')}
+            db.execute('UPDATE jobs SET revision=revision+1,payload=? WHERE id=?',
+                       (json.dumps(payload, ensure_ascii=False), job_id))
             return self._get(db, job_id)
 
     def set_official(self, job_id, revision, entry):

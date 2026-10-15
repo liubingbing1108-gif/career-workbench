@@ -18,15 +18,18 @@ function updateTargetPanel(session){
   $('#show-execution').hidden=!session;
   const url=targetUrl(session);$('#application-url').value=url;
   $('#flow-identity').textContent=session?.name||'';
+  const notice=$('#destination-notice');if(notice){notice.textContent=session?.destination_notice||'';notice.hidden=!notice.textContent;}
   if(session?.manual_reason){flowWaiting('此岗位需要本人处理',session.manual_reason,'<button id="target-official" class="primary">去官网处理</button>');$('#target-official').onclick=safe(()=>launchBrowser('focus'));return;}
   const ready=!!session?.form_analysis&&!!session?.website&&!['matching','failed'].includes(preparationState.scan_status);
   $('#target-waiting').hidden=ready;
   if(ready)return;
   if(!session){flowWaiting('从投递管理开始','录入岗位后，点击该行“开始投递”。');return;}
   const browser=preparationState.browser,stalled=browser?.status==='opening'&&Date.now()/1000-browser.updated_at>25;
-  const needsUser=browser?.status==='needs_user',failed=preparationState.scan_status==='failed'||browser?.status==='failed'||stalled;
-  const title=needsUser?'官网需要你继续':failed?'本次准备需要继续':preparationState.scan_status==='matching'?'正在匹配你的资料':'正在读取官网岗位';
-  flowWaiting(title,browser?.status==='failed'?browser.message:preparationState.scan_error||browser?.message||'系统正在解析链接、确认岗位并读取申请表，完成后会自动展示可选材料。',needsUser?'<button id="target-official" class="primary">去官网处理</button><button id="target-connect">我已完成，继续</button>':failed?'<button id="target-connect" class="primary">重试本次准备</button>':'');
+  const scanFailed=preparationState.scan_status==='failed';
+  const needsUser=browser?.status==='needs_user'&&!scanFailed&&preparationState.scan_status!=='matching',failed=scanFailed||browser?.status==='failed'||stalled;
+  const title=scanFailed?'资料匹配未完成':needsUser?'官网需要你继续':failed?'本次准备需要继续':preparationState.scan_status==='matching'?'正在匹配你的资料':'正在读取官网岗位';
+  const scanMessage=scanFailed&&/模型服务连接失败/.test(preparationState.scan_error||'')?'官网表单已读取，但资料匹配服务连接失败。字段和资料已保留，无需到官网操作。':preparationState.scan_error;
+  flowWaiting(title,!scanFailed&&browser?.status==='failed'?browser.message:scanMessage||browser?.message||'系统正在解析链接、确认岗位并读取申请表，完成后会自动展示可选材料。',needsUser?'<button id="target-official" class="primary">去官网处理</button><button id="target-connect">我已完成，继续</button>':failed?'<button id="target-connect" class="primary">重试本次准备</button>':'');
   if($('#target-connect'))$('#target-connect').onclick=safe(()=>launchBrowser('prepare',true));
   if($('#target-official'))$('#target-official').onclick=safe(()=>launchBrowser('focus'));
 }
@@ -35,6 +38,13 @@ async function managementApi(path,body,signal){
   const bootstrap=await bootstrapResponse.json();
   const res=await fetch('/management/api'+path,{signal,method:body?'POST':'GET',headers:{'Content-Type':'application/json','X-Management-Token':bootstrap.token},body:body?JSON.stringify(body):undefined});
   const result=await res.json();if(!res.ok)throw Error(result.error||'岗位准备失败');return result;
+}
+function manualApplicationFallback(job){
+      const manual=document.createElement('form');manual.className='manual-application';
+      manual.innerHTML='<label>手动粘贴投递链接<input type="url" required placeholder="招聘网站的表单填写链接" aria-label="手动粘贴投递链接"></label><button class="primary">使用此链接继续</button><p role="status"></p>';
+      manual.querySelector('input').value=job.official_url||job.source_url||'';
+      manual.onsubmit=safe(async event=>{event.preventDefault();const button=manual.querySelector('button');button.disabled=true;try{const fresh=await managementApi('/jobs/'+encodeURIComponent(job.id));const saved=await managementApi('/jobs/'+encodeURIComponent(job.id)+'/application-url',{revision:fresh.revision,url:manual.querySelector('input').value});await prepareManagedJob(saved);}catch(error){manual.querySelector('p').textContent=error.message;button.disabled=false;}});
+      $('#target-waiting').append(manual);
 }
 async function prepareManagedJob(job,retry=false){
   cancelJobPreparation();
@@ -71,6 +81,7 @@ async function prepareManagedJob(job,retry=false){
     if(!active())return;
     if(official.status!=='ready'){
       flowWaiting('官网岗位尚需核对',official.message,'<button id="resolve-retry">重新查找</button><button id="resolve-back">返回管理修改岗位</button>');
+      manualApplicationFallback(job);
       const box=document.createElement('div');box.className='official-candidates';
       box.innerHTML=(official.candidates||[]).map((c,i)=>`<p><strong>${escapeHtml(c.official_role||c.role)}</strong> · ${escapeHtml(c.location)}<br><a href="${escapeHtml(c.url)}" target="_blank" rel="noopener">查看候选官网</a>${c.verification==='public_pages'?` <button data-official-choice="${i}">${official.status==='identity_mismatch'?'采用官网岗位名称并继续':'选择此岗位'}</button>`:''}</p>`).join('');$('#target-waiting').append(box);
       $$('[data-official-choice]',box).forEach(button=>button.onclick=safe(async()=>{
@@ -89,16 +100,16 @@ async function prepareManagedJob(job,retry=false){
     if(!result.manual_reason&&!preparationState.executor?.connected&&!['running','awaiting_executor'].includes(result.preparation?.execution?.status))await launchBrowser();
   }catch(error){
     if(!active()||error.name==='AbortError')return;
-    flowWaiting('本次准备未完成',error.message,'<button id="resolve-retry">重试</button>');$('#resolve-retry').onclick=safe(()=>prepareManagedJob(job,true));
+    flowWaiting('本次准备未完成',error.message,'<button id="resolve-retry">重试</button>');manualApplicationFallback(job);$('#resolve-retry').onclick=safe(()=>prepareManagedJob(job,true));
   }finally{if(preparingJob===run)preparingJob=null;}
 }
 function extensionMessage(type,extra={}){
  return new Promise(resolve=>{const requestId=crypto.randomUUID();let timer;const receive=event=>{if(event.source===window&&event.origin===location.origin&&event.data?.type==='career:reply'&&event.data.requestId===requestId){clearTimeout(timer);window.removeEventListener('message',receive);resolve(event.data.result);}};window.addEventListener('message',receive);timer=setTimeout(()=>{window.removeEventListener('message',receive);resolve(null);},type==='career:hello'?300:12000);window.postMessage({type,requestId,...extra},location.origin);});
 }
-async function launchBrowser(mode='prepare',rescan=false){
+async function launchBrowser(mode='prepare',rescan=false,reconnect=false){
   const selected=sessionId,key=selected+'/'+mode;
   if(browserLaunches.has(key))return browserLaunches.get(key);
-  const pending=(async()=>{const bridge=await extensionMessage('career:hello');const result=await api('/api/browser-launch',{session_id:selected,mode,rescan,direct:bridge?.ok===true});if(bridge?.ok&&result.ticket){const connected=await extensionMessage('career:launch',{ticket:result.ticket});if(!connected?.ok)throw Error(connected?.message||'插件连接未完成，请重试。');}if(mode==='prepare'&&selected===sessionId&&currentView==='practice'){const next=await api('/api/preparation?session='+encodeURIComponent(selected));if(selected===sessionId&&currentView==='practice'){preparationState={...next,current:preparationState.current};updateTargetPanel(state.sessions.find(s=>s.id===selected));updatePreparationProgress();}}return result;})();
+  const pending=(async()=>{const bridge=await extensionMessage('career:hello');const result=await api('/api/browser-launch',{session_id:selected,mode,rescan,reconnect,direct:bridge?.ok===true});if(bridge?.ok&&result.ticket){const connected=await extensionMessage('career:launch',{ticket:result.ticket});if(!connected?.ok)throw Error(connected?.message||'插件连接未完成，请重试。');}if(mode==='prepare'&&selected===sessionId&&currentView==='practice'){const next=await api('/api/preparation?session='+encodeURIComponent(selected));if(selected===sessionId&&currentView==='practice'){preparationState={...next,current:preparationState.current};updateTargetPanel(state.sessions.find(s=>s.id===selected));updatePreparationProgress();}}return result;})();
   browserLaunches.set(key,pending);
   try{return await pending;}finally{if(browserLaunches.get(key)===pending)browserLaunches.delete(key);}
 }
@@ -106,7 +117,8 @@ window.addEventListener('message',safe(async event=>{
   if(event.origin!==location.origin||event.source!==$('#management-frame').contentWindow)return;
   if(event.data?.type==='workbench:deleted'){
     const removed=state.sessions.filter(s=>s.management_job_id===event.data.job_id).map(s=>s.id);
-    for(const key of answerDrafts.keys())if(removed.some(id=>key.startsWith(id+'/')))answerDrafts.delete(key);
+    if(answerDrafts.forgetSessions)answerDrafts.forgetSessions(removed);
+    else for(const key of answerDrafts.keys())if(removed.some(id=>key.startsWith(id+'/')))answerDrafts.delete(key);
     const activeRemoved=removed.includes(sessionId);await refresh();if(activeRemoved)showView('management');return;
   }
   if(event.data?.type==='workbench:prepare')await prepareManagedJob(event.data.job);
@@ -115,14 +127,20 @@ $('#back-management').onclick=()=>showView('management');
 $('#show-execution').onclick=()=>showExecutionDialog();
 $('#reread-form').onclick=safe(()=>launchBrowser('prepare',true));
 $('#execution-minimize').onclick=()=>$('#execution-dialog').close();
+$$('[data-confirm-application]').forEach(button=>button.onclick=safe(confirmApplication));
 $('#execution-return').onclick=()=>{$('#execution-dialog').close();showView('management');};
+$('#execution-retry').onclick=safe(()=>confirmPreparation(true));
 $('#execution-official').onclick=safe(()=>launchBrowser('focus'));
 $('#execution-pause').onclick=safe(async()=>{await api('/api/preparation/pause',{session_id:sessionId});preparationState={...await api('/api/preparation?session='+encodeURIComponent(sessionId)),current:preparationState.current};updatePreparationProgress();});
 window.addEventListener('hashchange',safe(async()=>{
   if(location.hash==='#management'){showView('management');return;}
   if(location.hash==='#practice'){showView('management');return;}
   const requested=location.hash.match(/^#practice\/([\w-]+)$/)?.[1];
-  if(requested&&state?.sessions.some(s=>s.id===requested)){sessionId=requested;await refresh();showView('practice');}
+  if(requested&&state?.sessions.some(s=>s.id===requested)){
+    $('#prep-preview-dialog')?.close();$('#execution-dialog').close();
+    flowWaiting('正在恢复本岗位资料','正在读取本次选择、编辑草稿和填写进度。');
+    sessionId=requested;await refresh();if(location.hash==='#practice/'+requested)showView('practice');
+  }
   else if(location.hash.startsWith('#profile/'))showView('profile');
 }));
 if(new URLSearchParams(location.search).has('lab')){document.body.classList.add('lab-mode');$('#session-select').parentElement.hidden=false;$('#application-link-form').hidden=true;$('#new-session').onclick=safe(async()=>{sessionId=(await api('/api/sessions',{name:'新的虚构演练'})).id;history.replaceState(null,'','#practice/'+sessionId);await refresh();showView('practice');});}

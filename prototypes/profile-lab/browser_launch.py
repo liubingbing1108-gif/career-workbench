@@ -30,12 +30,39 @@ class BrowserLaunch:
     def __init__(self,lab,bridge,opener=open_chrome):
         self.lab,self.bridge,self.opener=lab,bridge,opener;self.tickets={};self.controller_seen=0
         self.resolutions=None
+        self.progress_queries=None
+
+    def query_progress(self,job_id,base):
+        if not self.progress_queries:raise LabError('官网查询服务未连接',503)
+        with self.lab.lock:
+            if any(s.get('preparation',{}).get('execution',{}).get('status') in ('running','awaiting_executor') for s in self.lab.state()['sessions']):
+                raise LabError('正在填写，请先暂停后查询官网进度',409)
+            task=self.progress_queries.start(job_id)
+            ticket=next((k for k,v in self.tickets.items() if v.get('progress_task') is task and time.time()-v['created']<100),None)
+            if not ticket:
+                ticket=secrets.token_urlsafe(24)
+                self.tickets[ticket]={'mode':'progress','progress_task':task,'job_id':job_id,'url':task['url'],
+                                      'role':task['role'],'company':task['company'],'created':time.time(),'claimed':False}
+                try:
+                    if time.time()-self.controller_seen>=8:self.opener(base+'/launch-relay?launch='+ticket)
+                except Exception:
+                    self.progress_queries.accept(task,{'status':'unavailable'})
+                    raise
+            return self.progress_queries.status(job_id)
+
+    def progress_report(self,ticket,origin,observation):
+        item=self.tickets.get(ticket)
+        if not self.bridge.allowed_origin(origin) or not item or item.get('mode')!='progress' or item.get('origin')!=origin or time.time()-item['created']>=100:
+            raise LabError('官网进度查询连接已失效',403)
+        from store import Invalid,Conflict
+        try:return self.progress_queries.accept(item['progress_task'],observation)
+        except (Invalid,Conflict) as error:raise LabError(str(error),409)
 
     def inspect(self,job_id,base,direct=False):
         if not self.resolutions:raise LabError('页面核对未启用')
         job=self.resolutions.inspection_job(job_id)
         from official import public_https
-        url=public_https(job.get('source_url') or job.get('url',''))
+        url=public_https(job.get('official_url') or job.get('source_url') or job.get('url',''))
         with self.lab.lock:
             if any(s.get('preparation',{}).get('execution',{}).get('status') in ('running','awaiting_executor') for s in self.lab.state()['sessions']):raise LabError('正在填写，请先暂停再检查其他页面',409)
             ticket=next((k for k,v in self.tickets.items() if v.get('job_id')==job_id and v.get('revision')==job['revision'] and time.time()-v['created']<120),None)
@@ -50,7 +77,7 @@ class BrowserLaunch:
         if not self.bridge.allowed_origin(origin) or not item or item.get('mode')!='inspect' or item.get('origin')!=origin or time.time()-item['created']>=300:raise LabError('页面核对连接已失效',403)
         return self.resolutions.observe(item['job_id'],item['revision'],observation)
 
-    def request(self,sid,base,mode='prepare',direct=False,rescan=False):
+    def request(self,sid,base,mode='prepare',direct=False,rescan=False,reconnect=False):
         if mode not in ('prepare','focus','verify'):raise LabError('浏览器操作无效')
         with self.lab.lock:
             session=find(self.lab.state()['sessions'],sid)
@@ -62,15 +89,15 @@ class BrowserLaunch:
             if session.get('manual_reason') and mode=='prepare':raise LabError(session['manual_reason'])
             if mode in ('prepare','verify') and any(s.get('preparation',{}).get('execution',{}).get('status') in ('running','awaiting_executor') for s in self.lab.state()['sessions']):
                 raise LabError('该官网正在填写，请先暂停再重新启动',409)
-            if mode in ('prepare','verify') and not rescan and self.bridge.status(url,sid)['connected']:
+            if mode in ('prepare','verify') and not rescan and not reconnect and self.bridge.status(url,sid)['connected']:
                 return {'status':'ready','message':'已连接当前官网，无需打开新页面。'}
-            if mode=='prepare' and not rescan:
-                recent=next((v for v in self.tickets.values() if v['session_id']==sid and v.get('mode')==mode and time.time()-v['created']<15),None)
+            if mode=='prepare' and not rescan and not reconnect:
+                recent=next((v for v in self.tickets.values() if v.get('session_id')==sid and v.get('mode')==mode and time.time()-v['created']<15),None)
                 if recent and session.get('preparation',{}).get('browser',{}).get('status') not in ('failed','needs_user'):
                     return {'status':'opening','ticket':next(k for k,v in self.tickets.items() if v is recent),'message':'正在连接本次岗位，请稍候。'}
             self.tickets={k:v for k,v in self.tickets.items() if time.time()-v['created']<300 and v.get('session_id')!=sid}
             ticket=secrets.token_urlsafe(24)
-            self.tickets[ticket]={'session_id':sid,'url':url,'code':self.bridge.setup(sid)['code'],'created':time.time(),'claimed':False,'mode':mode,'resume_confirmed':mode=='prepare' and bool(session.get('preparation',{}).get('preserve_unsaved_page'))}
+            self.tickets[ticket]={'session_id':sid,'url':url,'code':self.bridge.setup(sid)['code'],'created':time.time(),'claimed':False,'mode':mode,'resume_confirmed':mode=='prepare' and not rescan and bool(session.get('preparation',{}).get('preserve_unsaved_page') or reconnect and session.get('preparation',{}).get('execution',{}).get('confirmed_materials'))}
             self.set_status(sid,'opening','正在打开Chrome并启动填写程序')
         try:
             if not direct and time.time()-self.controller_seen>=8:self.opener(base+'/launch-relay?launch='+ticket)
@@ -91,9 +118,10 @@ class BrowserLaunch:
         with self.lab.lock:
             item=self.tickets.get(ticket)
             if not item or time.time()-item['created']>=300:raise LabError('启动请求已过期，请从工作台重试',403)
-            if item.get('mode')!='inspect':find(self.lab.state()['sessions'],item['session_id'])
+            if item.get('mode') not in ('inspect','progress'):find(self.lab.state()['sessions'],item['session_id'])
             if item['claimed']:raise LabError('该启动请求已处理，请回到工作台查看进度',409)
             item['claimed']=True;item['origin']=origin
+            if item.get('mode')=='progress':return {k:item[k] for k in ('job_id','url','role','company','mode')}
             if item.get('mode')=='inspect':return {k:item[k] for k in ('job_id','url','mode')}
             self.set_status(item['session_id'],'connecting','填写程序已启动，正在连接官网')
             return {k:item[k] for k in ('session_id','url','code','mode','resume_confirmed')}

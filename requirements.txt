@@ -1,3 +1,4 @@
-# PDF text extraction; other production Python imports use the standard library.
+# All accepted resume formats pass through MarkItDown; pypdf is only a PDF input guard.
 pypdf==6.10.0
 jsonschema==4.26.0
+markitdown[pdf,docx,pptx,xlsx,xls]==0.1.8

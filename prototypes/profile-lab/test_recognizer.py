@@ -44,7 +44,8 @@ class RecognitionTests(unittest.TestCase):
     def test_unlabelled_text_maps_and_proposed_fields_commit_only_on_selection(self):
         text,result=sample();self.make_lab([result]);preview=self.upload('unlabelled.txt',text)
         self.assertEqual(len(preview['candidates']),13)
-        self.assertFalse(any(f['id']=='department' for f in self.lab.state()['fields']))
+        self.assertTrue(any(f['id']=='department' for f in self.lab.state()['fields']))
+        self.assertFalse(any(e['values'].get('department') for e in self.lab.state()['entries']))
         self.assertFalse(self.lab.state()['versions'])
         self.accept(preview)
         state=self.lab.state();self.assertTrue(any(f['id']=='department' for f in state['fields']))

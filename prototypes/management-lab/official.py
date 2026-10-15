@@ -35,7 +35,7 @@ def validate_entry(job,entry):
         not isinstance(e,dict) or e.get('url') not in {entry['url'],entry['company_url'],entry['recruitment_url']}
         or not isinstance(e.get('quote'),str) or not 0<len(e['quote'])<=2000 for e in evidence):
         raise Invalid('缺少官网身份和具体岗位的核对依据')
-    if entry.get('verification') not in ('public_pages','browser'):
+    if entry.get('verification') not in ('public_pages','browser','user_provided'):
         raise Invalid('官网入口尚未核验，不能开始填写')
 
 
@@ -106,6 +106,8 @@ class OfficialLookup:
     def lookup(self,job,progress=lambda *_:None):
         if job.get('needs_review') or not job.get('company') or not job.get('role'):
             raise Invalid('请先明确一个具体公司的具体岗位；岗位方向不代替岗位')
+        if job.get('official_url') and job.get('official_url_status')!='verified':
+            job={**job,'source_url':job['official_url']}
         verified=job.get('official_url_status')=='verified' and job.get('official_url')==job.get('official_entry',{}).get('url')
         if not verified and feishu_identity(job.get('source_url') or job.get('url','')):
             progress('正在核对已提供的申请链接','直接读取该链接对应的公开招聘主体和岗位，复用已有官网登录现场。')

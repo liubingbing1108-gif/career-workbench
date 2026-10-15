@@ -10,4 +10,4 @@ Use the existing executor protocol v1. Validate model references, scan actual co
 
 Only test with fictional data and temporary databases by default. Never inspect, upload or commit another user's .runtime, credentials, resumes, screenshots or application URLs. Any real-site test requires that user's authorization and confirmed materials. New users initialize once; never replace an existing runtime with an empty database.
 
-Run python scripts/run_tests.py (and --ui for interface changes), python scripts/check_docs.py and the publication privacy check. Keep documentation current; record limitations without turning suggestions into confirmed features. Do not add a license or make a repository public without the owner's decision.
+Run python scripts/run_tests.py (and --ui for interface changes), python scripts/check_docs.py and the publication privacy check. Keep documentation current; record limitations without turning suggestions into confirmed features. The owner has selected MIT and authorized public source releases; personal runtime and evidence remain excluded.

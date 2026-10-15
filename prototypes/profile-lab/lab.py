@@ -6,15 +6,13 @@ import copy
 import hashlib
 import io
 import json
-import logging
 import re
 import sqlite3
 import threading
+import time
 import uuid
-import zipfile
 from datetime import date
 from pathlib import Path
-from xml.etree import ElementTree
 
 
 CATEGORIES = [
@@ -23,10 +21,10 @@ CATEGORIES = [
     ("skills", "技能", True), ("honors", "荣誉与奖励", True),
     ("academic", "学术成果", True), ("certificates", "资格与证书", True),
     ("employment", "实习与工作", True), ("projects", "项目与研究", True),
-    ("campus", "校园与社会经历", True), ("subjective", "主观文本", False),
-    ("family", "家庭与联系人", True), ("preferences", "求职相关信息", False),
+    ("campus", "校园与社会经历", True), ("subjective", "个人陈述", True),
+    ("family", "家庭与联系人", True), ("preferences", "求职意向", True),
     ("portfolio", "作品", True), ("social", "社交账号", True),
-    ("attachments", "附件", False), ("additional", "官网新增字段", False),
+    ("identity_documents", "身份证件", True), ("attachments", "文件附件", False), ("additional", "官网新增字段", False),
 ]
 SAMPLE_FIELDS = [
     ("name", "姓名", "basic", "text", ["Name"]),
@@ -85,6 +83,8 @@ def find(items, item_id, message="记录不存在"):
 def validate_value(field, value):
     if not isinstance(value, str) or len(value) > 30000:
         raise LabError("字段值必须为文本，且不能超过 30000 字符")
+    if field.get("widget")=="boolean" and value not in ("","是","否","不适用"):
+        raise LabError(field["label"]+"请选择是、否、未提供或不适用")
     if value and field["type"] == "date":
         try:
             if date.fromisoformat(value).isoformat() != value:
@@ -108,62 +108,14 @@ def validate_value(field, value):
 
 
 def extract_text(filename, raw):
-    suffix = Path(filename).suffix.lower()
-    if suffix == ".txt":
-        try:
-            return [{"text": raw.decode("utf-8-sig"), "location": "文本文件"}]
-        except UnicodeDecodeError:
-            raise LabError("示例 TXT 需要 UTF-8 编码")
-    if suffix == ".docx":
-        try:
-            with zipfile.ZipFile(io.BytesIO(raw)) as archive:
-                names = ["word/document.xml"] + sorted(n for n in archive.namelist() if re.fullmatch(r"word/(?:header|footer)\d+\.xml", n))
-                if sum(archive.getinfo(n).file_size for n in names) > 8 * 1024 * 1024:
-                    raise LabError("文档正文过大")
-                roots = [(n, ElementTree.fromstring(archive.read(n))) for n in names]
-            ns = {"w": "http://schemas.openxmlformats.org/wordprocessingml/2006/main"}
-            blocks = []
-            def paragraph_text(para):
-                pieces = []
-                def visit(node):
-                    for child in node:
-                        if child.tag == f'{{{ns["w"]}}}p':
-                            continue  # Nested text boxes are extracted as their own paragraphs.
-                        if child.tag == f'{{{ns["w"]}}}t':
-                            pieces.append(child.text or "")
-                        elif child.tag in {f'{{{ns["w"]}}}br', f'{{{ns["w"]}}}tab'}:
-                            pieces.append("\n" if child.tag.endswith("}br") else "\t")
-                        else:
-                            visit(child)
-                visit(para)
-                return "".join(pieces)
-            for name, root in roots:
-                prefix = "段落" if name == "word/document.xml" else "页眉" if "/header" in name else "页脚"
-                for number, para in enumerate(root.findall(".//w:p", ns), 1):
-                    text = paragraph_text(para)
-                    if text.strip():
-                        blocks.append({"text": text, "location": f"{prefix} {number}"})
-            return blocks
-        except (zipfile.BadZipFile, KeyError, ElementTree.ParseError):
-            raise LabError("无法读取 DOCX 正文")
-    if suffix == ".pdf":
-        try:
-            from pypdf import PdfReader
-            logging.getLogger("pypdf").setLevel(logging.ERROR)
-            reader = PdfReader(io.BytesIO(raw))
-            if reader.is_encrypted:
-                raise LabError("加密 PDF 需要先由用户解密")
-            if len(reader.pages) > 50:
-                raise LabError("验证页最多读取 50 页")
-            return [{"text": p.extract_text() or "", "location": f"第 {i} 页"}
-                    for i, p in enumerate(reader.pages, 1)]
-        except ImportError:
-            raise LabError("当前运行环境缺少 pypdf，请使用 README 中的 Python 启动")
-        except LabError:
-            raise
-        except Exception:
-            raise LabError("无法读取 PDF 正文")
-    raise LabError("验证页支持 PDF、DOCX 和 UTF-8 TXT")
+    from document_markdown import convert_document
+    return convert_document(filename, raw)
+
+
+def conversion_metadata(blocks):
+    return dict(converter='MarkItDown', conversion_format='markdown', document_blocks=blocks,
+                text_preview='\n'.join(b['text'] for b in blocks)[:16000],
+                readable=any(b['text'].strip() for b in blocks))
 
 
 def parse_sample_fields(state, blocks, filename):
@@ -171,7 +123,8 @@ def parse_sample_fields(state, blocks, filename):
     aliases = {}
     for field in state["fields"]:
         for label in [field["label"], *field.get("aliases", [])]:
-            aliases.setdefault(label.casefold(), []).append(field)
+            bucket=aliases.setdefault(label.casefold(), [])
+            if field not in bucket:bucket.append(field)
     groups, indices = {}, {}
     for block in blocks:
         for line in block["text"].splitlines():
@@ -180,6 +133,9 @@ def parse_sample_fields(state, blocks, filename):
                 continue
             label, value = matched.groups()
             fields = aliases.get(label.strip().casefold(), [])
+            if len(fields)>1:
+                sample_ids={k for k,l,c,t,names in SAMPLE_FIELDS if label.strip().casefold() in {n.casefold() for n in [l,*names]}}
+                fields=[f for f in fields if f["id"] in sample_ids]
             if len(fields) != 1 or not value:
                 continue
             field = fields[0]
@@ -225,19 +181,21 @@ def parse_sample_fields(state, blocks, filename):
 
 def finish_preview(state, import_id, candidates, warnings, usage):
     preview = find(state["imports"], import_id)
-    preview.update(candidates=candidates, warnings=warnings, usage=usage, status="完成", error="")
+    preview.update(candidates=candidates, warnings=warnings, usage=usage, status="完成", stage="完成", error="", finished_at=time.time())
     return preview
 
 
 ANCHORS = {"education": ["school", "major", "education_started", "graduation_date"],
-           "employment": ["company", "started"], "language": ["language_name"],
+           "employment": ["company", "role", "started", "ended"], "language": ["language_name"],
            "skills": ["skill_name"], "certificates": ["certificate_name"],
-           "honors": ["award_name"], "campus": ["campus_title"], "projects": ["project_name"]}
+           "honors": ["award_name", "award_date"], "campus": ["campus_title"], "projects": ["project_name"]}
 
 
 def identity_key(cat, values):
     from recognizer import compact
     anchors = ANCHORS.get(cat, [])
+    if cat == "language" and (values.get("exam_name") or values.get("language_score")):
+        anchors = ["exam_name", "exam_date"]
     if cat == "education" and not values.get("education_started"):
         anchors = ["school", "major", "graduation_date"]
     if not anchors or not all(values.get(k) for k in anchors):
@@ -256,15 +214,16 @@ def all_versions(state, entry_id, field_id):
 
 
 def default_version(state, entry, field_id):
-    versions = all_versions(state, entry["id"], field_id)
+    versions = [v for v in all_versions(state, entry["id"], field_id) if not v.get('profile_deleted')]
     return next((v for v in versions if v["id"] == entry.get("default_versions", {}).get(field_id)), versions[0] if versions else None)
 
 
 def put_answer(state, entry, field, content, mode="new", target_id=None, name="新版本", source=None):
     from recognizer import compact
+    if field.get("entry_id") and field["entry_id"]!=entry["id"]:raise LabError("字段只属于创建它的资料，不能写入其他记录")
     content = validate_value(field, content)
     store = state["versions" if field["type"] == "versioned_text" else "answer_versions"]
-    versions = all_versions(state, entry["id"], field["id"])
+    versions = [v for v in all_versions(state, entry["id"], field["id"]) if not v.get('profile_deleted')]
     if mode == "replace" and versions:
         target = find(versions, target_id) if target_id else default_version(state, entry, field["id"])
         target.update(content=content, revision=target["revision"] + 1, source=source or {"kind": "manual"})
@@ -304,7 +263,23 @@ def reconcile_semantic_imports(state):
                 entry = next((e for e in state["entries"] if e["id"] == prior_id), None)
                 key = entry.get("identity_key") or identity_key(cat, entry["values"]) if entry else None
             key = key or preview["id"] + "/" + group
+            decision=preview.get('identity_decisions',{}).get(group)
+            values={c['field_id']:c['value'] for c in rows}
+            choices=[]
+            if cat in {'employment','honors'} and not all(c.get('saved') for c in rows):
+                for entry in state['entries']:
+                    old=entry.get('values',{})
+                    if entry['category']!=cat or entry.get('profile_archived'):continue
+                    if cat=='honors' and compact(values.get('award_name',''))==compact(old.get('award_name','')) and values.get('award_name') and (not values.get('award_date') or not old.get('award_date')):
+                        choices.append(entry['id'])
+                    if cat=='employment' and values.get('company') and values.get('role') and all(compact(values.get(k,''))==compact(old.get(k,'')) for k in ('company','role')) and (not values.get('started') or not old.get('started') or values['started']==old['started']) and values.get('ended')!=old.get('ended'):
+                        choices.append(entry['id'])
+            review=bool(choices) and not decision
+            if decision:key='entry:'+decision['entry_id'] if decision.get('entry_id') else preview['id']+'/'+group+'/separate'
+            elif review:key=preview['id']+'/'+group+'/review'
             for c in rows:
+                c['identity_review']=review
+                c['identity_choices']=choices
                 c["identity_key"] = key
                 c["import_id"] = preview["id"]
             grouped.setdefault(key, []).extend(rows)
@@ -312,7 +287,7 @@ def reconcile_semantic_imports(state):
         cat = rows[0]["category"]
         entries = [e for e in state["entries"] if e["category"] == cat]
         if category(cat)[2]:
-            matches = [e for e in entries if e.get("identity_key") == key or identity_key(cat, e["values"]) == key]
+            matches = [e for e in entries if (key=="entry:"+e["id"]) or (not key.startswith("entry:") and (e.get("identity_key") == key or identity_key(cat, e["values"]) == key))]
             prior = {c.get("created_entry") for c in rows if c.get("created_entry")}
             if not matches and len(prior) == 1:
                 matches = [e for e in entries if e["id"] in prior]
@@ -343,6 +318,9 @@ def reconcile_semantic_imports(state):
             if same:
                 c["status"], c["selected"], c["disposition"] = "一致", False, "same"
                 continue
+            if c.get("identity_review"):
+                c["status"],c["selected"]="需确认归属",False
+                continue
             fingerprint = c["fingerprint"]
             if fingerprint in canonical:
                 c["status"], c["selected"], c["duplicate_of"] = "已合并", False, canonical[fingerprint]["id"]
@@ -369,6 +347,7 @@ class Lab:
         self.directory.mkdir(parents=True, exist_ok=True)
         self.lock = threading.RLock()
         self.recognizer = recognizer
+        self.import_workers = {}
         self.db = sqlite3.connect(self.directory / "lab.sqlite", check_same_thread=False)
         self.db.execute("CREATE TABLE IF NOT EXISTS state (id INTEGER PRIMARY KEY, body TEXT NOT NULL)")
         self.db.execute("CREATE TABLE IF NOT EXISTS files (id TEXT PRIMARY KEY, body BLOB NOT NULL)")
@@ -377,6 +356,9 @@ class Lab:
         self.db.commit()
         # Widen date precision without changing any previously recorded value.
         def migrate(state):
+            for preview in state['imports']:
+                if preview.get('status') == '识别中':
+                    preview.update(status='已中断', stage='已中断', error='服务重启中断了识别，原文件已保留，可以重试。')
             state.setdefault("answer_versions", [])
             for key, label, repeatable in CATEGORIES:
                 if not any(c['id'] == key for c in state['categories']):
@@ -407,6 +389,11 @@ class Lab:
                         if entry and field:
                             put_answer(state, entry, field, c["value"], name=preview["filename"], source=c["source"])
             state["profile_schema_version"] = 3
+            from profile_schema import install
+            install(state)
+            for stored in state["categories"]:
+                definition=category(stored["id"])
+                if definition:stored.update(label=definition[1],repeatable=definition[2])
         self.mutate(migrate)
 
     def state(self):
@@ -421,10 +408,20 @@ class Lab:
             self.db.execute("UPDATE state SET body=? WHERE id=1", (json.dumps(state, ensure_ascii=False),))
             return copy.deepcopy(result)
 
-    def upload(self, filename, raw):
+    def upload(self, filename, raw, asynchronous=False):
         filename = Path(filename.replace("\\", "/")).name
         if not filename or len(filename) > 180 or not raw or len(raw) > 8 * 1024 * 1024:
             raise LabError("文件名无效或文件超过 8 MiB")
+        if asynchronous:
+            def create(state):
+                file_id = uid('file')
+                self.db.execute('INSERT INTO files VALUES (?,?)', (file_id, raw))
+                state['files'].append(dict(id=file_id, name=filename, size=len(raw), sha256=hashlib.sha256(raw).hexdigest()))
+                preview = dict(id=uid('import'), file_id=file_id, filename=filename, candidates=[], semantic=bool(self.recognizer), status='待识别', stage='原文件已保存', started_at=time.time(), extractor=self.recognizer.name if self.recognizer else '带标签示例解析（测试模式）')
+                state['imports'].append(preview)
+                return preview
+            preview = self.mutate(create)
+            return self.start_import(preview['id'])
         blocks = extract_text(filename, raw)
         if sum(len(b["text"]) for b in blocks) > 80000:
             raise LabError("文档正文超过本轮识别的 80000 字符限制")
@@ -436,13 +433,46 @@ class Lab:
                 "extractor": self.recognizer.name if self.recognizer else "带标签示例解析（测试模式）",
                 "candidates": [] if self.recognizer else parse_sample_fields(state, blocks, filename),
                 "semantic": bool(self.recognizer), "status": "识别中" if self.recognizer else "完成",
-                "readable": any(b["text"].strip() for b in blocks)}
+                **conversion_metadata(blocks)}
             state["imports"].append(preview)
             return preview
         preview = self.mutate(save)
         if self.recognizer:
             return self.recognize_import(preview["id"], blocks)
         return preview
+
+    def start_import(self, import_id):
+        with self.lock:
+            preview = find(self.state()['imports'], import_id)
+            if any(c.get('saved') for c in preview['candidates']):
+                raise LabError('已有资料已保存，请重新上传建立新预览')
+            if import_id in self.import_workers and self.import_workers[import_id].is_alive():
+                return preview
+            self.mutate(lambda s: find(s['imports'], import_id).update(status='识别中', stage='转换为 Markdown', error='', error_code='', diagnostics={}, started_at=time.time()))
+            def run():
+                try:
+                    meta, raw = self.file_bytes(preview['file_id'])
+                    blocks = extract_text(meta['name'], raw)
+                    if sum(len(b['text']) for b in blocks) > 80000:
+                        raise LabError('文档正文超过本轮识别的 80000 字符限制')
+                    self.mutate(lambda s: find(s['imports'], import_id).update(**conversion_metadata(blocks)))
+                    if self.recognizer:
+                        self.recognize_import(import_id, blocks)
+                    else:
+                        self.mutate(lambda s: finish_preview(s, import_id, parse_sample_fields(s, blocks, meta['name']), [], {}))
+                except Exception as error:
+                    self.mutate(lambda s: find(s['imports'], import_id).update(status='失败', stage='失败', error=str(error)[:1000], finished_at=time.time()))
+                finally:
+                    def record_attempt(state):
+                        task=find(state['imports'],import_id)
+                        history=task.setdefault('attempts',[])
+                        history.append({key:copy.deepcopy(task.get(key)) for key in ('started_at','finished_at','status','error_code','diagnostics')})
+                        task['attempts']=history[-20:]
+                    self.mutate(record_attempt)
+            worker = threading.Thread(target=run, daemon=True)
+            self.import_workers[import_id] = worker
+            worker.start()
+            return find(self.state()['imports'], import_id)
 
     def recognition_status(self):
         return self.recognizer.status() if self.recognizer else {"engine": "带标签示例解析（测试模式）", "available": True, "ocr": False}
@@ -457,20 +487,20 @@ class Lab:
         if blocks is None:
             meta, raw = self.file_bytes(preview["file_id"])
             blocks = extract_text(meta["name"], raw)
-        self.mutate(lambda s: find(s["imports"], import_id).update(status="识别中", error=""))
+        self.mutate(lambda s: find(s["imports"], import_id).update(status="识别中", stage="按资料组识别内容", error="", error_code='', diagnostics={}, **conversion_metadata(blocks)))
         if not any(b["text"].strip() for b in blocks):
             return self.mutate(lambda s: finish_preview(s, import_id, [], ["未读取到文字层；扫描 PDF 尚未接入 OCR，可以上传文字版或手填资料。"], {}))
         try:
             result, usage = self.recognizer.extract(self.state()["fields"], blocks)
             # Keep the model draft only in this temporary application session so
             # deterministic validation can be repaired without resending a resume.
-            self.mutate(lambda s: find(s["imports"], import_id).update(model_result=result))
+            self.mutate(lambda s: find(s["imports"], import_id).update(model_result=result, stage='核验来源与整理资料组'))
             candidates, rejected = grounded_candidates(self.state(), blocks, preview["filename"], result)
             warnings = [str(w)[:500] for w in result.get("warnings", [])][:30] + rejected
             self.mutate(lambda s: finish_preview(s, import_id, candidates, warnings, usage))
             return find(self.state()["imports"], import_id)
         except RecognitionError as error:
-            self.mutate(lambda s: find(s["imports"], import_id).update(status="失败", error=str(error)))
+            self.mutate(lambda s: find(s["imports"], import_id).update(status="失败", error=str(error), error_code=error.code, diagnostics=error.diagnostics))
             raise LabError(str(error), 502)
 
     def revalidate_import(self, import_id):
@@ -480,8 +510,9 @@ class Lab:
             raise LabError("已有资料已保存，不能替换此预览")
         if not preview.get("model_result"):
             raise LabError("此旧预览没有模型草稿，请重新识别")
-        meta, raw = self.file_bytes(preview["file_id"])
-        blocks = extract_text(meta["name"], raw)
+        blocks = preview.get('document_blocks')
+        if not blocks:
+            raise LabError('旧预览没有保存 Markdown 来源，请重新识别后核验，已保存资料不受影响')
         try:
             candidates, rejected = grounded_candidates(self.state(), blocks, preview["filename"], preview["model_result"])
         except RecognitionError as error:
@@ -515,6 +546,15 @@ class Lab:
                     raise LabError("资料已更新，请重新打开增量预览", 409)
             rows = {c["id"]: (p, c) for p in state["imports"] for c in p["candidates"]}
             groups, saved, ignored = {}, 0, 0
+            requested = {d['candidate_id']: d for d in decisions}
+            pending_sets = {}
+            for pid, candidate in rows.values():
+                if category(candidate['category'])[2] and candidate_pending(candidate):
+                    pending_sets.setdefault((pid['id'], candidate['group']), []).append(candidate['id'])
+            for ids in pending_sets.values():
+                chosen = [cid for cid in ids if cid in requested]
+                if chosen and (len(chosen) != len(ids) or len({requested[cid]['mode'] for cid in chosen}) != 1):
+                    raise LabError('请按完整资料组处理：同一段经历或同一项资料的待处理字段须一起保存或忽略', 409)
             if len({d["candidate_id"] for d in decisions}) != len(decisions):
                 raise LabError("同一增量不能重复处理")
             for decision in decisions:
@@ -531,6 +571,8 @@ class Lab:
                     state["ignored_candidates"].append(candidate["fingerprint"])
                     ignored += 1
                     continue
+                if candidate.get("identity_review"):
+                    raise LabError("请先确认这一组是已有经历/获奖，还是独立资料",409)
                 field = next((f for f in state["fields"] if f["id"] == candidate["field_id"]), None)
                 if field is None:
                     field = copy.deepcopy(candidate["definition"])
@@ -564,7 +606,7 @@ class Lab:
     def new_entry(state, cat):
         if not category(cat):
             raise LabError("未知资料分类")
-        existing = [e for e in state["entries"] if e["category"] == cat]
+        existing = [e for e in state["entries"] if e["category"] == cat and not e.get("profile_archived")]
         if existing and not category(cat)[2]:
             return existing[0]
         entry = {"id": uid(cat), "category": cat, "values": {}, "sources": {}}
@@ -694,7 +736,8 @@ class Lab:
         session = find(state["sessions"], session_id)
         grouped, values, sources, version_choices = {}, {}, {}, []
         for cat in state["categories"]:
-            entries = [e for e in state["entries"] if e["category"] == cat["id"]]
+            from profile_schema import available
+            entries = [e for e in state["entries"] if e["category"] == cat["id"] and available(e,session)]
             if cat["id"] in session.get("selected_entries", {}):
                 selected_ids = session["selected_entries"][cat["id"]]
                 entries = [find(entries, eid) for eid in selected_ids]

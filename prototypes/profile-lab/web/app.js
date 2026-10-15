@@ -3,17 +3,15 @@ const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, x => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[x]));
 let state, materials, application, increments, selectedCategory = 'basic', sessionId, preview, currentView = 'profile';
 let toastTimer;
-const answerDrafts = new Map();
-const profileVersions = new Map();
-const profileDrafts = new Map();
-let newVersionTarget;
+const answerDrafts = new AnswerDrafts(localStorage, (path, body)=>api(path, body), ()=>{if(typeof preparationState!=="undefined"&&preparationState)updatePreparationProgress();});
 let profileGroups = [];
 let preparationState = {};
-const expandedProfileEntries = new Set();
 const initialCategory = location.hash.match(/^#profile\/([\w-]+)$/)?.[1];
 if (initialCategory) selectedCategory = initialCategory;
 
+function recordUsesVersions(entry){const stored=profileLibrary.library.records.find(e=>e.id===entry?.id);return stored?!!stored.versions_enabled:['employment','projects','campus','preferences','subjective'].includes(entry?.category);}
 function versionsFor(entryId, fieldId) {
+  entryId=profileLibrary.library.records.find(e=>e.id===entryId)?.source_entry_id||entryId;
   return [...state.versions, ...(state.answer_versions || [])].filter(v => v.entry_id === entryId && v.field_id === fieldId);
 }
 function versionName(version) {
@@ -24,62 +22,8 @@ function versionName(version) {
   const generated = !name || /\.(pdf|docx?|txt)(?:\b|$)/i.test(name) ||
     (stored.source?.filename && name.includes(stored.source.filename)) ||
     /^(已确认版本|手填版本|手填描述|新描述版本|新版本|官网补充版本)$/.test(name);
-  return generated ? '版本 ' + number : name;
+  return generated ? '版本' + number : name.replace(/^版本\s+(\d+)$/, '版本$1');
 }
-function profileDraftKey(entry, field) {
-  return entry.id + '/' + field.id + '/' + (entry.default_versions?.[field.id] || 'empty');
-}
-function renderProfileField(entry, field) {
-  const key = entry.id + '/' + field.id;
-  const versions = versionsFor(entry.id, field.id);
-  const selected = versions.find(v => v.id === profileVersions.get(key)) ||
-    versions.find(v => v.id === entry.default_versions?.[field.id]) || versions[0];
-  const isDefault = !selected || selected.id === entry.default_versions?.[field.id];
-  const value = isDefault ? profileDrafts.get(profileDraftKey(entry, field)) ?? selected?.content ?? entry.values[field.id] ?? '' : selected.content;
-  const full = ['multiline', 'versioned_text'].includes(field.type);
-  return `<div class="profile-field ${full ? 'full-span' : ''}" data-profile-answer-key="${key}">
-    <div class="field-heading"><label for="profile-value-${entry.id}-${field.id}">${escapeHtml(field.label)}</label><button type="button" class="add-version" data-add-version data-entry="${entry.id}" data-field="${field.id}">＋ 新增版本</button></div>
-    ${versions.length > 1 ? `<div class="profile-version-row"><select data-profile-version data-entry="${entry.id}" data-field="${field.id}" aria-label="${escapeHtml(field.label)}版本">${versions.map(v => `<option value="${v.id}" ${v.id === selected.id ? 'selected' : ''}>${escapeHtml(versionName(v))}${v.id === entry.default_versions?.[field.id] ? ' · 默认' : ''}</option>`).join('')}</select>${isDefault ? '' : `<button type="button" data-default-version="${selected.id}" data-entry="${entry.id}" data-field="${field.id}">设为默认</button>`}</div>` : selected ? `<div class="single-version">${escapeHtml(versionName(selected))} · 默认</div>` : ''}
-    ${field.type === 'versioned_text' || !isDefault ? `<div class="version-content ${value ? '' : 'muted'}" id="profile-value-${entry.id}-${field.id}">${escapeHtml(value || '暂无内容')}</div>` : control(field, value, `id="profile-value-${entry.id}-${field.id}" data-field="${field.id}" data-entry="${entry.id}" aria-label="${escapeHtml(field.label)}"`)}
-  </div>`;
-}
-function bindProfileFields(root = $('#profile-fields')) {
-  $$('[data-profile-version]', root).forEach(select => select.onchange = () => {
-    const entry = state.entries.find(e => e.id === select.dataset.entry);
-    const field = state.fields.find(f => f.id === select.dataset.field);
-    const key = entry.id + '/' + field.id;
-    profileVersions.set(key, select.value);
-    const card = select.closest('[data-profile-answer-key]');
-    card.innerHTML = $("[data-profile-answer-key]", new DOMParser().parseFromString(renderProfileField(entry, field), 'text/html')).innerHTML;
-    bindProfileFields(card);
-  });
-  $$('[data-field][data-entry]:is(input,textarea,select):not([data-profile-version])', root).forEach(input => input.oninput = () => {
-    const entry = state.entries.find(e => e.id === input.dataset.entry);
-    const field = state.fields.find(f => f.id === input.dataset.field);
-    profileDrafts.set(profileDraftKey(entry, field), input.value);
-  });
-  $$('[data-add-version]', root).forEach(button => button.onclick = () => {
-    const entry = state.entries.find(e => e.id === button.dataset.entry);
-    const field = state.fields.find(f => f.id === button.dataset.field);
-    const versions = versionsFor(entry.id, field.id);
-    const selected = versions.find(v => v.id === profileVersions.get(entry.id + '/' + field.id)) || versions.find(v => v.id === entry.default_versions?.[field.id]) || versions[0];
-    let number = versions.length + 1;
-    while (versions.some(v => versionName(v) === '版本 ' + number)) number++;
-    newVersionTarget = {entryId: entry.id, fieldId: field.id};
-    $('#new-version-title').textContent = field.label + ' · 新增版本';
-    $('#new-version-name').value = '版本 ' + number;
-    const content = selected?.id === entry.default_versions?.[field.id] ? profileDrafts.get(profileDraftKey(entry, field)) ?? selected?.content : selected?.content;
-    $('#new-version-content').innerHTML = control(field, content ?? entry.values[field.id] ?? '', 'id="new-version-value" aria-label="新版本内容" required');
-    $('#new-version-error').hidden = true;
-    $('#new-version-dialog').showModal();
-    $('#new-version-value').focus();
-  });
-  $$('[data-default-version]', root).forEach(button => button.onclick = safe(async () => {
-    await api('/api/default-version', {entry_id: button.dataset.entry, field_id: button.dataset.field, version_id: button.dataset.defaultVersion});
-    await refresh(); toast('已设为默认版本');
-  }));
-}
-
 async function api(path, data) {
   const response = await fetch(path, data === undefined ? {} : {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
   const body = await response.json();
@@ -98,17 +42,21 @@ async function refresh() {
   const requestedSession=location.hash.match(/^#practice\/([\w-]+)$/)?.[1];
   const remembered=localStorage.getItem('profile-lab-session');
   const selected=latest.sessions.find(s=>s.id===requestedSession)?.id||latest.sessions.find(s=>s.id===sessionId)?.id||latest.sessions.find(s=>s.id===remembered)?.id||latest.sessions[0]?.id;
-  const [groups,newIncrements,newMaterials,newApplication,newPreparation]=await Promise.all([
+  const [groups,newIncrements,newMaterials,newApplication,newPreparation,library]=await Promise.all([
     api('/api/profile-groups'),api('/api/increments'),
     selected?api('/api/materials?session='+encodeURIComponent(selected)):Promise.resolve({}),
     selected?api('/api/application?session='+encodeURIComponent(selected)):Promise.resolve({website:null,automatic:[],decisions:[],missing:[]}),
-    selected?api('/api/preparation?session='+encodeURIComponent(selected)):Promise.resolve({})
+    selected?api('/api/preparation?session='+encodeURIComponent(selected)):Promise.resolve({}),
+    api('/api/profile/library').catch(error=>({loadError:error.message}))
   ]);
   if(newApplication.website&&latest.sessions.find(s=>s.id===selected)?.form_analysis)newPreparation.current=await api('/api/preparation/current?session='+encodeURIComponent(selected));
   if(revision!==refreshRevision)return;
+  answerDrafts.hydrate(selected,newPreparation.drafts||{});
   state=latest;profileGroups=groups;increments=newIncrements;materials=newMaterials;application=newApplication;preparationState=newPreparation;sessionId=selected;
-  if(!state.categories.some(c=>c.id===selectedCategory))selectedCategory='basic';
+  if(!library.tree?.nodes.some(c=>c.id===selectedCategory)&&!state.categories.some(c=>c.id===selectedCategory))selectedCategory='basic';
   if(sessionId)localStorage.setItem('profile-lab-session',sessionId);else localStorage.removeItem('profile-lab-session');
+  profileLibraryLoadError=library.loadError||'';
+  if(!profileLibraryLoadError)profileLibrary.hydrate(library);
   renderProfile();renderPractice();
 }
 function control(field, value, attrs = '') {
@@ -117,78 +65,16 @@ function control(field, value, attrs = '') {
   if (field.type === 'select') return `<select ${attrs}><option value="">留空</option>${field.options.map(x=>`<option value="${escapeHtml(x)}" ${x===value?'selected':''}>${escapeHtml(x)}</option>`).join('')}</select>`;
   return `<input type="${field.type==='date'?'date':field.type==='number'?'number':'text'}" value="${escaped}" ${attrs}>`;
 }
-function profileEntryTitle(entry, index = 0) {
-  const values = entry.values;
-  const firstNamedValue = state.fields.find(f=>f.category===entry.category && ['text','select'].includes(f.type) && values[f.id]);
-  return [values.company || values.school || values.organization || values.title || values.name || (firstNamedValue && values[firstNamedValue.id]) || '第 '+(index+1)+' 条记录',
-    entry.category === 'education' ? values.degree : values.role || values.major].filter(Boolean).join(' · ');
-}
-function profileEntryMeta(entry) {
-  const v=entry.values;
-  return [v.major, [v.education_started || v.started, v.graduation_date || v.ended].filter(Boolean).join(' — ')].filter(Boolean).join(' · ');
-}
-function groupMember(entry, index) {
-  return `<li data-set-member="${entry.id}"><div><strong>${escapeHtml(profileEntryTitle(entry,index))}</strong><p>${escapeHtml(profileEntryMeta(entry))}</p></div><button type="button" data-edit-group-entry="${entry.id}">查看 / 编辑</button></li>`;
-}
-function profileSetComposition(set) {
-  const missing = set.issues.filter(i=>i.kind==='coverage').map(i=>i.condition.values.join('／')+'（待补）');
-  return [...missing, ...(set.composition?[set.composition]:[])].join('＋') || '尚无对应经历';
-}
-function renderProfileGroup(group, entries) {
-  if(group.category==='education') {
-    return `<section class="profile-group" data-profile-group="education"><div class="group-intro"><strong>教育经历组合</strong><span class="tag">由网站要求决定使用哪一组</span><p>本科、硕士等经历是组内成员；填写时整组带入，各条资料使用默认版本。</p></div><div class="education-sets">${group.sets.map(set=>`<article class="education-set" data-profile-set="${set.id}"><header><h3>${escapeHtml(set.label)}</h3><span class="tag">${set.entry_ids.length} 段经历</span></header><p class="set-composition">${escapeHtml(profileSetComposition(set))}</p><p>${escapeHtml(set.requirement.summary)}</p><ul>${set.entry_ids.map(id=>groupMember(entries.find(e=>e.id===id),entries.findIndex(e=>e.id===id))).join('')}</ul>${set.issues.filter(i=>i.kind==='coverage').map(i=>`<div class="set-gap" data-set-gap>缺少${escapeHtml(i.condition.values.join('／'))}经历 · 遇到此要求时需要补充</div>`).join('')}${set.issues.some(i=>i.kind==='scope')?'<p class="set-gap">有经历的学历待补充或待明确，尚不能确定完整组合。</p>':''}</article>`).join('')}</div>${group.unassigned_ids.length?`<div class="ungrouped-entries"><strong>尚未归入上述组合</strong><p>学历不明确或不属于这两个起填范围，资料仍保留。</p><ul>${group.unassigned_ids.map(id=>groupMember(entries.find(e=>e.id===id),entries.findIndex(e=>e.id===id))).join('')}</ul></div>`:''}<p class="group-footnote">两组引用同一份经历资料。在下方修改一条经历后，两组同步更新；实际网站若有其他范围，以读取到的要求为准。</p></section>`;
+let profileLibraryLoadError='';
+function renderProfile(){
+  if(profileLibraryLoadError){
+    $('#category-nav').replaceChildren();$('#profile-add-controls').replaceChildren();$('#profile-foot').replaceChildren();
+    $('#category-title').textContent='我的资料';$('#category-description').textContent='';
+    $('#profile-fields').innerHTML='<p role="status">资料页暂时无法读取，请稍后重试。已保存资料和本次投递仍保留。</p>';
+    return;
   }
-  return `<section class="profile-group" data-profile-group="${group.category}"><div class="group-intro"><strong>${escapeHtml(group.label)} · 经历与答案库</strong><span class="tag">${entries.length} 条资料</span><p>${group.category==='employment'?'投递时按网站要求选择实习组合、顺序及每段的版本；要求完整工作履历时自动取齐相应经历。':'这些资料共同属于一个逻辑字段。投递时按网站要求取用；只有确实需要选择的内容才让你决定。'}</p></div><ul class="group-inventory">${entries.map(groupMember).join('')}</ul></section>`;
+  profileLibrary.render();
 }
-function renderProfile() {
-  $('#category-nav').innerHTML = state.categories.map(cat => `<button data-category="${cat.id}" class="${cat.id===selectedCategory?'active':''}"><span>${cat.label}</span><span class="count">${cat.id==='education'?'2 组':cat.repeatable?state.entries.filter(e=>e.category===cat.id).length+' 条':state.fields.filter(f=>f.category===cat.id).length}</span></button>`).join('');
-  $$('#category-nav button').forEach(b => b.onclick=()=>{selectedCategory=b.dataset.category;history.replaceState(null,'','#profile/'+selectedCategory);renderProfile();});
-  const cat = state.categories.find(c => c.id===selectedCategory);
-  const fields = state.fields.filter(f=>f.category===selectedCategory);
-  const entries = state.entries.filter(e=>e.category===selectedCategory);
-  const group = profileGroups.find(g=>g.category===selectedCategory);
-  $('#category-title').textContent=cat.label;
-  $('#category-description').textContent=selectedCategory==='education'?'先看整组包含哪些经历，再展开组内资料维护内容与版本。':cat.repeatable?'同一逻辑字段下集中管理全部记录，展开一条即可维护其内容和版本。':'选择版本查看内容；默认版本用于自动填写。每个字段都可以直接新增版本。';
-  $('#add-field').hidden=selectedCategory==='attachments';
-  if (selectedCategory==='attachments') {
-    $('#profile-fields').innerHTML=state.files.length?state.files.map(f=>`<div class="file-row"><div><strong>${escapeHtml(f.name)}</strong><p>${f.size} 字节 · 保留上传原件</p></div><a href="/api/files/${f.id}" download>下载原文件</a></div>`).join(''):'<div class="empty">尚未上传附件。全表单独立存在，上传文件不会替代资料字段。</div>';
-  } else if (!fields.length) {
-    $('#profile-fields').innerHTML='<div class="empty">此分类已预留。点击“新增字段”添加实际招聘需要的资料项。</div>';
-  } else if (!entries.length && selectedCategory!=='education') {
-    $('#profile-fields').innerHTML='<div class="empty">尚无记录，可手动添加，也可从简历中提取。</div>';
-  } else {
-    $('#profile-fields').innerHTML=(group?renderProfileGroup(group,entries)+'<h3 class="group-records-title">组内资料与版本</h3>':'')+entries.map((entry,index)=>cat.repeatable?`<details class="entry-card grouped-entry" data-profile-entry="${entry.id}" ${expandedProfileEntries.has(entry.id)?'open':''}><summary><span>${escapeHtml(profileEntryTitle(entry,index))}<small>${escapeHtml(profileEntryMeta(entry))}</small></span><span class="entry-edit-label">内容与版本</span></summary><div class="field-grid">${fields.map(field=>renderProfileField(entry,field)).join('')}</div></details>`:`<article class="entry-card"><h3>${escapeHtml(cat.label)}</h3><div class="field-grid">${fields.map(field=>renderProfileField(entry,field)).join('')}</div></article>`).join('');
-  }
-  $('#profile-foot').innerHTML=(cat.repeatable?'<button id="add-entry">＋ 添加一条记录</button> ':'')+(fields.some(f=>f.type!=='versioned_text')&&entries.length&&selectedCategory!=='attachments'?'<button id="save-profile" class="primary">保存到底稿</button>':'')+(increments.candidates.length?`<div class="pending-card">${increments.candidates.length} 项新增或变化待处理<button id="open-increments">处理增量</button></div>`:'')+state.imports.filter(p=>p.status==='失败').map(p=>`<div class="pending-card">${escapeHtml(p.filename)} · 识别失败<button data-pending="${p.id}">查看并重试</button></div>`).join('');
-  if($('#open-increments'))$('#open-increments').onclick=()=>openPreview();
-  bindProfileFields();
-  $$('[data-profile-entry]').forEach(details=>details.ontoggle=()=>{if(details.open)expandedProfileEntries.add(details.dataset.profileEntry);else expandedProfileEntries.delete(details.dataset.profileEntry);});
-  $$('[data-edit-group-entry]').forEach(button=>button.onclick=()=>{
-    const details=$(`[data-profile-entry="${button.dataset.editGroupEntry}"]`);
-    details.open=true;expandedProfileEntries.add(button.dataset.editGroupEntry);details.scrollIntoView({block:'start',behavior:'smooth'});
-  });
-  if($('#add-entry')) $('#add-entry').onclick=safe(async()=>{const added=await api('/api/entries',{category:selectedCategory});expandedProfileEntries.add(added.id);await refresh();$(`[data-profile-entry="${added.id}"]`)?.scrollIntoView({block:'start',behavior:'smooth'});});
-  if($('#save-profile')) $('#save-profile').onclick=safe(async()=>{
-    const values=entries.flatMap(entry=>fields.filter(f=>f.type!=='versioned_text').map(field=>({field_id:field.id,entry_id:entry.id,value:profileDrafts.get(profileDraftKey(entry,field))??entry.values[field.id]??''})));
-    await api('/api/profile',{values});
-    entries.forEach(entry=>fields.forEach(field=>profileDrafts.delete(profileDraftKey(entry,field))));
-    await refresh();toast('已保存到底稿');
-  });
-  $$('[data-pending]').forEach(b=>b.onclick=()=>openPreview(state.imports.find(p=>p.id===b.dataset.pending)));
-}
-$('#new-version-form').onsubmit=async event=>{
-  event.preventDefault();
-  const button=$('#save-new-version');button.disabled=true;
-  try{
-    const name=$('#new-version-name').value.trim(),content=$('#new-version-value').value;
-    if(!name||!content.trim())throw new Error('请填写版本名称和内容');
-    const existingIds=versionsFor(newVersionTarget.entryId,newVersionTarget.fieldId).map(v=>v.id);
-    const result=await api('/api/versions/create',{entry_id:newVersionTarget.entryId,field_id:newVersionTarget.fieldId,content,name});
-    profileVersions.set(newVersionTarget.entryId+'/'+newVersionTarget.fieldId,result.id);
-    $('#new-version-dialog').close();await refresh();toast((existingIds.includes(result.id)?'内容相同，已显示 ':'已保存 ')+versionName(result));
-  }catch(error){$('#new-version-error').textContent=error.message;$('#new-version-error').hidden=false;}
-  finally{button.disabled=false;}
-};
 function showView(view) {
   currentView=view;
   window.dispatchEvent(new CustomEvent('workbench:view-change',{detail:view}));
@@ -205,19 +91,14 @@ function showView(view) {
   }
   history.replaceState(null,'',view==='practice'?(sessionId?'#practice/'+sessionId:'#practice'):view==='profile'?'#profile/'+selectedCategory:'#management');
 }
-$('#view-profile').onclick=()=>showView('profile');$('#view-management').onclick=()=>showView('management');
+$('#view-profile').onclick=()=>showView('profile');
+$('#archive-profile').onclick=()=>{profileLibrary.archive=!profileLibrary.archive;renderProfile();};
+$('#pending-profile').onclick=()=>openPreview();
+$('#profile-search').oninput=e=>{profileLibrary.search=e.target.value;renderProfile();};
+$('#expand-profile').onclick=()=>{$$('[data-library-record],[data-file-card]').forEach(e=>{e.open=true;profileLibrary.open.add(e.dataset.libraryRecord||'file:'+e.dataset.fileCard);});};
+$('#collapse-profile').onclick=()=>{$$('[data-library-record],[data-file-card]').forEach(e=>{e.open=false;profileLibrary.open.delete(e.dataset.libraryRecord||'file:'+e.dataset.fileCard);});};
+$('#view-management').onclick=()=>showView('management');
 $$('[data-close]').forEach(b=>b.onclick=()=>$('#'+b.dataset.close).close());
-$('#add-field').onclick=()=>{
-  $('#field-form').reset();$('#field-options-label').hidden=true;
-  $('#field-category').innerHTML=state.categories.filter(c=>c.id!=='attachments').map(c=>`<option value="${c.id}">${c.label}</option>`).join('');
-  $('#field-category').value=selectedCategory;$('#field-dialog').showModal();
-};
-$('#field-type').onchange=()=>$('#field-options-label').hidden=$('#field-type').value!=='select';
-$('#field-form').onsubmit=safe(async event=>{
-  event.preventDefault();
-  await api('/api/fields',{label:$('#field-label').value,category:$('#field-category').value,type:$('#field-type').value,options:$('#field-options').value.split('\n').map(x=>x.trim()).filter(Boolean)});
-  selectedCategory=$('#field-category').value;$('#field-dialog').close();await refresh();toast('字段已添加到全表单');
-});
 $('#resume-file').onchange=safe(async event=>{
   const files=[...event.target.files];if(!files.length)return;
   if(files.some(file=>file.size>8*1024*1024))throw new Error('每份简历最多 8 MiB');
@@ -225,42 +106,70 @@ $('#resume-file').onchange=safe(async event=>{
   const completed=[],errors=[];
   try{
     for(const [index,file] of files.entries()){
-      $('#upload-progress').textContent=`正在识别 ${index+1}/${files.length}：${file.name}，完成后可预览。`;
+      $('#upload-progress').textContent=`正在上传 ${index+1}/${files.length}：${file.name}，识别将在后台继续。`;
       const encoded=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result.split(',')[1]);reader.onerror=reject;reader.readAsDataURL(file);});
-      try{completed.push(await api('/api/import',{filename:file.name,base64:encoded}));}
+      try{completed.push(await api('/api/import',{filename:file.name,base64:encoded,async:true}));}
       catch(error){errors.push(file.name+'：'+error.message);}
     }
-    await refresh();
+    await refresh();await pollImportTasks();
     const first=completed[0]||state.imports.at(-1);
-    if(first)openPreview(state.imports.find(p=>p.id===first.id));
-    $('#upload-progress').textContent=`已识别 ${completed.length}/${files.length} 份，尚未写入底稿。`+(errors.length?' '+errors.join('；'):'');
+    if(first)openPreview(state.imports.find(p=>p.id===first.id)||first);
+    $('#upload-progress').textContent=`已上传 ${completed.length}/${files.length} 份，可查看解析进度与原文预览。`+(errors.length?' '+errors.join('；'):'');
   }finally{event.target.value='';event.target.disabled=false;}
 });
+function importCandidateMarkup(c, grouped=false) {
+  return `<div class="candidate ${grouped?'set-field':''}" data-candidate="${c.id}">${grouped?'':`<input type="checkbox" data-import-scalar aria-label="选择增量 ${escapeHtml(c.label)}" ${c.selected?'checked':''}>`}<div class="candidate-title">${escapeHtml(c.label)}<span class="tag">${escapeHtml(({事实冲突:'新的答案，与默认不同',描述待检查:'新增描述版本'})[c.status]||c.status)}</span></div><div>${control({type:c.type,options:state.fields.find(f=>f.id===c.field_id)?.options||c.definition?.options||[]},c.value,`aria-label="预览 ${escapeHtml(c.label)}" data-candidate-value`)}${c.existing?`<div class="existing">当前默认：${escapeHtml(c.existing)}</div><label>替换哪个版本<select data-replace-version>${c.existing_versions.map(v=>`<option value="${v.id}" ${v.id===c.default_version_id?'selected':''}>${escapeHtml(versionName(v))}</option>`).join('')}</select></label>`:''}</div></div>`;
+}
+function importUnits(candidates) {
+  const groups=new Map();
+  for(const c of candidates){
+    const repeatable=state.categories.find(cat=>cat.id===c.category)?.repeatable;
+    const key=repeatable?c.import_id+'/'+c.group:c.id;
+    if(!groups.has(key))groups.set(key,{key,repeatable,category:c.category,rows:[]});
+    groups.get(key).rows.push(c);
+  }
+  return [...groups.values()];
+}
 function openPreview(result) {
   preview=result;
-  $('#import-summary').textContent=`${increments.candidates.length} 项增量 · ${increments.consistent} 项一致自动复用 · ${increments.merged} 项重复合并`;
-  $('#import-warnings').innerHTML=state.imports.flatMap(p=>[...(p.warnings||[]),...(p.error?[p.error]:[])]).map(w=>`<p class="notice">${escapeHtml(w)}</p>`).join('');
+  const parsing=['待识别','识别中'].includes(result?.status),candidates=result?increments.candidates.filter(c=>c.import_id===result.id):increments.candidates,units=importUnits(candidates);
+  $$('[data-import-mode],#select-all-import,#clear-import').forEach(button=>button.disabled=parsing);
+  if(typeof renderImportTaskPreview==='function')renderImportTaskPreview();
+  $('#import-summary').textContent=parsing?'正在解析，资料组生成后会自动显示':`${units.length} 组待处理 · ${increments.consistent} 项一致自动复用 · ${increments.merged} 项重复合并`;
+  $('#import-warnings').innerHTML=(result?[result]:state.imports).flatMap(p=>[...(p.warnings||[]),...(p.error?[p.error]:[])]).map(w=>`<p class="notice">${escapeHtml(w)}</p>`).join('');
   $('#retry-import').hidden=!result?.semantic||result.candidates.some(c=>c.saved)||result.status==='识别中';
-  $('#import-candidates').innerHTML=increments.candidates.length?increments.candidates.map(c=>`<div class="candidate" data-candidate="${c.id}"><input type="checkbox" aria-label="选择增量 ${escapeHtml(c.label)}" ${c.selected?'checked':''}><div class="candidate-title">${escapeHtml(c.group_title||state.categories.find(cat=>cat.id===c.category)?.label||'')}<br>${escapeHtml(c.label)}<span class="tag">${escapeHtml(({事实冲突:'新的答案，与默认不同',描述待检查:'新增描述版本'})[c.status]||c.status)}</span></div><div>${control({type:c.type,options:state.fields.find(f=>f.id===c.field_id)?.options||c.definition?.options||[]},c.value,`aria-label="预览 ${escapeHtml(c.label)}" data-candidate-value`)}${c.existing?`<div class="existing">当前默认：${escapeHtml(c.existing)}</div><label>替换哪个版本<select data-replace-version>${c.existing_versions.map(v=>`<option value="${v.id}" ${v.id===c.default_version_id?'selected':''}>${escapeHtml(versionName(v))}</option>`).join('')}</select></label>`:''}<div class="button-row">${['replace','new','ignore'].map(mode=>`<button data-one-import="${mode}">${{replace:'替换现有版本',new:'存为新版本',ignore:'忽略'}[mode]}</button>`).join('')}</div></div></div>`).join(''):'<div class="empty">没有新增或变化内容需要处理。</div>';
-  $('#import-count').textContent='仅选中的增量会按所点动作处理';
-  $$('[data-one-import]').forEach(b=>b.onclick=safe(()=>resolveIncrements(b.dataset.oneImport,[b.closest('[data-candidate]')])));
+  $('#import-candidates').innerHTML=parsing?'<div class="empty">正在识别，资料组尚未生成。</div>':units.length?units.map(unit=>{
+    const rows=unit.rows,first=rows[0],category=state.categories.find(cat=>cat.id===unit.category),title=first.group_title||rows.find(c=>['company','school','award_name','language_name','project_name','certificate_name','skill_name'].includes(c.field_id))?.value||category?.label;
+    if(!unit.repeatable)return `<section data-import-unit data-import-category="${unit.category}">${importCandidateMarkup(first)}<div class="button-row">${['replace','new','ignore'].map(mode=>`<button data-unit-import="${mode}">${{replace:'替换现有版本',new:'存为新版本',ignore:'忽略'}[mode]}</button>`).join('')}</div></section>`;
+    return `<section class="import-set" data-import-unit data-import-category="${unit.category}"><header><label class="checkbox-label"><input type="checkbox" data-import-set aria-label="选择资料组 ${escapeHtml(title)}" ${rows.every(c=>c.selected)?'checked':''}><strong>${escapeHtml(title)}</strong></label><span class="tag">${escapeHtml(category?.label)} · ${rows.length} 项待处理</span></header>${first.identity_review?`<div class="notice identity-review"><p>请确认这是否为已有的同一段经历／同一次获奖。</p><select data-identity-choice aria-label="选择已有资料或独立记录"><option value="">请选择</option><option value="__new">不同，是独立资料</option>${(first.identity_choices||[]).map(id=>{const e=state.entries.find(e=>e.id===id);return `<option value="${id}">同一条：${escapeHtml(profileLibrary.title(e))} · ${escapeHtml(profileLibrary.meta(e))}</option>`;}).join('')}</select><button data-confirm-identity="${first.id}">确认归属</button></div>`:''}<details><summary>查看 / 修改整组资料</summary><div class="import-set-fields">${rows.map(c=>importCandidateMarkup(c,true)).join('')}</div></details><div class="button-row">${['replace','new','ignore'].map(mode=>`<button data-unit-import="${mode}">${{replace:'整组替换现有版本',new:'整组存为新版本',ignore:'忽略整组'}[mode]}</button>`).join('')}</div></section>`;
+  }).join(''):'<div class="empty">没有新增或变化内容需要处理。</div>';
+  if(result&&!parsing){
+    const pendingIds=new Set(candidates.map(c=>c.id)),finished=importUnits(result.candidates.filter(c=>!pendingIds.has(c.id)));
+    if(finished.length)$('#import-candidates').insertAdjacentHTML('beforeend',`<details class="import-confirmed"><summary>已处理 / 已复用资料 · ${finished.length} 组</summary>${finished.map(unit=>`<section class="import-set"><strong>${escapeHtml(unit.rows[0].group_title||state.categories.find(c=>c.id===unit.category)?.label||'资料')}</strong>${unit.rows.map(c=>`<div class="summary-row"><span>${escapeHtml(c.label)}</span><span>${escapeHtml(c.value)}</span></div>`).join('')}</section>`).join('')}</details>`);
+  }
+  const categorySelect=$('#import-category');
+  categorySelect.innerHTML='<option value="">全部类别</option>'+state.categories.filter(c=>units.some(u=>u.category===c.id)).map(c=>`<option value="${c.id}">${escapeHtml(c.label)}</option>`).join('');
+  categorySelect.onchange=()=>$$('[data-import-unit]').forEach(unit=>unit.hidden=!!categorySelect.value&&unit.dataset.importCategory!==categorySelect.value);
+  $('#import-count').textContent='按资料组保存或忽略；组内已确认的一致内容保持原样';
+  $$('[data-unit-import]').forEach(b=>b.onclick=safe(()=>resolveIncrements(b.dataset.unitImport,$$('[data-candidate]',b.closest('[data-import-unit]')))));
+  $$('[data-confirm-identity]').forEach(button=>button.onclick=safe(async()=>{const c=increments.candidates.find(c=>c.id===button.dataset.confirmIdentity),choice=$('[data-identity-choice]',button.closest('.identity-review')).value;if(!choice)throw Error('请选择同一条资料或独立资料');await api('/api/import/identity',{import_id:c.import_id,group:c.group,entry_id:choice==='__new'?null:choice,revision:increments.revisions[c.import_id]});const pid=preview?.id;await refresh();openPreview(state.imports.find(p=>p.id===pid));}));
   if(!$('#import-dialog').open)$('#import-dialog').showModal();
 }
-$('#select-all-import').onclick=()=>$$('[data-candidate] input[type=checkbox]').forEach(c=>c.checked=true);
-$('#clear-import').onclick=()=>$$('[data-candidate] input[type=checkbox]').forEach(c=>c.checked=false);
+$('#select-all-import').onclick=()=>$$('[data-import-unit]:not([hidden]) [data-import-set],[data-import-unit]:not([hidden]) [data-import-scalar]').forEach(c=>c.checked=true);
+$('#clear-import').onclick=()=>$$('[data-import-unit]:not([hidden]) [data-import-set],[data-import-unit]:not([hidden]) [data-import-scalar]').forEach(c=>c.checked=false);
 $('#retry-import').onclick=safe(async()=>{
   $('#retry-import').disabled=true;
-  try{toast('正在重新识别…');const result=await api('/api/import/retry',{import_id:preview.id});await refresh();openPreview(result);}
+  try{toast('正在重新识别…');const result=await api('/api/import/retry',{import_id:preview.id,async:true});await refresh();await pollImportTasks();openPreview(result);}
   finally{$('#retry-import').disabled=false;}
 });
 async function resolveIncrements(mode,rows){
   if(!rows.length)throw new Error('请先选择要处理的增量');
   const decisions=rows.map(row=>({candidate_id:row.dataset.candidate,mode,value:$('[data-candidate-value]',row).value,version_id:$('[data-replace-version]',row)?.value}));
   const result=await api('/api/import/resolve',{decisions,revisions:increments.revisions});
-  await refresh();openPreview();toast(`已保存 ${result.saved} 项，忽略 ${result.ignored} 项`);
-  if(!increments.candidates.length)$('#import-dialog').close();
+  const previewId=preview?.id;await refresh();await pollImportTasks();openPreview(state.imports.find(p=>p.id===previewId));toast(`已保存 ${result.saved} 项，忽略 ${result.ignored} 项`);
+  if(!increments.candidates.some(c=>!preview||c.import_id===preview.id))$('#import-dialog').close();
 }
-$$('[data-import-mode]').forEach(b=>b.onclick=safe(()=>resolveIncrements(b.dataset.importMode,$$('[data-candidate]').filter(row=>$('input[type=checkbox]',row).checked))));
+$$('[data-import-mode]').forEach(b=>b.onclick=safe(()=>resolveIncrements(b.dataset.importMode,$$('[data-import-unit]:not([hidden])').filter(unit=>$('[data-import-set],[data-import-scalar]',unit)?.checked).flatMap(unit=>$$('[data-candidate]',unit)))));
 
 function answerRef(item, entryId, choice, childId){
   return {website_id:item.website_field.id,group_id:item.group_id,entry_id:entryId,field_id:choice?.field.id,child_id:childId||choice?.child_id};
@@ -268,8 +177,9 @@ function answerRef(item, entryId, choice, childId){
 function draftKey(ref){return sessionId+'/'+ref.group_id+'/'+ref.entry_id+'/'+(ref.field_id||ref.child_id||ref.website_id);}
 function versionEditor(choice, entryId, item){
   const ref=answerRef(item,entryId,choice),key=entryId+'/'+choice.field.id;
-  return `<div class="version-block" data-answer-key="${escapeHtml(key)}" data-answer-ref="${escapeHtml(JSON.stringify(ref))}"><label>${escapeHtml(choice.field.label)}${choice.versions.length>1?`<select data-version-select aria-label="${escapeHtml(choice.field.label)}版本">${choice.versions.map(v=>`<option value="${v.id}" ${v.id===choice.selected?.id?'selected':''}>${escapeHtml(versionName(v))}${state.entries.find(e=>e.id===entryId)?.default_versions?.[choice.field.id]===v.id?' · 默认':''}</option>`).join('')}</select>`:choice.selected?`<input type="hidden" data-version-select value="${choice.selected.id}">`:''}</label><label>本次使用内容${control(choice.field,answerDrafts.get(draftKey(ref))??choice.content,`data-version-content data-applied="${escapeHtml(choice.content)}"`)}</label><div class="button-row"><button data-version-mode="update">更新当前版本</button><button data-version-mode="new">保存为新版本</button><button data-version-mode="session">仅供本次使用</button></div></div>`;
+  return `<div class="version-block" data-answer-key="${escapeHtml(key)}" data-answer-ref="${escapeHtml(JSON.stringify(ref))}"><label>${escapeHtml(choice.field.label)}${control(choice.field,answerDrafts.get(draftKey(ref))??choice.content,`data-version-content data-applied="${escapeHtml(choice.content)}"`)}</label><div class="button-row"><button data-version-mode="session">仅供本次使用</button></div></div>`;
 }
+
 function entryTitle(entry){
   const v=entry.values;
   return [v.school||v.company||v.certificate_name||v.language||v.language_name||v.award_name||v.project_name||v.name||v.person_name||v.contact_name||v.family_name||'资料记录',v.degree||v.role||v.relationship||v.relation||'',v.started||v.education_started||''].filter(Boolean).join(' · ');
@@ -335,8 +245,9 @@ function bindChoices(){
     const block=button.closest('[data-answer-ref]'),ref=JSON.parse(block.dataset.answerRef),input=$('[data-version-content],[data-missing-value]',block),versionId=$('[data-version-select]',block)?.value;
     const version=[...state.versions,...state.answer_versions].find(v=>v.id===versionId);
     const mode=button.dataset.versionMode||button.dataset.missingMode;
+    await answerDrafts.settled(sessionId);
     await api('/api/website/answer',{session_id:sessionId,...ref,version_id:versionId,mode,value:input.value,expected_revision:version?.revision});
-    answerDrafts.delete(draftKey(ref));await refresh();toast(button.textContent+'已完成');
+    answerDrafts.delete(draftKey(ref));await answerDrafts.settled(sessionId);await refresh();toast(button.textContent+'已完成');
   }));
   $$('[data-add-material]').forEach(button=>button.onclick=safe(async()=>{await api('/api/website/entry',{session_id:sessionId,website_id:button.dataset.addMaterial});await refresh();toast('已添加待补充资料，请填写相关字段');}));
 }

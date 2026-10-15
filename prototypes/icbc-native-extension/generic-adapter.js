@@ -6,6 +6,7 @@
   const originPage = location.href;
   const ids = new WeakMap(); let nextId = 0;
   const dateKinds = new WeakMap();
+  const searchWidgets = new WeakSet();
   const idFor = (el, prefix = 'field') => {if (!ids.has(el)) ids.set(el, prefix + '-' + (++nextId)); return ids.get(el);};
   let cachedRoots=[document];
   const refreshRoots = () => {const out = [document]; for (let i=0; i<out.length; i++) for (const e of out[i].querySelectorAll('*')) if (e.shadowRoot) out.push(e.shadowRoot); cachedRoots=out;return out;};
@@ -68,7 +69,7 @@
     if(f.driver==='radio') return text(f.group.find(e=>e.checked)?.closest('label')) || f.group.find(e=>e.checked)?.value || '';
     if(f.driver==='checkbox')return f.el.checked;
     if(f.driver==='contenteditable')return f.el.innerText;
-    if(f.driver==='sugar')return text(f.root.querySelector('[class*="sd-Input-display-value-"]'));
+    if(f.driver==='sugar')return f.kind==='multiselect'?all('[class*="sd-Tag-text-"]',f.root).map(text):text(f.root.querySelector('[class*="sd-Input-display-value-"]'));
     if(f.driver==='ant') {
       if(f.kind==='multiselect')return all('.ant-select-selection__choice__content,.ant-select-selection-item-content',f.root).map(text);
       return text(f.root.querySelector('.ant-select-selection-selected-value,.ant-select-selection-item,.atsx-select-selection-selected-value'));
@@ -81,17 +82,24 @@
   function fields() {
     refreshRoots();guard(); const out=[], seen=new Set();
     for(const el of all('input,textarea,select,[contenteditable=true],[role=combobox]')) {
-      if(!visible(el)||el.closest('#jobfill-executor-report,#jobfill-executor-progress,.ant-calendar,.ant-select-dropdown,.phoenix-selectList,.phoenix-calendar,.constant-main-selector-container,.common-unmodeled-layer')||['hidden','submit','button','reset','image'].includes(el.type))continue;
+      if(!visible(el)||el.closest('#jobfill-executor-report,#jobfill-executor-progress,.ant-calendar,.ant-select-dropdown,.phoenix-selectList,.phoenix-calendar,.constant-main-selector-container,.common-unmodeled-layer,[class*=sd-Dropdown-dropdown]')||['hidden','submit','button','reset','image'].includes(el.type))continue;
       const w=widget(el), canonical=w?.root||el;
       if(seen.has(canonical))continue; seen.add(canonical);
       const item=el.closest(containerSelector)||el.parentElement;
       let label=labelFor(el,item),driver='native-text',kind='text',group;
-      if(w){driver=w.driver;kind=/multiple/.test(w.root.className)||w.root.getAttribute('aria-multiselectable')==='true'?'multiselect':'select';}
+      // Site navigation search is not part of the application material.
+      if(!w&&(/输入职位关键字|搜索职位|职位搜索|搜索岗位/.test(label+' '+(el.placeholder||''))||el.type==='search'))continue;
+      if(w){driver=w.driver;kind=/multiple|multi_select_info/.test(w.root.className)||w.root.getAttribute('aria-multiselectable')==='true'?'multiselect':'select';}
       if(w?.driver==='unsupported'){kind='unsupported';}
       else if(w?.driver==='phoenix-autocomplete'){kind='autocomplete';}
       else if(w?.driver==='phoenix-calendar'){kind=dateKinds.get(w.root)||(/^\d{4}-\d{2}-\d{2}$/.test(el.value)?'date':/^\d{4}-\d{2}$/.test(el.value)?'month':'unsupported');}
       else if(w?.driver==='ant-date'){kind=/^\d{4}-\d{2}$/.test(el.value)||/年月|月份/.test(el.placeholder||'')?'month':'date';}
       else if(w?.driver==='sugar-month'){kind='month';label+=w.suffix;}
+      else if(w?.driver==='sugar'&&!el.readOnly&&kind!=='multiselect'){
+        // Sugar clears its placeholder after selection; it is not a type change.
+        if(/请输入|搜索/.test(el.placeholder||'')||/学校名称|专业名称/.test(label))searchWidgets.add(w.root);
+        if(searchWidgets.has(w.root))kind='autocomplete';
+      }
       else if(el.tagName==='SELECT'){driver='native-select';kind=el.multiple?'multiselect':'select';}
       else if(el.type==='radio'){
         driver='radio';kind='radio';group=all('input[type=radio]',el.form||item).filter(e=>e.name===el.name&&visible(e));
@@ -129,15 +137,22 @@
   function optionsFor(f) {
     const owner=f.input.getAttribute('aria-controls')||f.input.getAttribute('aria-owns')||f.root.getAttribute('aria-controls');
     const popup=owner?f.input.getRootNode().getElementById?.(owner):null;
-    const candidates=all(optionSelectors,popup||undefined).filter(e=>visible(e)&&e.getAttribute('aria-disabled')!=='true'&&!/disabled/i.test(e.className));
+    // UD keeps its closed dropdown mounted offscreen during the leave state.
+    // Client rects alone still look visible and used to mix old options into
+    // the next field, then time out waiting for those stale nodes to disappear.
+    const candidates=all(optionSelectors,popup||undefined).filter(e=>visible(e)&&!e.closest('.ud-slide-up-leave,.ud-slide-up-leave-active,.ud-slide-up-leave-start,.ud__select__dropdown-hidden')&&e.getAttribute('aria-disabled')!=='true'&&!/disabled/i.test(e.className));
     return candidates.filter(e=>!candidates.some(other=>other!==e&&e.contains(other)));
   }
   const constantPanel=()=>all('.constant-main-selector-container').find(visible);
   async function closeMenu(f,ctx) {
     if(f.driver==='ud-select'){
-      const outside=f.item?.querySelector('.ud-formily-item-label')||document.body;
-      click(outside);f.input.blur();
-      await wait(()=>!optionsFor(f).length,ctx,3000);return;
+      // The scanner may bind the combobox wrapper while focus belongs to its
+      // inner search input. Blurring the wrapper alone leaves UD menus open.
+      const input=f.root.querySelector('input')||f.input;
+      input.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',code:'Escape',keyCode:27,bubbles:true}));
+      if(f.root.contains(document.activeElement))document.activeElement.blur();
+      click(document.body);
+      await wait(()=>!optionsFor(f).length||f.root.getAttribute('aria-expanded')==='false'||f.root.querySelector('[role=combobox]')?.getAttribute('aria-expanded')==='false',ctx,3000);return;
     }
     const panel=constantPanel();if(panel){click(one(all('.phoenix-button__content',panel).filter(e=>text(e)==='取消'),'关闭选择窗口'));await wait(()=>!visible(panel),ctx);return;}
     if(f.root.contains(document.activeElement))document.activeElement.blur();
@@ -149,8 +164,13 @@
     if(f.options.state==='enumerated')return f.options;
     if(!['select','multiselect'].includes(f.kind)||f.disabled)throw Error('这个控件不提供候选读取');
     const before=JSON.stringify(current(f));if(f.driver==='ud-select')click(document.body);click(f.input);
-    try {await wait(()=>optionsFor(f).length||constantPanel(),ctx);if(constantPanel())return {state:'requires-search',items:[],complete:false};return {state:'visible-options',items:optionsFor(f).map(text),complete:false};}
-    finally {await closeMenu(f,ctx);if(JSON.stringify(current(f))!==before)throw Error('读取选项意外改变字段');}
+    try {
+      try{await wait(()=>optionsFor(f).length||constantPanel(),ctx);}catch(e){
+        const structures=[...new Set(all('[class]').filter(e=>visible(e)&&/option|dropdown|select.*list|menu/i.test(String(e.className))).map(e=>e.tagName+'.'+String(e.className)))].slice(0,18);
+        throw Error('打开候选失败：'+e.message+'；可见结构 '+structures.join(' | '));
+      }
+      if(constantPanel())return {state:'requires-search',items:[],complete:false};return {state:'visible-options',items:optionsFor(f).map(text),complete:false};
+    } finally {try{await closeMenu(f,ctx);}catch(e){throw Error('关闭候选失败：'+e.message);}if(JSON.stringify(current(f))!==before)throw Error('读取选项意外改变字段');}
   }
   async function calendarPanel(f,ctx){
     const existing=all('.phoenix-calendar').filter(visible);
@@ -223,11 +243,30 @@
       f.el.focus();f.el.textContent=expected;f.el.dispatchEvent(new InputEvent('input',{bubbles:true,inputType:'insertText',data:expected}));f.el.dispatchEvent(new Event('change',{bubbles:true}));f.el.blur();
     }else if(['sugar','ant','element','aria','phoenix','ud-select'].includes(f.driver)){
       if(expected===''&&f.driver==='ant'){click(one(all('.ant-select-selection__clear,.ant-select-clear',f.root),'下拉清除按钮'));await wait(()=>current(f)==='',ctx);return;}
-      if(f.kind==='multiselect')throw Error('自定义多选需要对应选项状态驱动，当前不猜测追加');
+      if(f.kind==='multiselect'){
+        if(f.driver!=='sugar')throw Error('自定义多选需要对应选项状态驱动，当前不猜测追加');
+        const wanted=Array.isArray(expected)?expected:[expected];
+        for(const tag of all('[class*="sd-Tag-container-"]',f.root))if(!wanted.includes(text(tag.querySelector('[class*="sd-Tag-text-"]'))))click(one(all('[class*="sd-Tag-close-"]',tag),'移除未选择标签'));
+        for(const value of wanted){if(current(f).includes(value))continue;click(f.input);const exact=await wait(()=>{const found=optionsFor(f).filter(e=>text(e)===value);return found.length?found:null;},ctx);click(one(exact,'精确多选选项'));await wait(()=>current(f).includes(value),ctx);}
+        await closeMenu(f,ctx);if(JSON.stringify([...current(f)].sort())!==JSON.stringify([...wanted].sort()))throw Error('多选结果与确认内容不同');return;
+      }
       if(f.driver==='ud-select')click(document.body);
       click(f.input);
       // Search-only school widgets have no options until the confirmed query.
-      if(f.driver==='ud-select'&&f.kind==='autocomplete'&&!f.input.readOnly)await setText(f.input,expected,false);
+      if(['ud-select','sugar'].includes(f.driver)&&f.kind==='autocomplete'&&!f.input.readOnly)await setText(f.input,expected,false);
+      if(f.driver==='sugar'&&f.kind==='autocomplete'){
+        const dropdown=()=>all('[class*=sd-Dropdown-dropdown]').filter(visible);
+        const customLabel=/学校名称/.test(f.label)?'添加学校全称':/专业名称/.test(f.label)?'添加专业全称':'';
+        await wait(()=>optionsFor(f).some(e=>text(e)===expected)||dropdown().some(e=>/暂无选项/.test(text(e)))||constantPanel(),ctx,8000);
+        if(!optionsFor(f).some(e=>text(e)===expected)&&customLabel){
+          const panel=one(dropdown().filter(e=>/暂无选项/.test(text(e))),'无候选搜索菜单');
+          const entry=all('span,div,button,a',panel).filter(e=>e.children.length===0&&text(e)===customLabel);
+          if(entry.length===1)click(entry[0]);
+          const custom=await wait(()=>all('input[class*=option-input]',panel).filter(visible)[0],ctx);
+          await setText(custom,expected,false);click(one(all('button',panel).filter(e=>text(e)==='添加'&&!e.disabled),'添加已确认全称'));
+          await closeMenu(f,ctx);await wait(()=>current(f)===expected,ctx);return;
+        }
+      }
       await wait(()=>optionsFor(f).length||constantPanel(),ctx);
       const panel=constantPanel();
       if(panel){
@@ -254,7 +293,7 @@
     if(f.input.validity&&!f.input.validity.valid&&f.driver==='native-text')throw Error('浏览器原生校验未通过：'+f.input.validationMessage);
   }
   function validate(f,value){
-    if(f.kind==='multiselect'&&f.driver!=='native-select')throw Error('自定义多选尚未完成驱动验证');
+    if(f.kind==='multiselect'&&!['native-select','sugar'].includes(f.driver))throw Error('自定义多选尚未完成驱动验证');
     if(f.driver==='ant-date'&&f.kind!=='date')throw Error('Ant 月份弹层尚未验证');
     if(value===''&&!f.required){if(['native-text','contenteditable','ant','ant-date'].includes(f.driver))return;if(f.driver!=='native-select')throw Error('该控件尚未支持清空');}
     if(f.options.state==='enumerated')for(const v of(Array.isArray(value)?value:[value]))if(!f.options.items.includes(v))throw Error('不在已枚举选项中：'+v);
@@ -269,7 +308,8 @@
   function attachments(){
     const phoenix=all('.file-uploader__wrapper').filter(visible).map(root=>{const item=root.closest(containerSelector);return {attachmentId:idFor(root,'attachment'),label:text(item?.querySelector('.form-item__text')),required:!!item?.querySelector('.form-item__required'),fileNames:all('.file-uploader__list-view > *',root).map(text).filter(Boolean),input:root.querySelector('input[type=file]')};}).filter(a=>a.input&&a.label);
     const ud=all('[class*=uploadResume__]').filter(visible).filter(root=>!root.parentElement?.closest('[class*=uploadResume__]')&&root.querySelector('input[type=file]')&&sectionLabel(root.closest(blockSelector)||root)==='简历').map(root=>({attachmentId:idFor(root,'attachment'),label:'简历附件',required:true,fileNames:uploadNames(root),input:root.querySelector('input[type=file]'),root}));
-    return [...phoenix,...ud];
+    const sugar=all('input[type=file][name=resumeKey]').map(input=>{const root=input.closest('[class*=apply-field-]');return root&&visible(root)?{attachmentId:idFor(root,'attachment'),label:text(root.querySelector('[class^=title-]'))||'上传简历',required:!!root.querySelector('[class*=required],[class*=asterisk]'),fileNames:uploadNames(root),input,root,autoFill:true}:null;}).filter(Boolean);
+    return [...phoenix,...ud,...sugar];
   }
   async function uploadAttachment(attachment,file,ctx){
     const present=attachment.fileNames.length===1&&attachment.fileNames[0]===file.fileName;
@@ -284,9 +324,12 @@
     try{await wait(()=>{
       const modern=attachment.root||attachment.input.closest('[class*=uploadResume__]');
       if(modern){
-        const names=uploadNames(modern),done=modern.querySelector('.atsx-upload-list-item-done')||/上次上传/.test(text(modern))&&/更新|删除/.test(text(modern))||all('button,[role=button],a',modern).some(e=>/预览|下载|删除/.test(text(e)||e.getAttribute('aria-label')||e.getAttribute('title')||''));
-        if(names.length!==1||names[0]!==file.fileName||!done||modern.querySelector('[role=progressbar],.atsx-upload-list-item-uploading,.atsx-upload-list-item-error')){stable=null;return false;}
-        if(stable===null)stable=performance.now();return performance.now()-stable>=700;
+        // Sugar's completed resume card is a filename button, without a delete
+        // icon. A disabled/loading button or active parsing is not completion.
+        const sugarReady=attachment.autoFill&&all('button.file_upload-btn',modern).some(e=>text(e)===file.fileName&&!e.disabled&&e.getAttribute('aria-busy')!=='true'&&!/loading/i.test(e.className)&&!e.querySelector('[class*=loading],[class*=Loading]'));
+        const names=uploadNames(modern),done=sugarReady||attachment.autoFill&&(/重新上传|删除|预览|下载/.test(text(modern))||modern.querySelector('[class*=iconclose],[class*=icondelete],[class*=icontrash]'))||modern.querySelector('.atsx-upload-list-item-done')||/上次上传/.test(text(modern))&&/更新|删除/.test(text(modern))||all('button,[role=button],a',modern).some(e=>/预览|下载|删除/.test(text(e)||e.getAttribute('aria-label')||e.getAttribute('title')||''));
+        if(names.length!==1||names[0]!==file.fileName||!done||attachment.autoFill&&/正在解析|解析中|正在上传|上传中/.test(document.body.innerText||'')||modern.querySelector('[role=progressbar],.atsx-upload-list-item-uploading,.atsx-upload-list-item-error')){stable=null;return false;}
+        if(stable===null)stable=performance.now();return performance.now()-stable>=(attachment.autoFill?1500:700);
       }
       const root=attachment.input.closest('.file-uploader__wrapper'),row=root?.querySelector('.file-uploader__list-view');
       const names=root?all('.file-uploader__list-view > *',root).map(text).filter(Boolean):[];
@@ -298,10 +341,14 @@
     if(errors().length)throw Error('官网附件上传存在校验提示');
     return {status:present?'attachment-present':'attachment-uploaded',fileName:file.fileName};
   }
-  function draftButton(){const found=all('button').filter(e=>visible(e)&&!e.disabled&&text(e)==='暂存');return all('.form-item--phoenix').length&&found.length===1?found[0]:null;}
+  function draftButton(){
+    const profile=/^#\/candidateHome\/resume(?:$|[?])/.test(location.hash)&&all('[class*=sd-Select-container]').length>0;
+    const found=all('button').filter(e=>visible(e)&&!e.disabled&&text(e)===(profile?'保存':'暂存'));
+    return (profile||all('.form-item--phoenix').length)&&found.length===1?found[0]:null;
+  }
   async function saveDraft(ctx){
     const button=draftButton();if(!button)throw Error('没有唯一明确的草稿暂存按钮');
-    let receipt='',feedback='';const collect=node=>{const el=node.nodeType===3?node.parentElement:node;if(!el||!visible(el))return;const value=text(el);if(value.length<=100&&/保存|暂存|成功|失败|错误/.test(value))feedback=value;if(value.length<=100&&/^(?:简历)?(?:保存|暂存)成功(?:[，,]请到[「“]?投递记录[」”]?中查看)?(?:[。！!]|\s)*$/.test(value))receipt=value;};
+    let receipt='',feedback='';const collect=node=>{const el=node.nodeType===3?node.parentElement:node;if(!el||!visible(el))return;const value=text(el);if(value.length<=100&&/保存|暂存|成功|失败|错误/.test(value))feedback=value;if(value.length<=100&&/^(?:(?:简历)?(?:保存|暂存)成功(?:[，,]请到[「“]?投递记录[」”]?中查看)?|更新简历信息成功)(?:[。！!]|\s)*$/.test(value))receipt=value;};
     const observer=new MutationObserver(records=>records.forEach(r=>{collect(r.target);r.addedNodes.forEach(collect);}));
     observer.observe(document.body,{childList:true,subtree:true,characterData:true});
     try{click(button);try{await wait(()=>receipt,ctx,10000);}catch(e){throw Error(e.message+(feedback?'；官网反馈：'+feedback:''));}if(errors().length)throw Error('官网存在校验提示');return receipt;}

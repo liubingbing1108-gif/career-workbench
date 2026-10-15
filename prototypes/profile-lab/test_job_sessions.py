@@ -87,7 +87,7 @@ class JobSessionTests(unittest.TestCase):
         with self.assertRaises(LabError):
             bridge.call('report', self.origin, {**base, 'job_id': 'fill-a', 'status': 'complete', 'filled': 1, 'verified': 1, 'message': 'wrong job'})
 
-    def test_observed_application_url_keeps_public_role_and_rejects_other_role_or_site(self):
+    def test_explicit_application_url_keeps_public_role_and_continues_different_target(self):
         preview=self.app.store.preview_text('虚构公司 | 岗位丙 | https://example.com/detail?jobAdId=fictional-role')
         row=preview['candidates'][0]
         row.update(official_url_status='verified',official_entry={'verification':'browser'})
@@ -97,7 +97,20 @@ class JobSessionTests(unittest.TestCase):
         self.assertEqual(s['target']['url'],good)
         self.assertEqual(self.app.store.get(jid)['url'],row['url'])
         for bad in ['https://other.example/form?jobAdId=fictional-role','https://example.com/form?jobAdId=other-role','https://example.com/login?jobAdId=fictional-role']:
-            with self.assertRaises(LabError):self.jobs.open({'job_id':jid,'application_url':bad})
+            chosen=self.jobs.open({'job_id':jid,'application_url':bad})
+            self.assertEqual(chosen['target']['url'],bad);self.assertTrue(chosen['destination_notice'])
+            self.jobs.validate_destination(chosen['id'])
+
+    def test_manual_moka_form_opens_and_resumes_without_false_mismatch(self):
+        job=self.app.store.get(self.a)
+        url='https://app.mokahr.com/campus_apply/fictional/123#/candidateHome/resume'
+        self.app.store.set_application_url(job['id'],job['revision'],url)
+        session=self.jobs.open({'job_id':job['id']})
+        self.assertEqual(session['target']['url'],url);self.assertEqual(session['destination_notice'],'')
+        self.jobs.validate_destination(session['id'])
+        self.assertEqual(self.jobs.open({'job_id':job['id']})['id'],session['id'])
+        for invalid in ['javascript:alert(1)','https://user:password@example.com/apply','https://127.0.0.1/apply']:
+            with self.assertRaises(LabError):self.jobs.open({'job_id':job['id'],'application_url':invalid})
 
     def test_unscoped_connection_and_scan_refuse_ambiguous_url(self):
         bridge = ExecutorBridge(self.lab)
@@ -207,6 +220,30 @@ class JobSessionTests(unittest.TestCase):
         self.assertTrue(self.app.store.get(session['management_job_id'])['needs_review'])
         self.assertNotIn('execution',session['preparation'])
 
+    def test_http_progress_ticket_reports_stage_without_filling_or_dates(self):
+        from urllib.parse import urlsplit,parse_qs
+        opened=[];before=self.lab.state();job=self.app.store.list_jobs()[0]
+        server=make_server(self.lab,management_app=self.app,management_handler=management.handler(self.app),browser_opener=opened.append)
+        thread=threading.Thread(target=server.serve_forever,daemon=True);thread.start();base=f'http://127.0.0.1:{server.server_port}'
+        def post(path,body,origin=base):
+            return json.load(urlopen(Request(base+path,data=json.dumps(body).encode(),headers={'Content-Type':'application/json','Origin':origin,'X-Management-Token':self.app.token})))
+        try:
+            result=post('/management/api/jobs/'+job['id']+'/query',{})
+            self.assertEqual(result['status'],'running');self.assertEqual(len(opened),1)
+            ticket=parse_qs(urlsplit(opened[0]).query)['launch'][0]
+            claim=post('/api/executor/launch-claim',{'ticket':ticket},self.origin)
+            self.assertEqual(claim['mode'],'progress');self.assertNotIn('code',claim)
+            with self.assertRaises(HTTPError):
+                post('/api/executor/progress-report',{'ticket':ticket,'observation':{}},'https://untrusted.example')
+            result=post('/api/executor/progress-report',{'ticket':ticket,'observation':{'status':'records','url':claim['url'],'records':[{'role':job['role'],'stage':'简历筛选中'}]}},self.origin)
+            self.assertEqual(result['status'],'complete')
+            newest=self.app.store.get(job['id']);self.assertEqual(newest['recruitment_stage'],'简历筛选中')
+            self.assertEqual(newest['timeline'],job['timeline']);self.assertEqual(newest['application_status'],job['application_status'])
+            self.assertEqual(self.lab.state(),before)
+            status=json.load(urlopen(base+'/management/api/jobs/'+job['id']+'/query'))
+            self.assertEqual(status['stage'],'简历筛选中')
+        finally:server.shutdown();server.server_close();thread.join()
+
     def test_http_launch_uses_saved_job_and_does_not_fill(self):
         from urllib.parse import urlsplit,parse_qs
         opened=[];self.app.intake.enrich=lambda *args:None
@@ -257,3 +294,63 @@ class JobSessionTests(unittest.TestCase):
             self.assertEqual(len(self.lab.state()['sessions']), 1)
         finally:
             server.shutdown(); server.server_close(); thread.join()
+
+    def test_manual_confirmation_is_atomic_idempotent_and_keeps_other_job_and_profile(self):
+        from datetime import datetime
+        from zoneinfo import ZoneInfo
+        before=copy.deepcopy(self.lab.state());other=self.app.store.get(self.b)
+        job=self.app.store.get(self.a)
+        job=self.app.store.update(self.a,job['revision'],{'recruitment_stage':'一面','review_notes':'保留复盘'},[{'label':'一面','day':'2026-10-01'}])
+        result=self.jobs.confirm_application(self.sa['id'],job['revision'],True)
+        self.assertEqual(result['application_status'],'已投递')
+        self.assertEqual(result['recruitment_stage'],'一面')
+        self.assertEqual(result['review_notes'],'保留复盘')
+        self.assertEqual(next(i['day'] for i in result['timeline'] if i['label']=='投递日期'),datetime.now(ZoneInfo('Asia/Shanghai')).date().isoformat())
+        self.assertEqual(len(result['timeline']),2)
+        self.assertEqual(self.jobs.confirm_application(self.sa['id'],job['revision'],True),result)
+        self.assertEqual(self.lab.state(),before);self.assertEqual(self.app.store.get(self.b),other)
+        self.assertEqual(self.prep.view(self.sa['id'])['application_confirmation']['application_status'],'已投递')
+
+    def test_confirmation_preserves_existing_application_day_and_rejects_invalid_state(self):
+        job=self.app.store.get(self.a)
+        for confirmed in (False,None,'true'):
+            with self.assertRaises(LabError):self.jobs.confirm_application(self.sa['id'],job['revision'],confirmed)
+        with self.assertRaises(LabError):self.jobs.confirm_application(self.sa['id'],0,True)
+        self.queued(self.sa['id'],'busy')
+        with self.assertRaises(LabError):self.jobs.confirm_application(self.sa['id'],job['revision'],True)
+        self.assertEqual(self.app.store.get(self.a),job)
+        self.prep.pause(self.sa['id'])
+        job=self.app.store.update(self.a,job['revision'],{},[{'label':'投递日期','day':'2025-01-02'}])
+        result=self.jobs.confirm_application(self.sa['id'],job['revision'],True)
+        self.assertEqual(result['timeline'],job['timeline'])
+
+    def test_confirmation_failure_rolls_back_status_and_date(self):
+        job=self.app.store.get(self.a)
+        with self.app.store.connect() as db:
+            db.execute("CREATE TRIGGER refuse_confirm BEFORE UPDATE ON jobs BEGIN SELECT RAISE(ABORT,'fixture failure'); END")
+        import sqlite3
+        with self.assertRaises(sqlite3.IntegrityError):self.jobs.confirm_application(self.sa['id'],job['revision'],True)
+        self.assertEqual(self.app.store.get(self.a),job)
+
+    def test_http_confirmation_requires_explicit_action_and_persists(self):
+        server=make_server(self.lab,management_app=self.app,management_handler=management.handler(self.app))
+        thread=threading.Thread(target=server.serve_forever,daemon=True);thread.start();base=f'http://127.0.0.1:{server.server_port}'
+        try:
+            view=json.load(urlopen(base+'/api/preparation?session='+self.sa['id']))
+            self.assertEqual(view['application_confirmation']['application_status'],'未投递')
+            data={'session_id':self.sa['id'],'revision':view['application_confirmation']['revision'],'confirmed':True}
+            result=json.load(urlopen(Request(base+'/api/preparation/confirm-application',data=json.dumps(data).encode(),headers={'Content-Type':'application/json','Origin':base})))
+            self.assertEqual(result['application_status'],'已投递')
+            self.assertEqual(len(result['timeline']),1)
+        finally:server.shutdown();server.server_close();thread.join()
+
+    def test_existing_applied_without_date_requires_click_to_add_timeline(self):
+        job=self.app.store.get(self.a)
+        job=self.app.store.update(self.a,job['revision'],{'application_status':'已投递'},None)
+        self.assertEqual(job['timeline'],[])
+        view=self.prep.view(self.sa['id'])['application_confirmation']
+        self.assertIsNone(view['application_confirmed_at'])
+        self.assertEqual(self.app.store.get(self.a)['timeline'],[])
+        result=self.jobs.confirm_application(self.sa['id'],view['revision'],True)
+        self.assertEqual(len(result['timeline']),1)
+        self.assertTrue(result['application_confirmed_at'])

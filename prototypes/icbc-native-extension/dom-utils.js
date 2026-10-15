@@ -13,7 +13,15 @@
   try{const r=await chrome.runtime.sendMessage({type:'jobfill:native-text',channel:nativeChannel(),marker,value,blur,url:location.href});if(!r?.ok)throw Error(r?.error||'文本输入连接中断');if(r.result.value!==value)throw Error('文本输入实际值不一致');}
   finally{if(e.getAttribute('data-jobfill-native-field')===marker)e.removeAttribute('data-jobfill-native-field');}
  }
- const wait=(fn,ctx,ms=5000)=>new Promise((resolve,reject)=>{const start=performance.now();const tick=()=>{try{ctx.check();const r=fn();if(r)return resolve(r);if(performance.now()-start>=ms)throw Error('等待官网控件超时');setTimeout(tick,25);}catch(e){reject(e);}};tick();});
+ // Background tabs can throttle timers for a minute. React's actual DOM/input
+ // changes should wake a wait immediately; retain the bounded timer fallback.
+ const wait=(fn,ctx,ms=5000)=>new Promise((resolve,reject)=>{
+  const start=performance.now();let timer,observer,done=false;
+  const finish=(error,value)=>{if(done)return;done=true;clearTimeout(timer);observer?.disconnect();for(const event of ['input','change'])document.removeEventListener(event,tick,true);error?reject(error):resolve(value);};
+  const tick=()=>{if(done)return;clearTimeout(timer);try{ctx.check();const value=fn();if(value)return finish(null,value);if(performance.now()-start>=ms)throw Error('等待官网控件超时');timer=setTimeout(tick,25);}catch(error){finish(error);}};
+  observer=new MutationObserver(tick);observer.observe(document.documentElement,{subtree:true,childList:true,attributes:true,characterData:true});
+  for(const event of ['input','change'])document.addEventListener(event,tick,true);tick();
+ });
  const show=message=>{let p=document.querySelector('#jobfill-executor-progress');if(!p){p=document.createElement('aside');p.id='jobfill-executor-progress';p.style.cssText='position:fixed;right:14px;bottom:14px;max-width:400px;padding:14px;background:#17243a;color:white;z-index:2147483647;font:14px/1.6 system-ui;pointer-events:none';document.body.append(p);}p.textContent=message;};
  async function settle(errors,ctx){let stable=0;await wait(()=>{if(errors().length){stable=0;return false;}if(!stable)stable=performance.now();return performance.now()-stable>=350;},ctx,5000);}
  window.JobFillDOM={q,text,visible,one,click,setText,setTextCommitted,nativeTextBridgeReady:!!nativeChannel(),wait,show,settle};
