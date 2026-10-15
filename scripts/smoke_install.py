@@ -22,7 +22,7 @@ def main():
             import queue,threading
             lines=queue.Queue()
             threading.Thread(target=lambda: lines.put(process.stdout.readline()),daemon=True).start()
-            line=lines.get(timeout=90)
+            line=lines.get(timeout=30)
             if 'http://127.0.0.1:' not in line:raise RuntimeError('Temporary service did not start')
             url='http://127.0.0.1:'+line.split('http://127.0.0.1:',1)[1].strip().rstrip('/')
             def get(path):

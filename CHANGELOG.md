@@ -26,3 +26,5 @@ Fix job intake for explicit company/role plus dynamic application links. Preserv
 
 
 直接申请页分流和公共身份核验、官网标题冲突选择、只读复核、UD/Formily分组/控件/附件完成识别、无草稿恢复与现场提交提示已加入；只读搜索壳等待及来源/人工字段保护有回归。真实平台验证范围有限，不能宣称全部适配。
+
+发布兼容性修复：初始化明确关闭数据库连接，Windows 提供时区数据；本机服务不依赖反向 DNS，避免部分 macOS 网络启动误超时。

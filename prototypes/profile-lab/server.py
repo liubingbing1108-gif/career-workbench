@@ -2,6 +2,7 @@ from __future__ import annotations
 import argparse
 import importlib.util
 import sys
+from socketserver import TCPServer
 import base64
 import json
 import mimetypes
@@ -24,6 +25,15 @@ from job_sessions import JobSessions
 from browser_launch import BrowserLaunch, open_chrome
 
 ROOT = Path(__file__).resolve().parent
+
+
+class LoopbackHTTPServer(ThreadingHTTPServer):
+    def server_bind(self):
+        # This service always binds literal loopback; reverse DNS is unnecessary
+        # and can stall startup for tens of seconds on offline/macOS networks.
+        TCPServer.server_bind(self)
+        self.server_name = 'localhost'
+        self.server_port = self.server_address[1]
 
 
 def make_server(lab, port=0, mapper=None, management_app=None, management_handler=None, browser_opener=open_chrome):
@@ -310,7 +320,7 @@ def make_server(lab, port=0, mapper=None, management_app=None, management_handle
             except (KeyError, ValueError, TypeError):
                 self.send(400, {"error": "请求字段或编码无效"})
 
-    return ThreadingHTTPServer(("127.0.0.1", port), Handler)
+    return LoopbackHTTPServer(("127.0.0.1", port), Handler)
 
 
 if __name__ == "__main__":

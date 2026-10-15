@@ -6,6 +6,7 @@ import sys
 import tempfile
 import threading
 import unittest
+from unittest.mock import patch
 from urllib.request import Request,urlopen
 from urllib.error import HTTPError
 from lab import Lab,LabError
@@ -25,6 +26,14 @@ class UnifiedTests(unittest.TestCase):
     def setUp(self):
         self.tmp=tempfile.TemporaryDirectory();self.lab=Lab(Path(self.tmp.name)/'profile');self.app=Application(self.lab);self.prep=Preparation(self.lab,self.app)
     def tearDown(self):self.lab.db.close();self.tmp.cleanup()
+    def test_loopback_startup_never_waits_for_reverse_dns(self):
+        with patch('socket.getfqdn', side_effect=AssertionError('Unexpected DNS lookup')):
+            server=make_server(self.lab,0)
+        try:
+            self.assertEqual(server.server_address[0],'127.0.0.1')
+            self.assertEqual(server.server_name,'localhost')
+            self.assertGreater(server.server_port,0)
+        finally:server.server_close()
     def test_restart_keeps_newest_pending_optional_schema_after_failed_mapping(self):
         s=self.prep.open_target('https://example.com/apply')
         newest=scan_analysis(snapshot(),'https://example.com/apply')
