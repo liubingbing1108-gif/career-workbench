@@ -29,6 +29,8 @@
     ".changes/20261022T072220Z-profile-hide-clear-v015-a831ad.json",
     ".changes/20261022T072353Z-resume-export-doc-links-dd517e.json",
     ".changes/20261022T072418Z-resume-three-pass-audit-16fa51.json",
+    ".changes/20261022T072526Z-resume-three-pass-audit-77987a.json",
+    ".changes/20261022T072552Z-profile-multiple-exam-links-v016-14f3c9.json",
     ".github/ISSUE_TEMPLATE/work-item.md",
     ".github/PULL_REQUEST_TEMPLATE.md",
     ".github/workflows/ci.yml",

@@ -1,0 +1,23 @@
+{
+  "kind": "test",
+  "summary": "Audit resume import requirements, wire clarification and representation browser checks into the shared test entry, and align API and historical Skill documentation.",
+  "capabilities": [
+    "import",
+    "profile",
+    "distribution"
+  ],
+  "validation": "Three audit passes complete: 433 Python and 111 Node tests plus all 15 isolated browser scripts passed. A source-attribution skip/save bug was reproduced and fixed; optional dates remain skippable. All active database tables and original bytes remained identical. Source-only export privacy and document checks passed, and the local snapshot passed full release-baseline change coverage. No new real-model or website test; no remote publication.",
+  "compatibility": "No new product decision or provider. Local snapshot does not replace the released version or establish remote CI success; historical confirmed imports are not reprocessed.",
+  "handoff": {
+    "task": "resume-three-pass-audit",
+    "status": "complete",
+    "next": "Use the local audited source snapshot for further development; keep later category-specific version restrictions and overall profile redesign as separately authorized pending work. Remote release and CI require their normal release workflow.",
+    "docs": [],
+    "docs_reason": "Final private audit evidence and handoff status updated. Public API, test entry and exported validation links are already recorded in this task and the companion link-fix receipt."
+  },
+  "id": "20261022T072526Z-resume-three-pass-audit-77987a",
+  "files": [
+    "docs/PROJECT_ACTIVITY.md"
+  ],
+  "release": null
+}
