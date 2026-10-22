@@ -1,0 +1,23 @@
+{
+  "kind": "docs",
+  "summary": "Confirm the workbench correction flow, propose separate language-ability and exam data contracts, and record delivery of the field-mapping Skill rules and offline checks.",
+  "capabilities": [
+    "profile",
+    "mapping",
+    "agent"
+  ],
+  "validation": "Field-mapping bundle self-test: 41 tests passed; bundle version 1.0.0 and conformance fixture verified. check_docs.py passed 103 Markdown files, 644 relative links and D01-D100 coverage. check_project.py passed catalog/references; no PR diff check. No runtime product, database, real-model or website validation was performed.",
+  "compatibility": "Planning and delivery-status documents only. Product interfaces, active storage, extension and permissions unchanged. Language classification remains proposed; the field-mapping Skill bundle is delivered but not integrated into the product.",
+  "handoff": {
+    "task": "profile-prd-language-v05",
+    "status": "complete",
+    "next": "Discuss and confirm the proposed language ability/exam fields and scale rules, then continue the remaining profile PRD topics; keep product integration deferred.",
+    "docs": [],
+    "docs_reason": "Updated the private authoritative profile-refactor PRD and its requirements, decision, acceptance and handoff references. Public runtime contracts are unchanged; private specification paths remain in the local receipt."
+  },
+  "id": "20261016T025245Z-profile-prd-language-v05-d278a3",
+  "files": [
+    "docs/PROJECT_ACTIVITY.md"
+  ],
+  "release": null
+}

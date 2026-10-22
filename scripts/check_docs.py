@@ -4,7 +4,7 @@ from pathlib import Path
 import re
 from urllib.parse import unquote,urlsplit
 ROOT=Path(__file__).resolve().parents[1]
-required=['README.md','AGENTS.md','START_HERE.md','SECURITY.md','CONTRIBUTING.md','CHANGELOG.md']+['docs/'+n+'.md' for n in ('SETUP','PRODUCT_REQUIREMENTS','HANDOFF_CONTEXT','ARCHITECTURE','DATA_AND_API','AGENT_INTEGRATION','OPERATIONS','TESTING','RELEASE','ROADMAP','DECISIONS','DISCUSSION_AND_ACCEPTANCE')]
+required=['README.md','AGENTS.md','START_HERE.md','SECURITY.md','CONTRIBUTING.md','CHANGELOG.md','GOVERNANCE.md','docs/AGENT_PLAYBOOK.md','docs/CAPABILITIES.json','docs/CONTINUITY.md','docs/PROJECT_ACTIVITY.md']+['docs/'+n+'.md' for n in ('SETUP','PRODUCT_REQUIREMENTS','HANDOFF_CONTEXT','ARCHITECTURE','DATA_AND_API','AGENT_INTEGRATION','OPERATIONS','TESTING','RELEASE','ROADMAP','DECISIONS','DISCUSSION_AND_ACCEPTANCE')]
 errors=[f'Missing {name}' for name in required if not (ROOT/name).is_file()]
 count=0
 for p in ROOT.rglob('*.md'):

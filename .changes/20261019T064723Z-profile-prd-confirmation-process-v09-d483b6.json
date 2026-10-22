@@ -1,0 +1,21 @@
+{
+  "kind": "docs",
+  "summary": "Require plain-language, one-at-a-time review and explicit approval of field lists and shared versus alternative content before implementation task entry.",
+  "capabilities": [
+    "profile"
+  ],
+  "validation": "check_project.py PASS (15 records before receipt; no PR diff). check_docs.py did not pass: a concurrent parser task references docs/RESUME_SOURCE_REVIEW_VALIDATION.md which does not yet exist. No runtime tests run.",
+  "compatibility": "Documentation only. Existing confirmed rules retained; no pending proposal implicitly approved. No product code or Skill package edited by this task.",
+  "handoff": {
+    "task": "profile-prd-confirmation-process-v09",
+    "status": "complete",
+    "next": "Explain the first review issue using a concrete example and wait for the user response; then proceed one item at a time. Recheck repository document links once the separate parser report exists.",
+    "docs": [],
+    "docs_reason": "Updated private PRD approval process and its requirement, decision, acceptance, handoff and roadmap references. Public runtime contracts unchanged."
+  },
+  "id": "20261019T064723Z-profile-prd-confirmation-process-v09-d483b6",
+  "files": [
+    "docs/PROJECT_ACTIVITY.md"
+  ],
+  "release": null
+}

@@ -43,3 +43,20 @@ jobs:
       - run: python scripts/run_tests.py --ui
       - run: python scripts/check_docs.py
       - run: python scripts/check_privacy.py --tracked
+
+  project-contracts:
+    name: Project contracts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python scripts/check_project.py
+      - run: python -m unittest discover -s scripts -p "test_project*.py"
+      - if: github.event_name == 'pull_request'
+        env:
+          PROJECT_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: python scripts/check_project.py --base "$PROJECT_BASE_SHA"

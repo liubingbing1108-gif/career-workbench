@@ -1,0 +1,22 @@
+{
+  "kind": "docs",
+  "summary": "Confirm compact profile layout and audit the refactor PRD for version exceptions, linked exam saves, cross-source mapping and remaining product decisions.",
+  "capabilities": [
+    "profile",
+    "mapping"
+  ],
+  "validation": "Read the full refactor PRD and related structure, parser delivery and mapper contract/validator evidence. check_docs.py PASS: 104 Markdown, 642 relative links. check_project.py PASS: 14 records before receipt; no PR diff. PRD matrix checked: A01-A62, C01-C09, Q01-Q06 and E01-E06 without missing/duplicate IDs. No runtime tests or deployment verification.",
+  "compatibility": "Documentation-only task. No product code, Skill package, live data or deployment changes by this task; separate concurrent tasks retain their own scope. Existing approved behavior preserved; six new decision boundaries remain unapproved.",
+  "handoff": {
+    "task": "profile-prd-audit-v08",
+    "status": "complete",
+    "next": "Resolve the six listed product boundaries, starting with version scope and deletion semantics; complete field and integration contracts before any refactor implementation.",
+    "docs": [],
+    "docs_reason": "Updated private authoritative PRD, field structure reference and requirement/decision/acceptance/handoff/roadmap indexes. Public runtime contracts unchanged; private paths recorded in the local receipt."
+  },
+  "id": "20261019T064228Z-profile-prd-audit-v08-9f67a1",
+  "files": [
+    "docs/PROJECT_ACTIVITY.md"
+  ],
+  "release": null
+}

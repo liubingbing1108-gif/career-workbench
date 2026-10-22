@@ -57,3 +57,6 @@ python scripts/start_workbench.py
 [执行协议](../prototypes/icbc-native-extension/API.md) 和 [TypeScript 契约](../prototypes/icbc-native-extension/protocol.d.ts) 是唯一填写接口。模型返回字段映射和资料引用，服务器编译用户确认的材料，执行器扫描／预检查／新增记录／填写／回读／停止。没有任意脚本、任意选择器、任意点击或最终提交接口。
 
 若让编码 Agent 维护本项目，从 [AGENTS.md](../AGENTS.md) 和 [交接](HANDOFF_CONTEXT.md) 开始；使用虚构夹具，不读取或发布 `.runtime`，不因任务名包含“投递”就自动提交。
+
+
+完整接入验收与编码Agent工作流见[Agent手册](AGENT_PLAYBOOK.md)，能力与已知限制见[清单](CAPABILITIES.json)。适配器离线测试只证明协议，不能证明任何新模型已能正确解析、匹配和检索。

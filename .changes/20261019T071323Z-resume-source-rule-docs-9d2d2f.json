@@ -1,0 +1,22 @@
+{
+  "kind": "docs",
+  "summary": "Align internal product decisions with source-document verification and optional resume clarification.",
+  "capabilities": [
+    "import",
+    "profile"
+  ],
+  "validation": "Reviewed the confirmed requirements against implemented import behavior and private validation evidence; no user profile records changed.",
+  "compatibility": "This documents the explicitly authorized import change and does not implement the separate profile redesign.",
+  "handoff": {
+    "task": "resume-source-rule-docs",
+    "status": "complete",
+    "next": "Continue the separate profile requirements discussion through examples and user field confirmation.",
+    "docs": [],
+    "docs_reason": "Private product requirements, decisions, discussion, handoff and changelog are synchronized; private paths and data remain excluded from the public receipt."
+  },
+  "id": "20261019T071323Z-resume-source-rule-docs-9d2d2f",
+  "files": [
+    "docs/PROJECT_ACTIVITY.md"
+  ],
+  "release": null
+}

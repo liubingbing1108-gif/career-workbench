@@ -1,5 +1,7 @@
-# All accepted resume formats pass through MarkItDown; pypdf is only a PDF input guard.
+# All accepted formats use MarkItDown; original PDF layout and images resolve conversion doubts.
 pypdf==6.10.0
 jsonschema==4.26.0
 markitdown[pdf,docx,pptx,xlsx,xls]==0.1.8
 tzdata==2026.5
+
+pypdfium2==5.14.0

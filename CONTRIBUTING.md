@@ -7,3 +7,10 @@
 PR 描述说明具体问题、修改后的行为、测试及未覆盖边界。文档与实现同轮更新。真实官网测试必须由测试者授权，使用本人确认材料，最终本人提交；不要把生产数据混入公共测试。
 
 依赖变更更新锁文件及许可证记录。不要提交第三方付费插件或来源不明代码。历史模块名含 lab 是目录兼容性，不是另一个产品入口。
+
+
+统一协作规则见[GOVERNANCE](GOVERNANCE.md)。新增`.changes/<UTC时间>-<主题>.json`并运行`python scripts/check_project.py --base <完整PR基线SHA>`；CI会检查整个PR的变更覆盖。未发布片段通过`python scripts/check_project.py --notes`汇总，不让每个贡献者竞争修改同一段CHANGELOG。能力索引和Agent接续路径见[手册](docs/AGENT_PLAYBOOK.md)。
+
+## 自动交接
+
+按[CONTINUITY](docs/CONTINUITY.md)执行begin/record，自动生成[更新索引](docs/PROJECT_ACTIVITY.md)。测试入口与CI会拒绝缺少接续元数据或索引过期；PR必须保留完整变更覆盖。

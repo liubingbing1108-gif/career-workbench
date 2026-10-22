@@ -32,3 +32,13 @@
 插件独立只读复核模式不填写、上传、新增记录或暂存。异步搜索页壳不视为表单已加载。实际无草稿且重开丢失时，恢复已确认材料后保留当前页并提示本人提交，不称保存成功。当前包1.3.9/核心1.2.36/客户端1.2.13，协议v1，权限不变。有限真实平台验证不能代表任意网站、隐藏表单或跨系统均已验收。
 
 官网本人接手（mode=focus）只定位已有标签页，不重新读取表单、匹配、轮询材料或启动填写；该边界已加入虚构回归。
+
+## 简历导入确认契约（D99）
+
+新导入携带`parser_contract=resume-material-parser/v1`和`review_contract=resume-review/v1`，由识别器显式加载Skill并记录`skill_sha256`。`document_blocks`保留清洁`text`、转换`raw_text`和来源定位；原件仍通过`file_id`引用。有布局疑点时追加原PDF/Word结构及可用页面的证据，`source_review`说明核对结果与限制。旧已确认导入不自动迁移或重新识别。
+
+`POST /api/import/review`接收`import_id`、当前`revision`及`answers`列表。每项包括问题`id`、`action`（skip/original/apply/note/confirm）、可选`values`字段映射及`note`。`confirm`仅用于明确核对原件后的归属确认；`apply`只允许问题列出的字段，非空更正记录为用户确认来源。未提供的问题默认跳过；已保存对象的问题保持原决定且不可改写。返回completed、updated_fields、skipped；重复相同提交返回replayed。过期修订/已保存对象改写返回409，不发生部分写入。
+
+提交只更新导入候选及`review_answers`，不写共享资料。`review_completed`仅表示表单已处理，不表示所有疑点均已解决：缺失日期可留空；原件归属疑点跳过或仅备注后，该对象仍不能保存，其他确定对象可先保存。可重新打开未保存对象的问题补充确认，已保存对象锁定；原文引用失败不能靠归属确认解除。
+
+之后沿用`/api/import/identity`确认同一对象，`/api/import/resolve`按完整资料组处理：replace保留本次表述、new保留同一对象的完整替代表述、ignore只忽略本次。事实冲突另需明确确认。缺值不清空旧值；每组的确认、修订及事务保护继续有效。历史D85字段级版本描述已由D87及D99整组版本接续，不把多次获奖或不同经历当作同一对象的版本。

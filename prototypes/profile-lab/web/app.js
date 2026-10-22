@@ -120,26 +120,51 @@ $('#resume-file').onchange=safe(async event=>{
 function importCandidateMarkup(c, grouped=false) {
   return `<div class="candidate ${grouped?'set-field':''}" data-candidate="${c.id}">${grouped?'':`<input type="checkbox" data-import-scalar aria-label="选择增量 ${escapeHtml(c.label)}" ${c.selected?'checked':''}>`}<div class="candidate-title">${escapeHtml(c.label)}<span class="tag">${escapeHtml(({事实冲突:'新的答案，与默认不同',描述待检查:'新增描述版本'})[c.status]||c.status)}</span></div><div>${control({type:c.type,options:state.fields.find(f=>f.id===c.field_id)?.options||c.definition?.options||[]},c.value,`aria-label="预览 ${escapeHtml(c.label)}" data-candidate-value`)}${c.existing?`<div class="existing">当前默认：${escapeHtml(c.existing)}</div><label>替换哪个版本<select data-replace-version>${c.existing_versions.map(v=>`<option value="${v.id}" ${v.id===c.default_version_id?'selected':''}>${escapeHtml(versionName(v))}</option>`).join('')}</select></label>`:''}</div></div>`;
 }
+function skillImportMarkup(unit,title){
+  const rows=unit.rows,c=rows[0],task=state.imports.find(p=>p.id===c.import_id),reviewPending=task?.review_contract&&!task.review_completed,variants=c.representation_versions||[],conflicts=c.conflict_fields||[],blocked=rows.some(r=>r.validation_issues?.length);
+  const identity=c.identity_review?`<div class="notice identity-review"><p>先确认是否同一条资料：${escapeHtml(c.identity_reason||'对象归属尚不确定')}</p><select data-identity-choice aria-label="选择已有资料或独立记录"><option value="">请选择</option><option value="__new">不同，是独立资料</option>${(c.identity_options||[]).map(v=>`<option value="${escapeHtml(v.id)}">同一条：${escapeHtml(v.label)}</option>`).join('')}</select><button data-confirm-identity="${c.id}">确认归属</button></div>`:'';
+  const previous=variants.length?`<details open><summary>已有版本（A）</summary>${variants.map(v=>`<article><strong>${escapeHtml(v.name)}</strong>${Object.entries(v.values).map(([fid,value])=>`<div class="summary-row"><span>${escapeHtml(state.fields.find(f=>f.id===fid)?.label||fid)}</span><span style="white-space:pre-wrap">${escapeHtml(value)}</span></div>`).join('')}</article>`).join('')}</details>`:'';
+  const warning=conflicts.length?`<div class="notice">事实待核对：${conflicts.map(fid=>escapeHtml(rows.find(r=>r.field_id===fid)?.label||fid)).join('、')}。请核对后保留已有版，或确认采用本次事实。<label><input type="checkbox" data-confirm-facts>确认采用本次填写的事实</label></div>`:'';
+  return `<section class="import-set" data-import-unit data-skill-import data-import-category="${unit.category}"><header><label><input type="checkbox" data-import-set ${rows.every(r=>r.selected)?'checked':''}>${escapeHtml(title)}</label><span class="tag">${escapeHtml(c.status)}</span></header>${identity}${warning}${blocked?`<p class="notice">${rows.flatMap(r=>r.validation_issues||[]).filter((v,i,a)=>a.indexOf(v)===i).map(escapeHtml).join('；')}。此组尚不能保存。</p>`:''}${previous}<details open><summary>本次文件版本（B）</summary>${rows.map(r=>`<div class="candidate set-field" data-candidate="${r.id}"><label>${escapeHtml(r.label)}</label>${control({type:r.type,options:state.fields.find(f=>f.id===r.field_id)?.options||[]},r.value,'data-candidate-value aria-label="预览 '+escapeHtml(r.label)+'"')}</div>`).join('')}</details><details><summary>查看本次对象原文与来源</summary><p>${escapeHtml(c.source?.filename||'')}</p><pre style="white-space:pre-wrap">${escapeHtml(c.object_source||'')}</pre></details><div class="button-row"><button data-unit-import="ignore">${variants.length?'保留已有版（A）':'忽略本次'}</button><button data-unit-import="replace" ${blocked||c.identity_review||reviewPending?'disabled':''}>${variants.length?'保留本次版（B）':'保存此组'}</button>${variants.length?`<button data-unit-import="new" ${blocked||c.identity_review||conflicts.length||reviewPending?'disabled':''}>都保留（同一条资料的不同版本）</button>`:''}</div></section>`;
+}
 function importUnits(candidates) {
   const groups=new Map();
   for(const c of candidates){
-    const repeatable=state.categories.find(cat=>cat.id===c.category)?.repeatable;
+    const repeatable=!!c.parser_contract||state.categories.find(cat=>cat.id===c.category)?.repeatable;
     const key=repeatable?c.import_id+'/'+c.group:c.id;
     if(!groups.has(key))groups.set(key,{key,repeatable,category:c.category,rows:[]});
     groups.get(key).rows.push(c);
   }
   return [...groups.values()];
 }
+function importReviewMarkup(p){
+  if(!p.review_contract)return (p.warnings||[]).map(w=>`<p class="notice">${escapeHtml(w)}</p>`).join('');
+  const done=p.review_completed&&!p.reviewEditing,questions=p.review_questions||[],locked=q=>p.candidates.some(c=>c.saved&&(!q.group||c.group===q.group));
+  return `<section data-review-form="${escapeHtml(p.id)}" class="import-set"><h3>${done?'识别确认已完成':'识别确认与可选补充'} · ${escapeHtml(p.filename)}</h3><p>缺项可以跳过；采用解释后只更新本次识别候选，保存至资料库仍需下方确认。</p><a href="/api/files/${encodeURIComponent(p.file_id)}" target="_blank" rel="noopener">查看原PDF／Word文件</a><details><summary>清洁文本与转换原文</summary>${(p.document_blocks||[]).map(b=>`<h4>${escapeHtml(b.location)}</h4><pre style="white-space:pre-wrap">${escapeHtml(b.text)}</pre>${b.raw_text!==undefined?`<details><summary>清理前原文</summary><pre style="white-space:pre-wrap">${escapeHtml(b.raw_text)}</pre></details>`:''}`).join('')}</details>${questions.map(q=>{const answer=p.review_answers?.[q.id]||{},action=answer.action||'skip',readOnly=done||locked(q);return `<div data-review-question="${q.id}" style="padding:12px 0;border-top:1px solid #ddd"><strong>${escapeHtml(q.title)}</strong><p style="white-space:pre-wrap">${escapeHtml(q.prompt)}</p><select data-review-action aria-label="处理此疑点" ${readOnly?'disabled':''}>${[['skip','跳过，暂不补充'],['original','保留原文，不采用解释'],...(q.kind==='source'?[['confirm','已核对原件，确认此项归属']]:[]),...(q.changes.length?[['apply',q.kind==='source'?'填写更正内容并确认此疑点':'采用／填写下方内容']]:[]),['note','仅补充说明']].map(([v,l])=>`<option value="${v}" ${v===action?'selected':''}>${l}</option>`).join('')}</select>${q.changes.map(c=>`<label style="display:block">${escapeHtml(c.label)}${control({type:c.type,options:state.fields.find(f=>f.id===c.field_id)?.options||[]},answer.values?.[c.field_id]??c.value,`data-review-field="${escapeHtml(c.field_id)}" aria-label="补充 ${escapeHtml(c.label)}" ${readOnly?'disabled':''}`)}</label>`).join('')}<label style="display:block">补充说明（可空）<textarea data-review-note aria-label="补充说明" ${readOnly?'disabled':''}>${escapeHtml(answer.note||'')}</textarea></label></div>`;}).join('')}${done?'<p>已保留本次选择；跳过的内容保持原文或未知，归属未确定的对象继续待处理。</p>'+(questions.some(q=>!locked(q))?'<button type="button" data-edit-review>补充未保存对象的确认</button>':''):'<button type="button" data-complete-review>完成识别确认（未填写项跳过）</button>'}</section>`;
+}
+function bindImportReviewForms(){
+  $$('[data-edit-review]').forEach(button=>button.onclick=()=>{const p=state.imports.find(p=>p.id===button.closest('[data-review-form]').dataset.reviewForm);p.reviewEditing=true;openPreview(p);});
+  $$('[data-review-field]').forEach(input=>input.oninput=()=>{const row=input.closest('[data-review-question]');$('[data-review-action]',row).value='apply';});
+  $$('[data-review-note]').forEach(input=>input.oninput=()=>{const action=$('[data-review-action]',input.closest('[data-review-question]'));if(action.value==='skip')action.value='note';});
+  $$('[data-complete-review]').forEach(button=>button.onclick=safe(async()=>{
+    const form=button.closest('[data-review-form]'),pid=form.dataset.reviewForm,p=state.imports.find(p=>p.id===pid);
+    const answers=$$('[data-review-question]',form).filter(row=>!$('[data-review-action]',row).disabled).map(row=>({id:row.dataset.reviewQuestion,action:$('[data-review-action]',row).value,note:$('[data-review-note]',row).value,values:Object.fromEntries($$('[data-review-field]',row).map(input=>[input.dataset.reviewField,input.value]))}));
+    await api('/api/import/review',{import_id:pid,revision:p.revision,answers});await refresh();openPreview(state.imports.find(p=>p.id===pid));toast('识别确认已完成，未填内容保持空缺');
+  }));
+}
+
 function openPreview(result) {
   preview=result;
   const parsing=['待识别','识别中'].includes(result?.status),candidates=result?increments.candidates.filter(c=>c.import_id===result.id):increments.candidates,units=importUnits(candidates);
   $$('[data-import-mode],#select-all-import,#clear-import').forEach(button=>button.disabled=parsing);
   if(typeof renderImportTaskPreview==='function')renderImportTaskPreview();
   $('#import-summary').textContent=parsing?'正在解析，资料组生成后会自动显示':`${units.length} 组待处理 · ${increments.consistent} 项一致自动复用 · ${increments.merged} 项重复合并`;
-  $('#import-warnings').innerHTML=(result?[result]:state.imports).flatMap(p=>[...(p.warnings||[]),...(p.error?[p.error]:[])]).map(w=>`<p class="notice">${escapeHtml(w)}</p>`).join('');
+  $('#import-warnings').innerHTML=(result?[result]:state.imports).map(p=>importReviewMarkup(p)+(p.error?`<p class="notice">${escapeHtml(p.error)}</p>`:'')).join('');
+  bindImportReviewForms();
   $('#retry-import').hidden=!result?.semantic||result.candidates.some(c=>c.saved)||result.status==='识别中';
   $('#import-candidates').innerHTML=parsing?'<div class="empty">正在识别，资料组尚未生成。</div>':units.length?units.map(unit=>{
     const rows=unit.rows,first=rows[0],category=state.categories.find(cat=>cat.id===unit.category),title=first.group_title||rows.find(c=>['company','school','award_name','language_name','project_name','certificate_name','skill_name'].includes(c.field_id))?.value||category?.label;
+    if(first.parser_contract)return skillImportMarkup(unit,title);
     if(!unit.repeatable)return `<section data-import-unit data-import-category="${unit.category}">${importCandidateMarkup(first)}<div class="button-row">${['replace','new','ignore'].map(mode=>`<button data-unit-import="${mode}">${{replace:'替换现有版本',new:'存为新版本',ignore:'忽略'}[mode]}</button>`).join('')}</div></section>`;
     return `<section class="import-set" data-import-unit data-import-category="${unit.category}"><header><label class="checkbox-label"><input type="checkbox" data-import-set aria-label="选择资料组 ${escapeHtml(title)}" ${rows.every(c=>c.selected)?'checked':''}><strong>${escapeHtml(title)}</strong></label><span class="tag">${escapeHtml(category?.label)} · ${rows.length} 项待处理</span></header>${first.identity_review?`<div class="notice identity-review"><p>请确认这是否为已有的同一段经历／同一次获奖。</p><select data-identity-choice aria-label="选择已有资料或独立记录"><option value="">请选择</option><option value="__new">不同，是独立资料</option>${(first.identity_choices||[]).map(id=>{const e=state.entries.find(e=>e.id===id);return `<option value="${id}">同一条：${escapeHtml(profileLibrary.title(e))} · ${escapeHtml(profileLibrary.meta(e))}</option>`;}).join('')}</select><button data-confirm-identity="${first.id}">确认归属</button></div>`:''}<details><summary>查看 / 修改整组资料</summary><div class="import-set-fields">${rows.map(c=>importCandidateMarkup(c,true)).join('')}</div></details><div class="button-row">${['replace','new','ignore'].map(mode=>`<button data-unit-import="${mode}">${{replace:'整组替换现有版本',new:'整组存为新版本',ignore:'忽略整组'}[mode]}</button>`).join('')}</div></section>`;
   }).join(''):'<div class="empty">没有新增或变化内容需要处理。</div>';
@@ -164,7 +189,7 @@ $('#retry-import').onclick=safe(async()=>{
 });
 async function resolveIncrements(mode,rows){
   if(!rows.length)throw new Error('请先选择要处理的增量');
-  const decisions=rows.map(row=>({candidate_id:row.dataset.candidate,mode,value:$('[data-candidate-value]',row).value,version_id:$('[data-replace-version]',row)?.value}));
+  const decisions=rows.map(row=>({candidate_id:row.dataset.candidate,mode,value:$('[data-candidate-value]',row).value,version_id:$('[data-replace-version]',row)?.value,confirm_facts:!!$('[data-confirm-facts]',row.closest('[data-import-unit]'))?.checked}));
   const result=await api('/api/import/resolve',{decisions,revisions:increments.revisions});
   const previewId=preview?.id;await refresh();await pollImportTasks();openPreview(state.imports.find(p=>p.id===previewId));toast(`已保存 ${result.saved} 项，忽略 ${result.ignored} 项`);
   if(!increments.candidates.some(c=>!preview||c.import_id===preview.id))$('#import-dialog').close();

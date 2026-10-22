@@ -1,0 +1,22 @@
+{
+  "kind": "docs",
+  "summary": "Retrospectively register delivery of the application field-mapping rules and offline contracts; product integration remains pending.",
+  "capabilities": [
+    "mapping",
+    "agent"
+  ],
+  "validation": "Audit verified the existing delivery report and package manifest; python3 -B skills/application-field-mapper/scripts/validate.py --self-test passed all 41 tests and bundle pin verification. No product/model/site integration tests performed.",
+  "compatibility": "Status backfill only; package, product code, storage and deployment unchanged. Package remains outside the current public export whitelist. This receipt does not reconstruct the original file-change baseline or claim prior begin/record execution.",
+  "handoff": {
+    "task": "application-field-mapper-skill",
+    "status": "complete",
+    "next": "Implement and separately validate explicit loading and relation services only within the authorized product task; review full package export before distribution.",
+    "docs": [],
+    "docs_reason": "Confirmed delivery from the existing local report and upstream PRD; append a missing standalone delivery status without rewriting the historical report or public product contracts."
+  },
+  "id": "20261019T063937Z-application-field-mapper-skill-82bdf4",
+  "files": [
+    "docs/PROJECT_ACTIVITY.md"
+  ],
+  "release": null
+}

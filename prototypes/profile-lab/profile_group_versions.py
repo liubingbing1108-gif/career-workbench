@@ -6,7 +6,7 @@ VERSION_MODULES={'employment','projects','campus','preferences','subjective'}
 
 def enabled(state,entry,layout=None):
     from profile_hierarchy import record_layout
-    return (layout or record_layout(state,entry))['module_id'] in VERSION_MODULES
+    return bool(entry.get('import_representation_versions')) or (layout or record_layout(state,entry))['module_id'] in VERSION_MODULES
 
 def base_version(state,entry):
     return copy.deepcopy(entry.get('profile_base_version') or dict(id='default',name=entry.get('profile_default_name') or '版本1',field_versions={f['id']:(default_version(state,entry,f['id']) or {}).get('id') for f in state['fields'] if f['category']==entry['category'] and (not f.get('entry_id') or f['entry_id']==entry['id'])}))

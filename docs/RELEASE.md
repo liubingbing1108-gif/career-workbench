@@ -11,3 +11,8 @@ Release提供完整源码包、独立Chrome扩展包及SHA256校验文件。普�
 验证状态以本版本GitHub Actions为准；安装矩阵覆盖Windows/macOS/Linux的空库与双模块启动，完整离线和虚构Chromium界面在Linux执行。真实官网兼容只覆盖有限样本，仍有不支持的动态分支。没有草稿入口的官网请保留现场，最终提交由本人完成。
 
 第三方依赖按各自许可证分发，见[说明](../THIRD_PARTY_NOTICES.md)。
+
+
+## 此后每次更新
+
+按[治理规则](../GOVERNANCE.md)从独立变更片段汇总发布记录，检查版本、兼容/迁移、安装、接口、隐私及确切提交CI。`python scripts/check_project.py --notes`只生成待发布摘要；它不自动打tag、上传或修改数据。历史Release和tag不可覆盖。GitHub远端main规则须维护者配置并回读，仓库内CI不等于已强制保护。

@@ -1,0 +1,188 @@
+{
+  "schema_version": 1,
+  "project_id": "career-workbench",
+  "capabilities": [
+    {
+      "id": "profile",
+      "status": "partial",
+      "summary": "共享资料、记录、版本、原件及草稿",
+      "depends_on": [],
+      "sources": [
+        "prototypes/profile-lab/profile_library.py",
+        "prototypes/profile-lab/profile_group_versions.py"
+      ],
+      "tests": [
+        "prototypes/profile-lab/test_profile_group_versions.py",
+        "prototypes/profile-lab/test_profile_recovery.py"
+      ],
+      "docs": [
+        "docs/PRODUCT_REQUIREMENTS.md",
+        "docs/DATA_AND_API.md"
+      ],
+      "limitations": "现行资料组结构；新的简化结构待实施；不宣称任意字段完整覆盖",
+      "acceptance": "保存/版本/恢复不丢原事实、原件、草稿及旧投递引用"
+    },
+    {
+      "id": "agent",
+      "status": "partial",
+      "summary": "供应商中立的结构化推理与公开证据接口",
+      "depends_on": [],
+      "sources": [
+        "prototypes/profile-lab/agent_adapter.py",
+        "prototypes/profile-lab/recognizer.py"
+      ],
+      "tests": [
+        "prototypes/profile-lab/test_agent_adapter.py",
+        "prototypes/profile-lab/test_recognizer.py"
+      ],
+      "docs": [
+        "docs/AGENT_INTEGRATION.md",
+        "docs/AGENT_PLAYBOOK.md"
+      ],
+      "limitations": "实际模型必须自行验收，虚构适配器测试不证明语义准确或检索真实性",
+      "acceptance": "合法schema、来源证据、缺能力明确失败，不采用残缺或编造输出"
+    },
+    {
+      "id": "import",
+      "status": "partial",
+      "summary": "解析Skill、清洁文本、原件联合核对、可跳过确认表单与整组表述版本确认",
+      "depends_on": [
+        "profile",
+        "agent"
+      ],
+      "sources": [
+        "prototypes/profile-lab/document_markdown.py",
+        "prototypes/profile-lab/lab.py",
+        "skills/resume-material-parser/SKILL.md",
+        "prototypes/profile-lab/resume_skill.py",
+        "prototypes/profile-lab/resume_import.py",
+        "prototypes/profile-lab/document_review.py",
+        "prototypes/profile-lab/import_questions.py"
+      ],
+      "tests": [
+        "prototypes/profile-lab/test_markdown_sets.py",
+        "prototypes/profile-lab/test_resume_skill.py",
+        "prototypes/profile-lab/test_resume_skill_browser.cjs",
+        "prototypes/profile-lab/test_document_review.py",
+        "prototypes/profile-lab/test_import_questions.py",
+        "prototypes/profile-lab/test_import_questions_browser.cjs"
+      ],
+      "docs": [
+        "docs/PRODUCT_REQUIREMENTS.md"
+      ],
+      "limitations": "原件视觉核对最多8页；Word页面渲染依赖可用LibreOffice，否则仅核对原始段落/表格；自定义Agent未声明图像能力时保留疑点。模型/转换失败和未确认解释不自动当作事实。",
+      "acceptance": "原文完整、对象分组、确认后入库，冲突暂缓不覆盖旧值"
+    },
+    {
+      "id": "management",
+      "status": "implemented",
+      "summary": "本机岗位录入、人工状态、日期及独立删除",
+      "depends_on": [],
+      "sources": [
+        "prototypes/management-lab/store.py",
+        "prototypes/management-lab/intake.py"
+      ],
+      "tests": [
+        "prototypes/management-lab/test_management.py",
+        "prototypes/management-lab/test_intake_resilience.py"
+      ],
+      "docs": [
+        "docs/PRODUCT_REQUIREMENTS.md",
+        "docs/DATA_AND_API.md"
+      ],
+      "limitations": "仅已投或明确要投；个人中心批量导入不包含在本项",
+      "acceptance": "一行一岗，重复正常新增，人工确认已投，删除保留共享资料和其他岗位"
+    },
+    {
+      "id": "mapping",
+      "status": "partial",
+      "summary": "网站对象/范围理解、资料取值与完整材料预览",
+      "depends_on": [
+        "profile",
+        "agent",
+        "management"
+      ],
+      "sources": [
+        "prototypes/profile-lab/mapping.py",
+        "prototypes/profile-lab/preparation.py",
+        "prototypes/profile-lab/application.py"
+      ],
+      "tests": [
+        "prototypes/profile-lab/test_requirement_sets.py",
+        "prototypes/profile-lab/test_preparation.py"
+      ],
+      "docs": [
+        "docs/PRODUCT_REQUIREMENTS.md",
+        "docs/AGENT_INTEGRATION.md"
+      ],
+      "limitations": "新网站同义语义、动态分支仍有缺口；歧义不猜填",
+      "acceptance": "正确对象和范围、合法引用、确认后执行，缺项跳过而不清空官网"
+    },
+    {
+      "id": "execution",
+      "status": "partial",
+      "summary": "插件自动连接、扫描、填写、附件、回读和重试",
+      "depends_on": [
+        "mapping"
+      ],
+      "sources": [
+        "prototypes/icbc-native-extension/executor-core.js",
+        "prototypes/icbc-native-extension/material-runner.js",
+        "prototypes/profile-lab/executor_bridge.py"
+      ],
+      "tests": [
+        "prototypes/icbc-native-extension/executor-core.test.cjs",
+        "prototypes/icbc-native-extension/test-upload-ready.cjs",
+        "prototypes/profile-lab/test_executor_bridge.py"
+      ],
+      "docs": [
+        "prototypes/icbc-native-extension/API.md",
+        "docs/TESTING.md"
+      ],
+      "limitations": "复杂iframe/控件和所有网站未覆盖；无草稿页面不刷新，最终本人提交",
+      "acceptance": "保护人工值、无重复新增、报告实际写入/回读/附件/持久保存，各岗位隔离"
+    },
+    {
+      "id": "progress",
+      "status": "partial",
+      "summary": "用户触发的官网进度只读查询",
+      "depends_on": [
+        "management"
+      ],
+      "sources": [
+        "prototypes/management-lab/progress_query.py"
+      ],
+      "tests": [
+        "prototypes/management-lab/test_progress_query.py"
+      ],
+      "docs": [
+        "docs/PRODUCT_REQUIREMENTS.md"
+      ],
+      "limitations": "只在支持站点唯一明确匹配时更新阶段；不自动轮询或猜志愿",
+      "acceptance": "保留人工并发改动，不改已投状态，不生成日期"
+    },
+    {
+      "id": "distribution",
+      "status": "partial",
+      "summary": "跨系统安装、诊断、源码分发和质量检查",
+      "depends_on": [],
+      "sources": [
+        "scripts/bootstrap.py",
+        "scripts/doctor.py",
+        "scripts/check_project.py"
+      ],
+      "tests": [
+        "scripts/test_setup.py",
+        "scripts/test_doctor.py",
+        "scripts/test_project_governance.py"
+      ],
+      "docs": [
+        "docs/SETUP.md",
+        "docs/RELEASE.md",
+        "GOVERNANCE.md"
+      ],
+      "limitations": "安装CI不等于各系统真实Chrome/模型/全部网站通过；远端规则须维护者启用",
+      "acceptance": "干净安装、拒绝覆盖原库、隔离测试、逐次变更记录和无私人数据分发"
+    }
+  ]
+}

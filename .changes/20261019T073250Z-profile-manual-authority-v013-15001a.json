@@ -1,0 +1,21 @@
+{
+  "kind": "docs",
+  "summary": "Limit semantic discrepancy questions to resume recognition and accept manual content without semantic rechecking or follow-up prompts.",
+  "capabilities": [
+    "profile"
+  ],
+  "validation": "check_docs.py PASS: 105 Markdown, 649 relative links. check_project.py PASS: 21 records before receipt; no PR diff. PRD A01-A67 sequence verified. No runtime tests.",
+  "compatibility": "Documentation only. No code, Skill, live data or deployment edits. Prior proposed manual-edit semantic review is superseded; explicit save scope and existing technical safeguards remain.",
+  "handoff": {
+    "task": "profile-manual-authority-v013",
+    "status": "complete",
+    "next": "Explain detection in plain language, then continue the remaining product boundaries one at a time; Q04 semantic review after manual edits is settled by P37.",
+    "docs": [],
+    "docs_reason": "Private PRD, field reference and shared requirement/decision/acceptance/handoff/roadmap indexes updated. Public runtime contracts unchanged."
+  },
+  "id": "20261019T073250Z-profile-manual-authority-v013-15001a",
+  "files": [
+    "docs/PROJECT_ACTIVITY.md"
+  ],
+  "release": null
+}

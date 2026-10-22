@@ -1,0 +1,22 @@
+{
+  "kind": "build",
+  "summary": "Complete and verify the cross-conversation continuity rollout; automatic project index and scoped receipts are in place.",
+  "capabilities": [
+    "distribution",
+    "agent"
+  ],
+  "validation": "24 local governance/handoff tests passed; clean export 23 passed plus 1 private-exporter-specific skip, already passed in author tree. Documentation: 102 private Markdown files/633 links, 111 public links; 215 exported source files passed privacy scan. All 170 protected source/runtime hashes unchanged. No remote CI, product UI, model or website testing claimed.",
+  "compatibility": "Development management only; application code, databases, runtime configuration, PID and extension permissions unchanged.",
+  "handoff": {
+    "task": "continuity-rollout",
+    "status": "complete",
+    "next": "Agents use status/begin/record on subsequent tasks; remote required-check enforcement remains pending publication configuration.",
+    "docs": [],
+    "docs_reason": "Private final acceptance report updated; public continuity contracts are documented in the bootstrap fragment."
+  },
+  "id": "20261016T022449Z-continuity-rollout-e0726f",
+  "files": [
+    "docs/PROJECT_ACTIVITY.md"
+  ],
+  "release": null
+}

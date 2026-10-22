@@ -80,3 +80,8 @@ python scripts/check_docs.py
 ## 许可证
 
 采用 [MIT](LICENSE) 许可证。依赖许可证独立列于 [第三方说明](THIRD_PARTY_NOTICES.md)。使用者自行配置模型账号、Chrome及网站登录；有限官网验证不等于任意页面兼容。
+
+
+## 让自己的Agent使用或维护
+
+运行Agent按[接入协议](docs/AGENT_INTEGRATION.md)配置并按[手册](docs/AGENT_PLAYBOOK.md)验收；开发Agent从[治理规则](GOVERNANCE.md)与[能力清单](docs/CAPABILITIES.json)定位模块和测试。每次更新保留独立变更记录，CI检查遗漏。当前支持范围与未实现能力明确区分，不承诺任意模型或网站都兼容。
