@@ -1,0 +1,21 @@
+{
+  "kind": "docs",
+  "summary": "Narrow the planned profile expression-version scope and align import, writeback, layout and migration requirements.",
+  "capabilities": [
+    "profile"
+  ],
+  "validation": "check_project.py passed with 22 change records before receipt. check_docs.py reported three missing audit-report links in concurrently owned roadmap, chat index and changelog; no errors reported in the six updated specifications. Runtime tests were not run for this documentation-only task.",
+  "compatibility": "Planning documentation only; no product code, Skill, API, storage or runtime data changes.",
+  "handoff": {
+    "task": "profile-version-scope-v014",
+    "status": "complete",
+    "next": "Continue one-at-a-time product decisions and confirm the full field catalog before implementation tasks. After the concurrent audit releases shared status documents, synchronize the narrowed version scope into roadmap, handoff and changelog and rerun the full documentation check.",
+    "docs": [],
+    "docs_reason": "Updated six private authoritative planning and acceptance documents. Shared roadmap, handoff and changelog are occupied by the concurrent audit task and were not modified. Public runtime specifications remain unchanged."
+  },
+  "id": "20261022T071648Z-profile-version-scope-v014-2dd295",
+  "files": [
+    "docs/PROJECT_ACTIVITY.md"
+  ],
+  "release": "0.3.0"
+}

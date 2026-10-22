@@ -1,0 +1,21 @@
+{
+  "kind": "docs",
+  "summary": "Record isolated resume review and retry validation without changing product behavior or confirmed user data.",
+  "capabilities": [
+    "import"
+  ],
+  "validation": "Fourth isolated model retry completed with 19 groups and 64 source-validated fields; seven complete descriptions matched declared ranges. Private viewer verified all 269 candidate fields across four files, search and source expansion, zero browser errors. Original-file bytes and production table digests verified unchanged.",
+  "compatibility": "No product code, API, storage migration, deployment or permissions changed. Personal content remains outside the distribution whitelist.",
+  "handoff": {
+    "task": "resume-isolated-review",
+    "status": "complete",
+    "next": "User reviews isolated candidates and unresolved source/identity warnings before any future explicit save.",
+    "docs": [],
+    "docs_reason": "Updated private validation evidence only; approved product rules remain unchanged."
+  },
+  "id": "20261016T025809Z-resume-isolated-review-e1b50e",
+  "files": [
+    "docs/PROJECT_ACTIVITY.md"
+  ],
+  "release": "0.3.0"
+}

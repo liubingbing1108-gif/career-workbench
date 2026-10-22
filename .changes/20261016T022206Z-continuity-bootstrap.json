@@ -1,0 +1,44 @@
+{
+  "id": "20261016T022206Z-continuity-bootstrap",
+  "kind": "build",
+  "summary": "Add scoped development task receipts and a generated cross-conversation handoff index, enforced by existing checks and source export.",
+  "capabilities": [
+    "distribution",
+    "agent"
+  ],
+  "files": [
+    ".gitignore",
+    "AGENTS.md",
+    "START_HERE.md",
+    "CONTRIBUTING.md",
+    "GOVERNANCE.md",
+    "docs/CONTINUITY.md",
+    "docs/PROJECT_ACTIVITY.md",
+    "docs/HANDOFF_CONTEXT.md",
+    "docs/ROADMAP.md",
+    "docs/AGENT_PLAYBOOK.md",
+    "docs/TESTING.md",
+    "scripts/check_docs.py",
+    "scripts/check_project.py",
+    "scripts/test_project_governance.py",
+    "scripts/project_handoff.py",
+    "scripts/test_project_handoff.py",
+    "scripts/run_tests.py",
+    ".github/workflows/ci.yml",
+    ".github/PULL_REQUEST_TEMPLATE.md"
+  ],
+  "validation": "24 governance/handoff tests passed on fictional temporary directories. Final clean-export and privacy checks pending. No application runtime, UI, model or website tests claimed.",
+  "compatibility": "Development-only. Application code, data schema, extension permissions and startup remain unchanged. Existing pre-adoption records are preserved; future records require handoff metadata.",
+  "release": "0.3.0",
+  "handoff": {
+    "task": "continuity-rollout",
+    "status": "in_progress",
+    "next": "Verify clean export and protected runtime, then append final evidence.",
+    "docs": [
+      "GOVERNANCE.md",
+      "docs/CONTINUITY.md",
+      "docs/AGENT_PLAYBOOK.md"
+    ],
+    "docs_reason": "Development workflow and handoff contracts changed; product behavior did not. This bootstrap record is created explicitly while introducing the recording tool."
+  }
+}

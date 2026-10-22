@@ -1,0 +1,44 @@
+{
+  "id": "20261016T021423Z-resume-skill-integration",
+  "kind": "feature",
+  "summary": "Integrate source-grounded resume Skill and user-confirmed whole-record representations, including awards.",
+  "capabilities": [
+    "import",
+    "profile",
+    "agent"
+  ],
+  "files": [
+    "prototypes/profile-lab/recognizer.py",
+    "prototypes/profile-lab/resume_skill.py",
+    "prototypes/profile-lab/resume_import.py",
+    "prototypes/profile-lab/lab.py",
+    "prototypes/profile-lab/profile_library.py",
+    "prototypes/profile-lab/profile_group_versions.py",
+    "prototypes/profile-lab/web/app.js",
+    "prototypes/profile-lab/web/profile-hierarchy.js",
+    "prototypes/profile-lab/test_resume_skill.py",
+    "prototypes/profile-lab/test_resume_skill_fixture.py",
+    "prototypes/profile-lab/test_resume_skill_browser.cjs",
+    "skills/resume-material-parser/SKILL.md",
+    "skills/resume-material-parser/references/integration.md",
+    "skills/resume-material-parser/references/current-review.md",
+    "skills/resume-material-parser/references/open-decisions.md",
+    "skills/resume-material-parser/references/acceptance.md",
+    "docs/CAPABILITIES.json",
+    "docs/RESUME_SKILL_VALIDATION.md"
+  ],
+  "validation": "285 offline profile tests passed, including 15 Skill cases; isolated browser verifies identity and version selection, save, reload and originals/defaults. Local deployment protected existing database contents. Model/network/PDF limitations remain explicit; no universal accuracy claim.",
+  "compatibility": "Existing import API and profile database retained. New tagged imports use whole-group versions; confirmed historical data is not reparsed. No extension or permission expansion.",
+  "release": "0.3.0",
+  "handoff": {
+    "task": "resume-skill-integration",
+    "status": "complete",
+    "next": "Monitor future explicit imports; preserve unresolved PDF ordering and source-grounding issues for user review. Real-model timeouts remain visible and retryable.",
+    "docs": [
+      "skills/resume-material-parser/SKILL.md",
+      "docs/RESUME_SKILL_VALIDATION.md",
+      "docs/CAPABILITIES.json"
+    ],
+    "docs_reason": "Records the approved import workflow, alternative representations and factual-conflict safeguards, verified integration scope, and model/PDF limitations."
+  }
+}

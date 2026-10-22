@@ -1,0 +1,22 @@
+{
+  "kind": "docs",
+  "summary": "Clarify exam category and score fields within language ability; propose shared exam references and inline entry.",
+  "capabilities": [
+    "profile",
+    "mapping"
+  ],
+  "validation": "python3 scripts/check_docs.py PASS (103 Markdown, 645 relative links); python3 scripts/check_project.py PASS (10 records, no PR diff). Documentation only; no runtime tests run.",
+  "compatibility": "Product code, APIs, storage and runtime data unchanged. Shared exam references remain a proposed implementation.",
+  "handoff": {
+    "task": "profile-language-exam-fields-v06",
+    "status": "complete",
+    "next": "Continue confirming language classification and remaining profile redesign topics before implementation.",
+    "docs": [],
+    "docs_reason": "Updated private authoritative profile PRD and requirement, decision, acceptance, handoff and roadmap indexes. Public runtime contracts unchanged; private file paths remain in local receipt."
+  },
+  "id": "20261016T025838Z-profile-language-exam-fields-v06-0dd725",
+  "files": [
+    "docs/PROJECT_ACTIVITY.md"
+  ],
+  "release": "0.3.0"
+}

@@ -1,0 +1,24 @@
+{
+  "id": "20261016T021248Z-profile-correction-loop-prd",
+  "kind": "docs",
+  "summary": "Confirm profile writeback requirements and specify editable workbench correction paths for website filling feedback, including scoped retry and readback.",
+  "capabilities": [
+    "profile",
+    "mapping",
+    "execution"
+  ],
+  "files": [
+    "docs/PROFILE_MANAGEMENT_REFACTOR_PRD.md",
+    "docs/PRODUCT_REQUIREMENTS.md",
+    "docs/DECISIONS.md",
+    "docs/DISCUSSION_AND_ACCEPTANCE.md",
+    "docs/HANDOFF_CONTEXT.md",
+    "docs/PROFILE_LIBRARY_DESIGN.md",
+    "docs/ROADMAP.md",
+    "docs/CHAT_MAP.md",
+    "CHANGELOG.md"
+  ],
+  "validation": "PRD requirements, task/source paths and acceptance additions verified by local assertions. python3 scripts/check_project.py passed catalog/references; PR diff not checked. python3 scripts/check_docs.py reports two pending references (service.md and integration.md) in the separately in-progress application-field-mapper Skill package. No product behavior or deployment tests performed.",
+  "compatibility": "Planning documents only; no product code, API, storage, extension, permission or runtime changes. Structured issue feedback and targeted replacement require future compatible protocol implementation and tests.",
+  "release": "0.3.0"
+}

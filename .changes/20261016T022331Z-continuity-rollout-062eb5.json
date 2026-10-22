@@ -1,0 +1,22 @@
+{
+  "kind": "docs",
+  "summary": "Record the continuity rollout acceptance progress without exposing private workspace notes.",
+  "capabilities": [
+    "distribution",
+    "agent"
+  ],
+  "validation": "24 temporary-directory governance and continuity tests passed; final export verification pending.",
+  "compatibility": "Development management only; no application or runtime change.",
+  "handoff": {
+    "task": "continuity-rollout",
+    "status": "in_progress",
+    "next": "Verify clean candidate export, protection hashes and remaining documentation gates.",
+    "docs": [],
+    "docs_reason": "Private acceptance report updated; public implementation contracts were recorded in the bootstrap fragment."
+  },
+  "id": "20261016T022331Z-continuity-rollout-062eb5",
+  "files": [
+    "docs/PROJECT_ACTIVITY.md"
+  ],
+  "release": "0.3.0"
+}

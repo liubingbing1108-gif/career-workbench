@@ -1,0 +1,22 @@
+{
+  "kind": "docs",
+  "summary": "Confirm combined language/exam form filling with a single current CET-6 result, and synchronize prior award/import and linked-score decisions into shared indexes.",
+  "capabilities": [
+    "profile",
+    "mapping"
+  ],
+  "validation": "check_docs.py PASS: 105 Markdown, 648 relative links. check_project.py PASS: 20 records before receipt, no PR diff. PRD acceptance sequence A01-A66 verified. No runtime tests.",
+  "compatibility": "Documentation only; no code, Skill or active profile data edited. New single-current-result rule applies to CET-6; other exam multiplicity remains pending. Original files and past application content remain protected.",
+  "handoff": {
+    "task": "profile-cet6-single-v012",
+    "status": "complete",
+    "next": "Explain the fourth issue, inconsistent text within one experience, in plain language and wait for confirmation. Earlier deferred shared-index synchronization is now complete.",
+    "docs": [],
+    "docs_reason": "Updated private main PRD, field reference and shared requirement/decision/acceptance/handoff/roadmap indexes after the other task released them. Public runtime contracts unchanged."
+  },
+  "id": "20261019T071730Z-profile-cet6-single-v012-fb6371",
+  "files": [
+    "docs/PROJECT_ACTIVITY.md"
+  ],
+  "release": "0.3.0"
+}

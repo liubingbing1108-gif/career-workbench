@@ -1,0 +1,26 @@
+{
+  "kind": "fix",
+  "summary": "Keep unresolved source attribution pending when optional import questions are skipped; allow later confirmation of unsaved objects.",
+  "capabilities": [
+    "import",
+    "profile"
+  ],
+  "validation": "Unified run_tests.py --ui passed 433 Python and 111 Node tests and all 15 browser scripts. Six new negative cases and the UI flow cover skipped source doubts, independent group save, later source confirmation, saved-answer protection and grounding rejection. Deployment pre/post all-table contents identical.",
+  "compatibility": "No bulk reprocessing or schema migration. Confirmed records remain unchanged; optional missing values remain skippable. Existing invalid evidence checks cannot be bypassed by source confirmation.",
+  "handoff": {
+    "task": "resume-source-skip-guard",
+    "status": "complete",
+    "next": "Retain source ambiguity regression coverage; adapt later category-specific product decisions only in their authorized implementation work.",
+    "docs": [],
+    "docs_reason": "Restores the existing Skill rule that skipped source ambiguity is not confirmation. Interface and audit documentation are maintained by the companion audit task."
+  },
+  "id": "20261022T071813Z-resume-source-skip-guard-451e4d",
+  "files": [
+    "prototypes/profile-lab/import_questions.py",
+    "prototypes/profile-lab/test_import_questions.py",
+    "prototypes/profile-lab/test_import_questions_browser.cjs",
+    "prototypes/profile-lab/test_import_questions_fixture.py",
+    "prototypes/profile-lab/web/app.js"
+  ],
+  "release": "0.3.0"
+}

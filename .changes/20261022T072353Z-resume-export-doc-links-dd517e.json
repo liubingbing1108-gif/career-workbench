@@ -1,0 +1,26 @@
+{
+  "kind": "docs",
+  "summary": "Fix the exported resume Skill validation link and document the implemented clarification contract and limits.",
+  "capabilities": [
+    "import",
+    "distribution"
+  ],
+  "validation": "Private documentation check passed; source-only checkout documentation check passed 151 relative links and tracked-source privacy scan passed. No model calls or runtime changes.",
+  "compatibility": "Private evidence remains excluded; the common validation entry works in both the private workspace and exported source tree. Later product version-policy work remains pending.",
+  "handoff": {
+    "task": "resume-export-doc-links",
+    "status": "complete",
+    "next": "Keep exported Skill links inside the source whitelist when adding future validation documents.",
+    "docs": [
+      "skills/resume-material-parser/references/integration.md",
+      "docs/RESUME_SKILL_VALIDATION.md"
+    ],
+    "docs_reason": "Replaces a link to an excluded private report with the shared validation entry and records current tests and source-review limits."
+  },
+  "id": "20261022T072353Z-resume-export-doc-links-dd517e",
+  "files": [
+    "docs/RESUME_SKILL_VALIDATION.md",
+    "skills/resume-material-parser/references/integration.md"
+  ],
+  "release": "0.3.0"
+}

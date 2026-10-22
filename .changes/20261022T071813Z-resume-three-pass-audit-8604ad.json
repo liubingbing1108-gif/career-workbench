@@ -1,0 +1,32 @@
+{
+  "kind": "test",
+  "summary": "Audit resume import requirements, wire clarification and representation browser checks into the shared test entry, and align API and historical Skill documentation.",
+  "capabilities": [
+    "import",
+    "profile",
+    "distribution"
+  ],
+  "validation": "Three-pass audit in progress: requirement mapping complete; 433 Python and 111 Node tests and all 15 browser scripts passed; repaired source-skip bypass separately recorded. Local source-only snapshot and full-baseline checks remain.",
+  "compatibility": "No new product decision or provider. Local snapshot does not replace the released version or establish remote CI success; historical confirmed imports are not reprocessed.",
+  "handoff": {
+    "task": "resume-three-pass-audit",
+    "status": "in_progress",
+    "next": "Finish sanitized export, local Git snapshot, complete-baseline coverage check and final handoff validation.",
+    "docs": [
+      "docs/DATA_AND_API.md",
+      "docs/TESTING.md",
+      "skills/resume-material-parser/references/open-decisions.md",
+      "skills/resume-material-parser/references/current-review.md"
+    ],
+    "docs_reason": "Document the review endpoint, unresolved-source semantics, shared regression entry and the distinction between historical draft and current implementation; private requirement matrix stays local."
+  },
+  "id": "20261022T071813Z-resume-three-pass-audit-8604ad",
+  "files": [
+    "docs/DATA_AND_API.md",
+    "docs/TESTING.md",
+    "scripts/run_tests.py",
+    "skills/resume-material-parser/references/current-review.md",
+    "skills/resume-material-parser/references/open-decisions.md"
+  ],
+  "release": "0.3.0"
+}

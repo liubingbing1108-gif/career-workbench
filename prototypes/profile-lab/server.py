@@ -138,7 +138,7 @@ def make_server(lab, port=0, mapper=None, management_app=None, management_handle
                 if parsed.path == "/api/recognition":
                     return self.send(200, lab.recognition_status())
                 if parsed.path == '/api/imports':
-                    return self.send(200, [{**{k: p.get(k) for k in ('id', 'filename', 'status', 'stage', 'started_at', 'error', 'text_preview', 'converter', 'conversion_format')}, 'pending_count': sum(candidate_pending(c) for c in p['candidates'])} for p in lab.state()['imports']])
+                    return self.send(200, [{**{k: p.get(k) for k in ('id', 'filename', 'status', 'stage', 'started_at', 'error', 'text_preview', 'converter', 'conversion_format')}, 'pending_count': sum(candidate_pending(c) for c in p['candidates']) + (len(p.get('review_questions',[])) if p.get('review_contract') and not p.get('review_completed') else 0)} for p in lab.state()['imports']])
                 if parsed.path == "/api/materials":
                     session_id = parse_qs(parsed.query).get("session", [""])[0]
                     return self.send(200, lab.materials(session_id))
@@ -250,6 +250,9 @@ def make_server(lab, port=0, mapper=None, management_app=None, management_handle
                     result = lab.start_import(data['import_id']) if data.get('async') is True else lab.recognize_import(data["import_id"])
                 elif action == "/api/import/commit":
                     result = lab.commit_import(data["import_id"], data["accepted"], data.get("edits", {}), data.get("expected_revision"))
+                elif action == "/api/import/review":
+                    from import_questions import complete
+                    result = complete(lab,data)
                 elif action == "/api/import/identity":
                     result = library.import_identity(data)
                 elif action == "/api/import/resolve":

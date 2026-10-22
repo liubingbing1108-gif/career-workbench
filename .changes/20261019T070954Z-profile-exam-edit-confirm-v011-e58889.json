@@ -1,0 +1,21 @@
+{
+  "kind": "docs",
+  "summary": "Record confirmation that editing a linked exam score in profile management updates the shared exam record with a visible save-scope notice.",
+  "capabilities": [
+    "profile"
+  ],
+  "validation": "check_docs.py PASS: 105 Markdown and 647 relative links. check_project.py PASS: 17 records before receipt, no PR diff. No runtime tests.",
+  "compatibility": "PRD only. No code, Skill or data edits. Application-session-only changes remain separate from shared profile saves.",
+  "handoff": {
+    "task": "profile-exam-edit-confirm-v011",
+    "status": "complete",
+    "next": "Explain website language rows combining ability and exam fields. Sync this confirmation and the preceding award rule into shared indexes when the separate resume-source-rule-docs task releases them.",
+    "docs": [],
+    "docs_reason": "Private main PRD updated. Shared documentation is registered to a different active task and was not overwritten. Public runtime contracts unchanged."
+  },
+  "id": "20261019T070954Z-profile-exam-edit-confirm-v011-e58889",
+  "files": [
+    "docs/PROJECT_ACTIVITY.md"
+  ],
+  "release": "0.3.0"
+}

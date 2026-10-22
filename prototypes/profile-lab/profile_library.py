@@ -406,9 +406,15 @@ class ProfileLibrary:
             if not rows or any(c.get('saved') for c in rows):raise LabError('此组已保存或不存在')
             eid=data.get('entry_id')
             if eid:
-                entry=find(state['entries'],eid)
-                if entry['category']!=rows[0]['category']:raise LabError('不能合并不同模块的资料')
                 if eid not in rows[0].get('identity_choices',[]):raise LabError('请选择待核对的已有记录')
+                if eid.startswith('pending:') and preview.get('parser_contract'):
+                    pid,group=eid.removeprefix('pending:').split('/',1)
+                    other=find(state['imports'],pid)
+                    target=next((c for c in other['candidates'] if c['group']==group),None)
+                    if not target or target['category']!=rows[0]['category']:raise LabError('待处理对象无效')
+                else:
+                    entry=find(state['entries'],eid)
+                    if entry['category']!=rows[0]['category']:raise LabError('不能合并不同模块的资料')
             preview.setdefault('identity_decisions',{})[data['group']]={'entry_id':eid}
             preview['revision']=preview.get('revision',1)+1
             return dict(saved=True)

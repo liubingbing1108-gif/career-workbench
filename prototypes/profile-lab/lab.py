@@ -67,7 +67,7 @@ def initial_state():
         "categories": [{"id": k, "label": v, "repeatable": r} for k, v, r in CATEGORIES],
         "fields": [{"id": k, "label": v, "category": c, "type": t,
                     "aliases": aliases, "options": []} for k, v, c, t, aliases in SAMPLE_FIELDS],
-        "entries": [{"id": uid(k), "category": k, "values": {}, "sources": {}}
+        "entries": [{"id": uid(k), "category": k, "values": {}, "sources": {}, "default_versions": {}}
                     for k, _, repeatable in CATEGORIES if not repeatable],
         "versions": [], "files": [], "imports": [], "sessions": [],
     }
@@ -181,7 +181,20 @@ def parse_sample_fields(state, blocks, filename):
 
 def finish_preview(state, import_id, candidates, warnings, usage):
     preview = find(state["imports"], import_id)
+    if usage.get('parser_contract'):
+        preview['parser_contract']=usage['parser_contract']
+        from resume_import import groups, comparison_token
+        ignored=set(preview.get('ignored_groups',[]))
+        for rows in groups(candidates).values():
+            if comparison_token({c['field_id']:c['value'] for c in rows}) in ignored:
+                for c in rows:c.update(disposition='ignore',status='已忽略',selected=False)
+    previous_candidates=copy.deepcopy(preview.get("candidates",[]))
     preview.update(candidates=candidates, warnings=warnings, usage=usage, status="完成", stage="完成", error="", finished_at=time.time())
+    if usage.get("review_contract"):
+        preview["review_contract"]=usage["review_contract"]
+        from import_questions import build_questions
+        build_questions(state,preview,previous_candidates)
+        preview["stage"]="完成识别确认" if preview.get("review_completed") else "识别内容已就绪，待确认（可跳过）"
     return preview
 
 
@@ -251,6 +264,7 @@ def reconcile_semantic_imports(state):
     state.setdefault("ignored_candidates", [])
     grouped, signatures = {}, {}
     for preview in state["imports"]:
+        if preview.get("parser_contract"):continue
         signatures[preview["id"]] = [(c.get("entry_id"), c.get("existing"), c.get("status"), c.get("duplicate_of")) for c in preview["candidates"]]
         local = {}
         for c in preview["candidates"]:
@@ -337,8 +351,12 @@ def reconcile_semantic_imports(state):
             except LabError:
                 c["status"], c["selected"] = "需更正格式", False
     for preview in state["imports"]:
+        if preview.get("parser_contract"):continue
         changed = signatures[preview["id"]] != [(c.get("entry_id"), c.get("existing"), c.get("status"), c.get("duplicate_of")) for c in preview["candidates"]]
         preview["revision"] = preview.get("revision", 1) + int(changed)
+
+    from resume_import import reconcile
+    reconcile(state)
 
 
 class Lab:
@@ -367,7 +385,6 @@ class Lab:
                 if field["id"] in {"started", "ended", "graduation_date"} and field["type"] == "date":
                     field["type"] = "partial_date"
             for entry in state["entries"]:
-                entry.setdefault("default_versions", {})
                 for field_id, value in entry["values"].items():
                     field = next((f for f in state["fields"] if f["id"] == field_id), None)
                     if field and not all_versions(state, entry["id"], field_id):
@@ -487,16 +504,63 @@ class Lab:
         if blocks is None:
             meta, raw = self.file_bytes(preview["file_id"])
             blocks = extract_text(meta["name"], raw)
+        from document_review import clean_blocks
+        if not all(b.get("cleanup_version") for b in blocks):blocks=clean_blocks(blocks)
         self.mutate(lambda s: find(s["imports"], import_id).update(status="识别中", stage="按资料组识别内容", error="", error_code='', diagnostics={}, **conversion_metadata(blocks)))
         if not any(b["text"].strip() for b in blocks):
             return self.mutate(lambda s: finish_preview(s, import_id, [], ["未读取到文字层；扫描 PDF 尚未接入 OCR，可以上传文字版或手填资料。"], {}))
         try:
-            result, usage = self.recognizer.extract(self.state()["fields"], blocks)
+            from resume_skill import rules, catalog, compare
+            from resume_import import comparison_token
+            current=self.state(); _, digest=rules()
+            adapter=hashlib.sha256((Path(__file__).with_name('recognizer.py').read_bytes()+Path(__file__).with_name('resume_skill.py').read_bytes()+Path(__file__).with_name('document_review.py').read_bytes())).hexdigest()
+            cache_key=comparison_token({'blocks':blocks,'fields':catalog(current['fields']),'skill':digest,'adapter':adapter})
+            cached=next((p for p in reversed(current['imports']) if p.get('extraction_cache_key')==cache_key and p.get('model_result',{}).get('parser_contract')),None)
+            if cached:
+                result,usage=copy.deepcopy(cached.get('extraction_result',cached['model_result'])),{**cached.get('usage',{}),'extraction_cached':True}
+            else:
+                result, usage = self.recognizer.extract(current["fields"], blocks)
+            self.mutate(lambda s: find(s['imports'],import_id).update(extraction_cache_key=cache_key))
             # Keep the model draft only in this temporary application session so
             # deterministic validation can be repaired without resending a resume.
-            self.mutate(lambda s: find(s["imports"], import_id).update(model_result=result, stage='核验来源与整理资料组'))
+            self.mutate(lambda s: find(s['imports'],import_id).update(extraction_result=copy.deepcopy(result)))
+            from document_review import needs_source,review_source
+            source_warnings=[]
+            if result.get('parser_contract') and needs_source(result):
+                self.mutate(lambda s: find(s['imports'],import_id).update(stage='结合原PDF/Word核对版式与归属'))
+                meta,raw=self.file_bytes(preview['file_id'])
+                try:
+                    blocks,result,source_review=review_source(self.recognizer,current['fields'],blocks,result,meta['name'],raw)
+                except RecognitionError as error:
+                    source_review={'failed':True,'reason':'原件模型核对未完成，保留原提取结果和疑点','code':error.code}
+                if source_review.get('failed'):source_warnings.append(source_review['reason'])
+                self.mutate(lambda s:find(s['imports'],import_id).update(source_review=source_review,**conversion_metadata(blocks)))
+                usage={**usage,'source_review':source_review}
+            self.mutate(lambda s: find(s['imports'], import_id).update(model_result=result, stage='核验来源与整理资料组'))
             candidates, rejected = grounded_candidates(self.state(), blocks, preview["filename"], result)
-            warnings = [str(w)[:500] for w in result.get("warnings", [])][:30] + rejected
+            additional_warnings=list(source_warnings)
+            if result.get('parser_contract') and rejected:
+                from resume_skill import repair
+                self.mutate(lambda s: find(s['imports'],import_id).update(stage='局部核对未通过的原文引用',model_result_before_repair=result))
+                try:
+                    result,repair_info=repair(self.recognizer,self.state()['fields'],blocks,result,candidates)
+                except RecognitionError as error:
+                    repair_info={'failed':True,'code':error.code,'diagnostics':error.diagnostics}
+                    additional_warnings.append('局部模型核对未完成；原提取结果保留，未通过核验的资料组暂不能保存。')
+                candidates,rejected=grounded_candidates(self.state(),blocks,preview['filename'],result)
+                self.mutate(lambda s: find(s['imports'],import_id).update(model_result=result,repair_info=repair_info))
+                usage={**usage,'repair':repair_info}
+            if result.get('parser_contract'):
+                self.mutate(lambda s: find(s['imports'],import_id).update(stage='比较已有资料与表述版本'))
+                comparison_failed=False
+                try:
+                    hints,comparison_usage=compare(self.recognizer,self.state(),candidates,import_id)
+                except RecognitionError as error:
+                    hints={};comparison_usage={'failed':True,'code':error.code,'diagnostics':error.diagnostics};comparison_failed=True
+                    additional_warnings.append('语义比较未完成；已有确定相同项可复用，其余与现有资料的归属须确认。')
+                self.mutate(lambda s: find(s['imports'],import_id).update(comparison_hints=hints,comparison_failed=comparison_failed))
+                usage={**usage,'parser_contract':result['parser_contract'],'comparison_usage':comparison_usage}
+            warnings = [str(w) for w in result.get("warnings", [])] + rejected + additional_warnings
             self.mutate(lambda s: finish_preview(s, import_id, candidates, warnings, usage))
             return find(self.state()["imports"], import_id)
         except RecognitionError as error:
@@ -541,9 +605,19 @@ class Lab:
 
     def resolve_import(self, decisions, revisions=None):
         def commit(state):
+            # Confirmed historical imports keep their existing contract; new Skill
+            # imports are saved as whole representations in the same transaction.
+            tagged={c['id'] for p in state['imports'] if p.get('parser_contract') for c in p['candidates']}
+            if len({d['candidate_id'] for d in decisions})!=len(decisions):raise LabError('同一增量不能重复处理')
             for pid, revision in (revisions or {}).items():
                 if revision != find(state["imports"], pid).get("revision", 1):
                     raise LabError("资料已更新，请重新打开增量预览", 409)
+            if any(d['candidate_id'] in tagged for d in decisions):
+                if not all(d['candidate_id'] in tagged for d in decisions):raise LabError('请分别处理新旧解析任务')
+                affected={p['id']:p for p in state['imports'] if any(c['id'] in {d['candidate_id'] for d in decisions if d['mode']!='ignore'} for c in p['candidates'])}
+                if any(p.get('review_contract') and not p.get('review_completed') for p in affected.values()):raise LabError('请先完成确认表单；缺项可全部跳过',409)
+                from resume_import import resolve
+                return resolve(self,state,decisions)
             rows = {c["id"]: (p, c) for p in state["imports"] for c in p["candidates"]}
             groups, saved, ignored = {}, 0, 0
             requested = {d['candidate_id']: d for d in decisions}
@@ -609,7 +683,7 @@ class Lab:
         existing = [e for e in state["entries"] if e["category"] == cat and not e.get("profile_archived")]
         if existing and not category(cat)[2]:
             return existing[0]
-        entry = {"id": uid(cat), "category": cat, "values": {}, "sources": {}}
+        entry = {"id": uid(cat), "category": cat, "values": {}, "sources": {}, "default_versions": {}}
         state["entries"].append(entry)
         return entry
 

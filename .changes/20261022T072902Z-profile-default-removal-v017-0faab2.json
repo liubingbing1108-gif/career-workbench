@@ -1,0 +1,21 @@
+{
+  "kind": "docs",
+  "summary": "Allow the default version to remain unset after deletion; prompt for a replacement without automatically choosing one.",
+  "capabilities": [
+    "profile"
+  ],
+  "validation": "check_docs.py passed for 106 Markdown files and 662 relative links; check_project.py passed with 31 records before receipt. Verified new acceptance rows are unique. No runtime tests for documentation-only planning.",
+  "compatibility": "No product code, Skill, API, runtime data or deployment changes. Historical delivery evidence preserved.",
+  "handoff": {
+    "task": "profile-default-removal-v017",
+    "status": "complete",
+    "next": "Continue one-at-a-time confirmation of remaining deletion/restoration rules, starting with deleting an exam record and its existing ability links; then language details and full field catalog. All shared profile planning indexes are synchronized.",
+    "docs": [],
+    "docs_reason": "Updated private authoritative PRD, structure, requirements, decisions, acceptance, handoff, roadmap and changelog. Public runtime specifications unchanged."
+  },
+  "id": "20261022T072902Z-profile-default-removal-v017-0faab2",
+  "files": [
+    "docs/PROJECT_ACTIVITY.md"
+  ],
+  "release": "0.3.0"
+}

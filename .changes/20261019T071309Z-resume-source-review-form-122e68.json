@@ -1,0 +1,43 @@
+{
+  "kind": "feature",
+  "summary": "Add conservative Markdown cleanup, original-document ambiguity review and optional import clarification forms.",
+  "capabilities": [
+    "import",
+    "profile",
+    "agent"
+  ],
+  "validation": "301 Python regression tests passed; subsequent cleanup-specific suite passed all 8 tests. New clarification and existing version-choice browser flows passed. One authorized private PDF completed isolated source-image review; local deployment API verified and both active databases remained identical across restart.",
+  "compatibility": "Existing confirmed records and historical imports are unchanged. PDF source review covers up to 8 pages; Word visual review requires a local renderer. Missing evidence and optional fields remain skippable.",
+  "handoff": {
+    "task": "resume-source-review-form",
+    "status": "complete",
+    "next": "Collect user feedback on new imports; retain explicit identity, version and save confirmations. Broader document-layout accuracy is not established by this validation.",
+    "docs": [
+      "docs/CAPABILITIES.json",
+      "skills/resume-material-parser/SKILL.md",
+      "skills/resume-material-parser/references/acceptance.md",
+      "skills/resume-material-parser/references/integration.md"
+    ],
+    "docs_reason": "Skill flow, capability limits and acceptance contract now document cleaning, source review and optional clarification; private validation report contains local evidence."
+  },
+  "id": "20261019T071309Z-resume-source-review-form-122e68",
+  "files": [
+    "docs/CAPABILITIES.json",
+    "prototypes/profile-lab/document_review.py",
+    "prototypes/profile-lab/import_questions.py",
+    "prototypes/profile-lab/lab.py",
+    "prototypes/profile-lab/recognizer.py",
+    "prototypes/profile-lab/resume_skill.py",
+    "prototypes/profile-lab/server.py",
+    "prototypes/profile-lab/test_document_review.py",
+    "prototypes/profile-lab/test_import_questions.py",
+    "prototypes/profile-lab/test_import_questions_browser.cjs",
+    "prototypes/profile-lab/test_import_questions_fixture.py",
+    "prototypes/profile-lab/web/app.js",
+    "requirements.txt",
+    "skills/resume-material-parser/SKILL.md",
+    "skills/resume-material-parser/references/acceptance.md",
+    "skills/resume-material-parser/references/integration.md"
+  ],
+  "release": "0.3.0"
+}

@@ -1,0 +1,21 @@
+{
+  "kind": "docs",
+  "summary": "Record award identity confirmation followed by one chosen wording, and comparison of every new resume with existing profile data.",
+  "capabilities": [
+    "profile"
+  ],
+  "validation": "check_docs.py PASS (105 Markdown, 647 relative links); check_project.py PASS (16 records before receipt; no PR diff). A01-A65 checked for complete unique sequence. No runtime tests or code changes.",
+  "compatibility": "New award requirement supersedes the earlier keep-both selectable award wording rule; other categories retain existing approved behavior. Product and parser behavior not changed in this task.",
+  "handoff": {
+    "task": "profile-award-import-v010",
+    "status": "complete",
+    "next": "Continue plain-language confirmation one item at a time. Sync the newly confirmed award rule into shared requirement/decision/handoff/roadmap/changelog indexes when the separate resume-source-rule-docs task releases those files.",
+    "docs": [],
+    "docs_reason": "Updated private main PRD and two profile references. Shared index documents are currently registered to another active task and were not overwritten; the latest rule is authoritative in the main PRD. No public runtime contract change."
+  },
+  "id": "20261019T070548Z-profile-award-import-v010-ce753d",
+  "files": [
+    "docs/PROJECT_ACTIVITY.md"
+  ],
+  "release": "0.3.0"
+}

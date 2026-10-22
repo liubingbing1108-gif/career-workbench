@@ -1,0 +1,32 @@
+{
+  "id": "20261015T124141Z-repository-governance",
+  "kind": "build",
+  "summary": "Add public governance, capability and Agent acceptance indexes, per-change records and PR coverage checks.",
+  "capabilities": [
+    "distribution",
+    "agent"
+  ],
+  "files": [
+    "GOVERNANCE.md",
+    "AGENTS.md",
+    "START_HERE.md",
+    "CONTRIBUTING.md",
+    "README.md",
+    "docs/AGENT_PLAYBOOK.md",
+    "docs/CAPABILITIES.json",
+    "docs/TESTING.md",
+    "docs/RELEASE.md",
+    "docs/AGENT_INTEGRATION.md",
+    "docs/HANDOFF_CONTEXT.md",
+    "docs/DECISIONS.md",
+    "scripts/check_docs.py",
+    "scripts/check_project.py",
+    "scripts/test_project_governance.py",
+    ".github/workflows/ci.yml",
+    ".github/PULL_REQUEST_TEMPLATE.md",
+    ".github/ISSUE_TEMPLATE/work-item.md"
+  ],
+  "validation": "python -m unittest discover -s scripts -p test_project_governance.py: 13 passed, including complete PR diffs, missing records/coverage, history protection, release assignment, dependency cycles and version drift. Clean export: check_project.py passed, check_docs.py passed (90 links), check_privacy.py passed (205 source files). No real GitHub PR/CI execution, product UI/model/site revalidation or release.",
+  "compatibility": "No application code, data schema, runtime Agent protocol or extension permission change. Remote branch rules require separate activation.",
+  "release": "0.3.0"
+}

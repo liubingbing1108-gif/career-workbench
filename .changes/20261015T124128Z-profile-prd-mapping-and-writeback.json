@@ -1,0 +1,23 @@
+{
+  "id": "20261015T124128Z-profile-prd-mapping-and-writeback",
+  "kind": "docs",
+  "summary": "Record the approved field-mapping design and scope its standalone Skill deliverables; extend the profile refactor plan with proposed application-to-profile writeback behavior.",
+  "capabilities": [
+    "profile",
+    "mapping"
+  ],
+  "files": [
+    "docs/PROFILE_MANAGEMENT_REFACTOR_PRD.md",
+    "docs/PRODUCT_REQUIREMENTS.md",
+    "docs/DECISIONS.md",
+    "docs/DISCUSSION_AND_ACCEPTANCE.md",
+    "docs/HANDOFF_CONTEXT.md",
+    "docs/PROFILE_LIBRARY_DESIGN.md",
+    "docs/ROADMAP.md",
+    "docs/CHAT_MAP.md",
+    "CHANGELOG.md"
+  ],
+  "validation": "python3 scripts/check_project.py: PASS catalog/references and 2 records; PR diff not checked. python3 scripts/check_docs.py initially passed for 95 Markdown files and D01-D100; a later workspace-wide rerun detected 3 not-yet-created references in the separate in-progress field-mapping Skill package. This task does not claim that package or the whole evolving workspace has completed validation. Product behavior and runtime deployment were not validated.",
+  "compatibility": "Documentation-only planning. Existing product APIs, storage, extension and permissions are unchanged by this task. Field-mapping Skill authoring is a separate task; runtime integration and proposed writeback rules are not reported as delivered.",
+  "release": "0.3.0"
+}

@@ -1,0 +1,21 @@
+{
+  "kind": "docs",
+  "summary": "Specify multiple exam-result links per language ability, requirement-based selection, and unlinking without deleting exam records.",
+  "capabilities": [
+    "profile"
+  ],
+  "validation": "check_docs.py passed with 106 Markdown files and 659 relative links; check_project.py passed with 28 change records before receipt. No runtime tests for a documentation-only change.",
+  "compatibility": "No product code, Skill, API, stored data or deployment changes. Previously confirmed unique current-result rule is preserved.",
+  "handoff": {
+    "task": "profile-multiple-exam-links-v016",
+    "status": "complete",
+    "next": "Continue one-at-a-time confirmation of the remaining deletion/default-version boundaries and field catalog. Synchronize latest profile decisions into roadmap, handoff and changelog once the concurrent audit releases those files.",
+    "docs": [],
+    "docs_reason": "Updated six private authoritative planning/acceptance documents. Shared roadmap, handoff and changelog are still registered to the active audit task; public runtime contracts unchanged."
+  },
+  "id": "20261022T072552Z-profile-multiple-exam-links-v016-14f3c9",
+  "files": [
+    "docs/PROJECT_ACTIVITY.md"
+  ],
+  "release": "0.3.0"
+}

@@ -2,6 +2,8 @@
 
 运行 `python scripts/run_tests.py` 执行 Python 及 Node 离线回归，`--ui` 加跑临时本机页面的 Chromium 界面测试。安装方式见 README。默认不访问招聘官网、不调用模型、不读取真实资料库。
 
+简历解析的Python测试由默认发现规则执行；`--ui`还显式执行`test_resume_skill_browser.cjs`和`test_import_questions_browser.cjs`，覆盖同一对象表述版本、原件保留、可跳过确认、说明保存、刷新恢复以及确认表单不提前写入共享资料。CI调用同一入口；本地通过不冒充远端CI已经执行。
+
 测试覆盖字段与来源核验、增量／版本、教育完整集合、实习选择和顺序、岗位隔离、删除事务、官网证据／岗位匹配、重复进入、保存队列、执行锁、未知字段拒绝、人工变化保护、原件上传等待、暂存后内容丢失和进度报告。
 
 发布测试具体结果在 [发布记录](RELEASE.md)。离线适配器和 DOM 夹具证明程序约束，不能证明当前所有真实官网接受。浏览器测试是虚构页面，没有最终申请提交。
@@ -21,3 +23,12 @@
 v0.2.0 发布前在全新源码导出和全新虚拟环境中验证：371 项 Python 测试（资料 270、管理 97、安装诊断 4），111 项 Node 测试，以及全部 13 个界面测试脚本通过。空库初始化、双模块随机端口启动、依赖完整性与 61 个文档相对链接检查通过。测试未调用真实模型或招聘官网。
 
 GitHub Actions 另外提供 Windows、macOS、Linux × Python 3.11/3.14 安装和启动检查，并在 Linux/Python 3.12 执行完整离线与 Chromium 回归；最新实际状态见仓库 Actions，不能用离线检查替代真实网站兼容性验证。
+
+
+## 项目治理检查
+
+`python scripts/check_project.py`验证能力引用、依赖和变更记录；`python -m unittest discover -s scripts -p test_project_governance.py`验证检查器拒绝缺记录、漏文件、依赖环和历史篡改。公开Git checkout另用`--base <完整PR基线SHA>`检查整个PR。静态检查不代表真实模型或官网功能成功。
+
+## 接续机制检查
+
+`python -m unittest discover -s scripts -p "test_project*.py"`验证治理与接续。`python scripts/check_project.py`检查索引与片段；run_tests首先执行它。范围登记、删除记录、并发冲突、失败恢复和私有路径隔离均用临时虚构目录验证。
