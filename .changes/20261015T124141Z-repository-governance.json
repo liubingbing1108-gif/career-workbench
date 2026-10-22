@@ -28,5 +28,5 @@
   ],
   "validation": "python -m unittest discover -s scripts -p test_project_governance.py: 13 passed, including complete PR diffs, missing records/coverage, history protection, release assignment, dependency cycles and version drift. Clean export: check_project.py passed, check_docs.py passed (90 links), check_privacy.py passed (205 source files). No real GitHub PR/CI execution, product UI/model/site revalidation or release.",
   "compatibility": "No application code, data schema, runtime Agent protocol or extension permission change. Remote branch rules require separate activation.",
-  "release": null
+  "release": "0.3.0"
 }

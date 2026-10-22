@@ -29,7 +29,7 @@
   ],
   "validation": "24 governance/handoff tests passed on fictional temporary directories. Final clean-export and privacy checks pending. No application runtime, UI, model or website tests claimed.",
   "compatibility": "Development-only. Application code, data schema, extension permissions and startup remain unchanged. Existing pre-adoption records are preserved; future records require handoff metadata.",
-  "release": null,
+  "release": "0.3.0",
   "handoff": {
     "task": "continuity-rollout",
     "status": "in_progress",

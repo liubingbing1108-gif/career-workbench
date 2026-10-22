@@ -28,5 +28,5 @@
     "skills/resume-material-parser/references/current-review.md",
     "skills/resume-material-parser/references/open-decisions.md"
   ],
-  "release": null
+  "release": "0.3.0"
 }

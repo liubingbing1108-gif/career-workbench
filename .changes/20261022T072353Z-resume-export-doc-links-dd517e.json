@@ -22,5 +22,5 @@
     "docs/RESUME_SKILL_VALIDATION.md",
     "skills/resume-material-parser/references/integration.md"
   ],
-  "release": null
+  "release": "0.3.0"
 }

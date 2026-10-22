@@ -39,5 +39,5 @@
     "skills/resume-material-parser/references/acceptance.md",
     "skills/resume-material-parser/references/integration.md"
   ],
-  "release": null
+  "release": "0.3.0"
 }

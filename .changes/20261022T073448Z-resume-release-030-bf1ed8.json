@@ -1,0 +1,31 @@
+{
+  "kind": "feature",
+  "summary": "Prepare v0.3.0 release of verified resume parsing, source review and confirmation workflows",
+  "capabilities": [
+    "distribution"
+  ],
+  "validation": "Prior exact runtime snapshot passed 433 Python and 111 Node checks plus 15 isolated browser scripts; release metadata and clean export checks pending. Remote main and existing releases verified; no runtime changes in this preparation.",
+  "compatibility": "Existing confirmed records are not reprocessed; executor protocol v1 and extension versions unchanged. Broader profile version-policy refactor remains pending.",
+  "handoff": {
+    "task": "resume-release-030",
+    "status": "in_progress",
+    "next": "Validate clean source export and privacy, publish PR, verify CI and release assets",
+    "docs": [
+      "README.md",
+      "CHANGELOG.md",
+      "docs/RELEASE.md",
+      "docs/HANDOFF_CONTEXT.md"
+    ],
+    "docs_reason": "Document release contents, compatibility and pending profile-model refactor; private release evidence stays local"
+  },
+  "id": "20261022T073448Z-resume-release-030-bf1ed8",
+  "files": [
+    "CHANGELOG.md",
+    "README.md",
+    "docs/HANDOFF_CONTEXT.md",
+    "docs/RELEASE.md",
+    "package-lock.json",
+    "package.json"
+  ],
+  "release": "0.3.0"
+}

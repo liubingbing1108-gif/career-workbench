@@ -29,7 +29,7 @@
   ],
   "validation": "285 offline profile tests passed, including 15 Skill cases; isolated browser verifies identity and version selection, save, reload and originals/defaults. Local deployment protected existing database contents. Model/network/PDF limitations remain explicit; no universal accuracy claim.",
   "compatibility": "Existing import API and profile database retained. New tagged imports use whole-group versions; confirmed historical data is not reparsed. No extension or permission expansion.",
-  "release": null,
+  "release": "0.3.0",
   "handoff": {
     "task": "resume-skill-integration",
     "status": "complete",

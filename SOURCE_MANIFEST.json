@@ -1,5 +1,5 @@
 {
-  "version": "0.2.0",
+  "version": "0.3.0",
   "files": [
     ".changes/20261015T124128Z-profile-prd-mapping-and-writeback.json",
     ".changes/20261015T124141Z-repository-governance.json",
@@ -31,6 +31,10 @@
     ".changes/20261022T072418Z-resume-three-pass-audit-16fa51.json",
     ".changes/20261022T072526Z-resume-three-pass-audit-77987a.json",
     ".changes/20261022T072552Z-profile-multiple-exam-links-v016-14f3c9.json",
+    ".changes/20261022T072639Z-profile-prd-shared-index-v016-b57204.json",
+    ".changes/20261022T072902Z-profile-default-removal-v017-0faab2.json",
+    ".changes/20261022T073203Z-profile-exam-delete-v018-158b7c.json",
+    ".changes/20261022T073448Z-resume-release-030-bf1ed8.json",
     ".github/ISSUE_TEMPLATE/work-item.md",
     ".github/PULL_REQUEST_TEMPLATE.md",
     ".github/workflows/ci.yml",

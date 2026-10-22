@@ -22,5 +22,5 @@
     "prototypes/profile-lab/test_import_questions_fixture.py",
     "prototypes/profile-lab/web/app.js"
   ],
-  "release": null
+  "release": "0.3.0"
 }
