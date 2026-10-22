@@ -1,0 +1,21 @@
+{
+  "kind": "docs",
+  "summary": "Clarify that hiding a profile field preserves its value, while explicit clearing requires saving; keep remaining deletion and unlinking decisions pending.",
+  "capabilities": [
+    "profile"
+  ],
+  "validation": "check_docs.py passed: 106 Markdown files, 657 relative links and D01-D100 coverage. check_project.py passed with 25 change records before this receipt. No runtime tests for this documentation-only change.",
+  "compatibility": "No product code, Skill, API, runtime data or deployment changes.",
+  "handoff": {
+    "task": "profile-hide-clear-v015",
+    "status": "complete",
+    "next": "Continue the next single product question about unlinking an exam without deleting its record. Confirm field catalog details before implementation. Synchronize the version-scope and hide/clear decisions into shared roadmap, handoff and changelog after the concurrent audit releases those files.",
+    "docs": [],
+    "docs_reason": "Updated six private planning and acceptance documents. Shared roadmap, handoff and changelog remain owned by the concurrent audit and were not edited. Public runtime contracts are unchanged."
+  },
+  "id": "20261022T072220Z-profile-hide-clear-v015-a831ad",
+  "files": [
+    "docs/PROJECT_ACTIVITY.md"
+  ],
+  "release": null
+}
