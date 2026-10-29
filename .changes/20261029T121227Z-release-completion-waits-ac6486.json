@@ -1,0 +1,23 @@
+{
+  "kind": "test",
+  "summary": "Await persisted legacy selections and composed material preview before browser assertions.",
+  "capabilities": [
+    "profile",
+    "distribution"
+  ],
+  "validation": "Legacy browser scenarios and current-material browser test pass locally with fictional data. Main CI attempts revealed assertions before selection refresh/derived preview completion; full CI follows.",
+  "compatibility": "Test synchronization only; no runtime code, data or permissions changed.",
+  "handoff": {
+    "task": "release-completion-waits",
+    "status": "complete",
+    "next": "Run full CI for release candidate.",
+    "docs": [],
+    "docs_reason": "No product behavior change; synchronize browser tests with existing readiness and completion signals."
+  },
+  "id": "20261029T121227Z-release-completion-waits-ac6486",
+  "files": [
+    "prototypes/profile-lab/test_browser.cjs",
+    "prototypes/profile-lab/test_current_material_browser.cjs"
+  ],
+  "release": null
+}
