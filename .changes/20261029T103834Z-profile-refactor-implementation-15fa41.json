@@ -1,0 +1,26 @@
+{
+  "kind": "refactor",
+  "summary": "Finalize confirmed migration choices and share startup normalization between rehearsal and runtime.",
+  "capabilities": [
+    "profile",
+    "import",
+    "mapping",
+    "execution"
+  ],
+  "validation": "14 migration tests passed. Reviewed private copy apply/replay/startup/rollback preserves state after startup, 8 original BLOBs, management contents and 12 session drafts/statuses. Installed extension reloaded and verified as 1.3.10.",
+  "compatibility": "Hash-bound review can normalize startup and mark unused legacy answers deleted while retaining historical evidence. Active runtime is not migrated yet.",
+  "handoff": {
+    "task": "profile-refactor-implementation",
+    "status": "in_progress",
+    "next": "Run final exported regression, then apply the reviewed migration to the existing runtime and verify local UI.",
+    "docs": [],
+    "docs_reason": "Private validation and implementation records updated; storage and protocol remain compatible."
+  },
+  "id": "20261029T103834Z-profile-refactor-implementation-15fa41",
+  "files": [
+    "prototypes/profile-lab/lab.py",
+    "scripts/migrate_profile_refactor.py",
+    "scripts/test_profile_refactor_migration.py"
+  ],
+  "release": "0.4.0"
+}

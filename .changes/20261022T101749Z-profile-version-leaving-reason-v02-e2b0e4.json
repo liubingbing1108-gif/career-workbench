@@ -1,0 +1,21 @@
+{
+  "kind": "docs",
+  "summary": "Confirm a shared departure reason across expression versions of one internship, with scoped saving and historical application protection.",
+  "capabilities": [
+    "profile"
+  ],
+  "validation": "python3 scripts/check_docs.py passed: 113 Markdown files, 738 relative links, D01-D100 coverage. python3 scripts/check_project.py passed: project catalog, references and 45 change records; PR diff not checked. Reviewed the updated topic and six planned acceptance scenarios; no product tests run for this documentation-only change.",
+  "compatibility": "Planning documentation only; no code, Skill, API, runtime data, original attachments, website operations or deployment changes.",
+  "handoff": {
+    "task": "profile-version-leaving-reason-v02",
+    "status": "complete",
+    "next": "Confirm the version ownership of internship proof attachments next, one item at a time. Field existence remains owned by the field topic; its departure-reason candidate must defer to the confirmed shared-value rule. Implementation remains deferred.",
+    "docs": [],
+    "docs_reason": "Updated only the assigned private version-ownership PRD topic to V0.2, including current rules, save/cancel/failure/history boundaries, six acceptance examples and cross-topic dependencies. The main guide already delegates this domain to the topic; no shared specification duplication is needed."
+  },
+  "id": "20261022T101749Z-profile-version-leaving-reason-v02-e2b0e4",
+  "files": [
+    "docs/PROJECT_ACTIVITY.md"
+  ],
+  "release": "0.4.0"
+}

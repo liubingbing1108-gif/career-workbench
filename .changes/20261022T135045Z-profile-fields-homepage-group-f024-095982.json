@@ -1,0 +1,21 @@
+{
+  "kind": "docs",
+  "summary": "Restore grouped homepage platform and URL maintenance and remove the dedicated code-homepage entry; prepare contact review.",
+  "capabilities": [
+    "profile"
+  ],
+  "validation": "check_docs.py and check_project.py passed; targeted checks verified 261 unique review IDs, two grouped homepage fields, excluded code entry, paired legacy mappings, F-89 through F-92 and twelve pending contact decisions. No runtime tests or full PR diff checks.",
+  "compatibility": "Documentation only; no code, Skill, API, runtime, migration, browser or release changes. Legacy homepage pairs, code-homepage values, original files and history preserved.",
+  "handoff": {
+    "task": "profile-fields-homepage-group-f024",
+    "status": "complete",
+    "next": "Batch-review eleven existing contact fields and proposal to omit the extra experience-link field. Keep internship referees independent per V0.12; other contact uses and field exclusions remain pending. Prior cross-topic implementation synchronization dependencies remain.",
+    "docs": [],
+    "docs_reason": "Updated owning local field PRD and catalog, replaced obsolete independent-homepage proposal and clarified existing internship contact boundary without deciding other contact functions."
+  },
+  "id": "20261022T135045Z-profile-fields-homepage-group-f024-095982",
+  "files": [
+    "docs/PROJECT_ACTIVITY.md"
+  ],
+  "release": "0.4.0"
+}

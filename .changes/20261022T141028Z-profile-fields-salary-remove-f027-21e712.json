@@ -1,0 +1,21 @@
+{
+  "kind": "docs",
+  "summary": "Exclude the entire expected-salary category and its five fields; prepare personal-statement topics and metadata for batch review.",
+  "capabilities": [
+    "profile"
+  ],
+  "validation": "check_docs.py and check_project.py passed; targeted checks verified 261 unique IDs, five salary exclusions and legacy mappings, F-100 through F-102, fourteen pending statement candidates and updated superseded salary-pending rules. No runtime tests or full PR diff checks.",
+  "compatibility": "Documentation only; no code, Skill, API, runtime, migration, browser or release changes. Legacy salary values, paired semantics, sources, original files and history preserved.",
+  "handoff": {
+    "task": "profile-fields-salary-remove-f027",
+    "status": "complete",
+    "next": "Batch-review ten independent personal-statement topics and four optional per-statement metadata candidates. Explain the seven-property legacy group to topic-body mapping without duplication, no long-term versions, scope preservation and no cross-company automatic reuse. Keep metadata distinct from canceled internship/project version properties. Prior implementation synchronization dependencies remain.",
+    "docs": [],
+    "docs_reason": "Updated owning local field PRD and catalog, including current salary exclusion and previous dependent status; other topics unchanged."
+  },
+  "id": "20261022T141028Z-profile-fields-salary-remove-f027-21e712",
+  "files": [
+    "docs/PROJECT_ACTIVITY.md"
+  ],
+  "release": "0.4.0"
+}

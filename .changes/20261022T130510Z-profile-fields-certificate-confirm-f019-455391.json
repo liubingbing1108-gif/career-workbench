@@ -1,0 +1,21 @@
+{
+  "kind": "docs",
+  "summary": "Confirm six certificate fields, exclude issuer identifier and validity, and prepare the award batch.",
+  "capabilities": [
+    "profile"
+  ],
+  "validation": "check_docs and check_project passed; verified 259 stable IDs, six confirmed certificate fields, three exclusions and legacy mappings, nine pending award fields and F-70 through F-73. No runtime tests.",
+  "compatibility": "Documentation only; no code, Skill, API, runtime, migration, browser or release changes. Legacy values, original files and history preserved.",
+  "handoff": {
+    "task": "profile-fields-certificate-confirm-f019",
+    "status": "complete",
+    "next": "Batch-review nine award fields with optional values, separate scope and prize rank, source time precision including academic year/edition, manual individual/team and role, and multiple original attachments. Prior cross-topic date/project sync dependencies remain.",
+    "docs": [],
+    "docs_reason": "Updated owning field PRD and catalog, including confirmed exclusions, legacy mappings, acceptance examples and pending award proposal. Other topics unchanged."
+  },
+  "id": "20261022T130510Z-profile-fields-certificate-confirm-f019-455391",
+  "files": [
+    "docs/PROJECT_ACTIVITY.md"
+  ],
+  "release": "0.4.0"
+}

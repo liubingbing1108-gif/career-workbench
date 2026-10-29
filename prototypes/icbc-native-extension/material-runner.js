@@ -5,7 +5,7 @@
  const unwrap=r=>{if(!r.ok)throw Error(r.error?.message||'执行器失败');return r.result;};
  function compile(materials,snapshot){
   if(snapshot.page.url!==materials.url)throw Error('官网链接与确认的材料不一致');
-  const assignments=[],issues=[],readOnlyChecks=[];
+  const assignments=[],issues=[],readOnlyChecks=[],bindings=[];
   const add=(id,value,source,label,strictLabel=false,target={})=>{
    if(value===''||value===null||value===undefined)return;
    let matches=snapshot.fields.filter(f=>f.fieldId===id||(id.includes('[]')&&normal(f.fieldId)===id));
@@ -18,7 +18,7 @@
     else if(sameLabel.length>1)matches=[];
    }
    if(matches.length!==1){issues.push(label+'：当前控件未接通，需本人处理');return;}
-   const field=matches[0];
+   const field=matches[0];bindings.push({fieldId:field.fieldId,website_id:target.website_id||id,source_ref:source||{},expected_value:value});
    if(field.kind==='multiselect'&&!Array.isArray(value))value=[value];
    if(field.disabled||field.kind==='unsupported'){readOnlyChecks.push({fieldId:field.fieldId,value});if(JSON.stringify(field.currentValue)!==JSON.stringify(value))issues.push(label+'：官网只读内容与本次材料不同，请核对');return;}
    assignments.push({fieldId:field.fieldId,value,overwrite:'ifUnchanged',sourceRef:JSON.stringify(source||{})});
@@ -41,12 +41,12 @@
      }
      if(!v.value)return;
      if(candidates.length!==1){issues.push(row.label+'第 '+(index+1)+' 条 '+v.label+'：当前没有唯一对应控件');return;}
-     add(candidates[0].fieldId,v.value,v.source_ref,row.label+' '+v.label);
+     add(candidates[0].fieldId,v.value,v.source_ref,row.label+' '+v.label,false,{website_id:v.website_id});
     }));
    }else add(row.website_id,row.value,row.source_ref,row.label,true,row);
   }
   if(materials.attachment&&!snapshot.capabilities?.upload)issues.push('简历附件：请上传已选择的原文件“'+materials.attachment.name+'”；当前控件没有已接通的附件驱动');
-  return {assignments,issues,readOnlyChecks};
+  return {assignments,issues,readOnlyChecks,bindings};
  }
  const findSection=(snapshot,row)=>snapshot.sections.find(s=>s.sectionId===row.website_id&&s.label===row.label)||snapshot.sections.filter(s=>s.label===row.label).length===1&&snapshot.sections.find(s=>s.label===row.label)||snapshot.sections.find(s=>s.sectionId===row.website_id&&!s.label);
  function identify(snapshot,f){
@@ -97,7 +97,54 @@
    await client.call('readDateFormat',{snapshotId:snapshot.snapshotId,fieldId:field.fieldId});snapshot=unwrap(await client.call('scan'));
   }return snapshot;
  }
+ function structuredIssue(binding,snapshot,errorType='READBACK_MISMATCH'){
+  const f=snapshot.fields.find(f=>f.fieldId===binding.fieldId);if(!f)return null;
+  return {website_id:binding.website_id,source_ref:binding.source_ref,expected_value:binding.expected_value,field_id:f.fieldId,label:f.label,section_id:f.sectionId||'',record_id:f.recordId||'',snapshot_id:snapshot.snapshotId||'',observed_value:f.currentValue,error_type:errorType,constraints:f.constraints||{},validation_messages:snapshot.validation||[],record_fields:f.recordId?snapshot.fields.filter(x=>x.sectionId===f.sectionId&&x.recordId===f.recordId).map(x=>({field_id:x.fieldId,label:x.label,value:x.currentValue})):[]};
+ }
+ async function runCorrections(client,materials,report,shouldStop){
+  const call=async(method,args={})=>unwrap(await client.call(method,args)),equal=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
+  let snapshot=await call('scan'),filled=0,verified=0;const issues=[],structured_issues=[],correction_results=[],completed=new Map();
+  if(snapshot.page.url!==materials.url)throw Error('修正页面与确认目标不同');
+  if(snapshot.capabilities?.correctionRetry!==1)throw Error('当前执行核心不支持受限修正');
+  for(const c of materials.corrections){
+   if(shouldStop())throw Error('已停止局部修正');
+   snapshot=await call('scan');if(snapshot.page.url!==materials.url)throw Error('官网页面已切换');
+   const f=snapshot.fields.find(f=>f.fieldId===c.field_id);
+   const sameTarget=f&&f.label===c.label&&(f.sectionId||'')===c.section_id&&(f.recordId||'')===c.record_id;
+   const rowFields=f?.recordId?snapshot.fields.filter(x=>x.sectionId===f.sectionId&&x.recordId===f.recordId):[];
+   const rowMatches=!f?.recordId||(rowFields.length===c.record_fields.length&&c.record_fields.every(old=>{const a=rowFields.find(x=>x.fieldId===old.field_id&&x.label===old.label);return a&&equal(a.currentValue,completed.has(old.field_id)?completed.get(old.field_id):old.value);}));
+   if(!sameTarget||!rowMatches||!equal(f.currentValue,c.expected_current)){
+    issues.push(c.label+'：官网值或记录位置已变化，已保留当前输入');correction_results.push({issue_id:c.issue_id,state:'conflict'});
+    const issue=sameTarget&&structuredIssue({fieldId:c.field_id,website_id:c.website_id,source_ref:c.source_ref,expected_value:c.value},snapshot,'VALUE_CHANGED');if(issue)structured_issues.push(issue);continue;
+   }
+   const requestId=crypto.randomUUID(),plan={schemaVersion:1,requestId,snapshotId:snapshot.snapshotId,assignments:[{fieldId:c.field_id,value:c.value,expectedCurrentValue:c.expected_current,overwrite:'ifUnchanged',sourceRef:JSON.stringify(c.source_ref)}]};
+   let started=false,settled=false;
+   const stopAndVerify=async()=>{
+    try{await call('cancel');for(let i=0;i<20;i++){const stopped=await call('status',{requestId});if(stopped&&stopped.status!=='running')return;await new Promise(r=>setTimeout(r,100));}}
+    catch{}
+    const error=Error('尚未收到执行核心停止确认，已停止后续修正；请保留原页并重新连接核对');error.stopUnconfirmed=true;throw error;
+   };
+   try{
+    await call('validate',plan);started=true;await call('execute',plan);let job,start=Date.now();
+    do{if(shouldStop())throw Error('已请求停止局部修正');job=await call('status',{requestId});if(job.status!=='running')break;await new Promise(r=>setTimeout(r,200));}while(Date.now()-start<120000);
+    if(job.status==='running')throw Error('局部修正超时');
+    settled=true;
+    filled+=(job.results||[]).filter(r=>r.status==='filled').length;
+    snapshot=await call('scan');const actual=snapshot.fields.find(x=>x.fieldId===c.field_id);
+    if(job.status!=='complete'||!actual||!equal(actual.currentValue,c.value)||(snapshot.validation||[]).length)throw Error(job.error?.message||'官网回读或可见校验未通过');
+    verified++;completed.set(c.field_id,c.value);correction_results.push({issue_id:c.issue_id,state:'current_verified'});
+   }catch(error){
+    if(started&&!settled){await stopAndVerify();throw error;}
+    if(shouldStop())throw error;
+    issues.push(c.label+'：'+error.message);snapshot=await call('scan');const issue=structuredIssue({fieldId:c.field_id,website_id:c.website_id,source_ref:c.source_ref,expected_value:c.value},snapshot,'CORRECTION_FAILED');if(issue)structured_issues.push(issue);correction_results.push({issue_id:c.issue_id,state:'needs_review'});
+   }
+   await report({status:'running',filled,verified,issues,structured_issues,correction_results,message:'局部修正已核对 '+verified+' / '+materials.corrections.length+' 项'});
+  }
+  const result={filled,verified,issues,structured_issues,correction_results,expected_count:materials.corrections.length,saved:false,persistence_verified:false};
+  await report({status:'needs_attention',phase:'review',...result,message:'局部修正完成核对 '+verified+' / '+materials.corrections.length+' 项。未重新打开页面；官网保存及最终提交仍需核对。'});return result;
+ }
  async function run(client,materials,report,shouldStop=()=>false){
+  if(materials.corrections)return runCorrections(client,materials,report,shouldStop);
   let filled=0,verified=0,issues=[],saved=false,save_acknowledged=false,persistence_verified=false,persisted=0,attachment_verified=false,phase='connecting';
   const send=report;report=progress=>send({phase,...progress});
   const call=async(method,payload={})=>unwrap(await client.call(method,payload));
@@ -238,7 +285,8 @@
   for(const f of snapshot.fields.filter(f=>f.required&&!f.currentValue&&!f.disabled))issues.push(f.label+'：官网仍需补充。');
   issues=[...new Set(issues)];
   const message=materials.preserve_unsaved_page?'已恢复并核对 '+verified+' / '+expected.length+' 项'+(attachment_verified?'及所选附件':'')+'。此官网页没有草稿保存，请保留当前页面'+(verified===expected.length&&(!materials.attachment||attachment_verified)?'供你本人提交。':'并处理下方未完成项。'):saved?'已重新打开官网，'+persisted+' 项内容及所选附件仍在。':persistence_verified?'重新打开官网后仅保留 '+persisted+' / '+expected.length+' 项，请处理下方未保存内容。':'已核对 '+verified+' 项，尚未确认官网保存。';
-  const result={filled,verified,saved,save_acknowledged,persistence_verified,persisted,expected_count:expected.length,attachment_verified,draft_supported:!!snapshot.capabilities?.saveDraft,issues};
+  const structured_issues=materials.session_id?built.bindings.filter(b=>{const f=snapshot.fields.find(f=>f.fieldId===b.fieldId);return f&&(JSON.stringify(f.currentValue)!==JSON.stringify(b.expected_value)||(snapshot.validation||[]).length);}).map(b=>structuredIssue(b,snapshot,(snapshot.validation||[]).length?'WEBSITE_VALIDATION':'READBACK_MISMATCH')).filter(Boolean):[];
+  const result={...(materials.session_id?{structured_issues}:{}),filled,verified,saved,save_acknowledged,persistence_verified,persisted,expected_count:expected.length,attachment_verified,draft_supported:!!snapshot.capabilities?.saveDraft,issues};
   await report({status:'needs_attention',phase:'review',...result,message});
   return result;
  }

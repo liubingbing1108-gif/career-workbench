@@ -1,0 +1,21 @@
+{
+  "kind": "docs",
+  "summary": "Simplify attachments to a type and actual file saved together; close the first field-category review while retaining structural follow-ups.",
+  "capabilities": [
+    "profile"
+  ],
+  "validation": "check_docs.py and check_project.py passed; targeted checks verified 262 unique review IDs, two grouped attachment entries, six removed editable attributes, four internal file facts, F-107 through F-110 and explicit remaining structural dependencies. No runtime tests or full PR diff checks.",
+  "compatibility": "Documentation only; no code, Skill, API, runtime, migration, browser or release changes. Original files, existing references, legacy metadata and historical scope restrictions preserved. Future implementation must coordinate file and type save outcomes without partial updates.",
+  "handoff": {
+    "task": "profile-fields-attachments-confirm-f029",
+    "status": "complete",
+    "next": "All 22 original field categories have first-pass decisions. Consolidate remaining structural details in one batch: same-type identity documents and renewal/permanent validity, employment-nature transitions and exam classification options. Reconcile project four-expression and exam obtained-date semantics with owning topics before implementation, and preserve migration safeguards for all exclusions. Do not reopen confirmed field choices or implement product changes without the later authorized implementation phase.",
+    "docs": [],
+    "docs_reason": "Updated owning local field PRD and catalog, attachment save semantics, acceptance targets and review completion status; other topics unchanged."
+  },
+  "id": "20261023T101500Z-profile-fields-attachments-confirm-f029-6a93a6",
+  "files": [
+    "docs/PROJECT_ACTIVITY.md"
+  ],
+  "release": "0.4.0"
+}

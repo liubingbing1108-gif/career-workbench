@@ -15,12 +15,12 @@ export interface Field {
 export interface Section {sectionId:string; label:string; count?:number; canAdd:boolean}
 export interface Snapshot {
  schemaVersion:1; executorVersion:string; sessionId:string; snapshotId:string; page:Page;
- capabilities:{fill:boolean; ensureRecords:boolean; openSection:boolean; saveDraft:boolean; upload:boolean; submit:false};
+ capabilities:{fill:boolean; correctionRetry?:1; stopProof?:1; ensureRecords:boolean; openSection:boolean; saveDraft:boolean; upload:boolean; submit:false};
  attachments:{attachmentId:string;label:string;required:boolean;fileNames:string[]}[];
  scanElapsedMs:number; coverageDetails:{frames?:number;openShadowRoots?:number;frameContentsScanned?:boolean};
  sections:Section[]; fields:Field[]; coverage:'currently-accessible-fields'; validation:string[];
 }
-export interface Assignment {fieldId:string; value:Value; overwrite?:'emptyOnly'|'ifUnchanged'; sourceRef?:string}
+export interface Assignment {fieldId:string; value:Value; overwrite?:'emptyOnly'|'ifUnchanged'; sourceRef?:string; expectedCurrentValue?:Value}
 export interface Plan {schemaVersion:1; requestId:string; snapshotId:string; assignments:Assignment[]}
 export interface RecordPlan {schemaVersion:1; requestId:string; snapshotId:string; sections:{sectionId:string; count:number}[]}
 export interface SavePlan {schemaVersion:1; requestId:string; snapshotId:string}
@@ -44,6 +44,7 @@ export interface Methods {
  execute:{input:Plan; output:Accepted};
  ensureRecords:{input:RecordPlan; output:Accepted};
  status:{input:{requestId?:string}; output:Job|null};
+ executionState:{input:Record<string,never>; output:{sessionId:string;page:Page;busy:boolean;cancelled:boolean}};
  verify:{input:{requestId:string}; output:{complete:boolean; checks:{fieldId:string; passed:boolean}[]; validation:string[]; scope:'page-values-only'}};
  cancel:{input:Record<string,never>; output:{stopping:boolean}};
  openSection:{input:{sectionId:string}; output:Snapshot};

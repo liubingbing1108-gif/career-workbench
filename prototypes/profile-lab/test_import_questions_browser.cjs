@@ -2,8 +2,9 @@ const {chromium}=require('playwright');
 const {spawn}=require('child_process');
 const assert=require('node:assert/strict');
 
+let currentProfile=false;
 async function fixture(source,check){
- const server=spawn(process.env.PYTHON||'python3',['-u','test_import_questions_fixture.py',...(source?['--source']:[])],{cwd:__dirname,stdio:['ignore','pipe','pipe']});
+ const server=spawn(process.env.PYTHON||'python3',['-u','test_import_questions_fixture.py',...(source?['--source']:[]),...(currentProfile?['--current']:[])],{cwd:__dirname,stdio:['ignore','pipe','pipe']});
  let browser;
  try{
   const base=await new Promise((resolve,reject)=>{
@@ -22,6 +23,8 @@ async function fixture(source,check){
 }
 
 (async()=>{
+ for(const current of [false,true]){
+ currentProfile=current;
  await fixture(false,async(page,state)=>{
   const form=page.locator('[data-review-form]');assert.equal(await form.locator('[data-review-question]').count(),3);
   const meaning=form.locator('[data-review-question]').filter({hasText:'国家级二等奖'});
@@ -56,4 +59,6 @@ async function fixture(source,check){
   assert.equal((await state()).entries.filter(e=>e.category==='honors').length,2);
   console.log('PASS unresolved source skip blocks only its group; other group saves; reload, explicit source confirmation and remaining save work; saved answers locked');
  });
+ console.log('PASS source review contract '+(currentProfile?'30':'legacy'));
+ }
 })().catch(e=>{console.error(e);process.exitCode=1;});

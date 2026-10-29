@@ -1,0 +1,21 @@
+{
+  "kind": "docs",
+  "summary": "Consolidate personal statements into three optional text fields and remove eight topic/metadata candidates; prepare attachment review.",
+  "capabilities": [
+    "profile"
+  ],
+  "validation": "check_docs.py and check_project.py passed; targeted checks verified 262 unique IDs, three statement targets, four merged sources, eight exclusions, legacy mappings, F-103 through F-106 and twelve attachment rows. Corrected stale summary references to settled language/version/referee rules. No runtime tests or full PR diff checks.",
+  "compatibility": "Documentation only; no code, Skill, API, runtime, migration, browser or release changes. Old statement originals, versions, scope restrictions and history preserved without automatic concatenation or cross-company reuse.",
+  "handoff": {
+    "task": "profile-fields-statements-confirm-f028",
+    "status": "complete",
+    "next": "Batch-review twelve attachment entries, distinguishing seven optional editable/reference attributes, the actual original file and four automatic file facts. Preserve established original-file protection, separate photo references and multiple attachments; file metadata must not restore canceled text-version attributes. Prior cross-topic implementation synchronization dependencies and remaining structural details still require final reconciliation after this last category.",
+    "docs": [],
+    "docs_reason": "Updated owning local field PRD and catalog, mappings and acceptance targets; corrected stale catalog summaries to already-confirmed rules without new decisions."
+  },
+  "id": "20261022T141827Z-profile-fields-statements-confirm-f028-c6a422",
+  "files": [
+    "docs/PROJECT_ACTIVITY.md"
+  ],
+  "release": "0.4.0"
+}

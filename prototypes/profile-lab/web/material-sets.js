@@ -23,12 +23,13 @@ function materialModule(item){
    <div class="record-heading"><label class="checkbox-label">${canChoose?`<input type="checkbox" data-experience ${position>=0?'checked':''} ${blocked?'disabled':''} aria-label="本次选择${escapeHtml(title)}">`:''}<strong>${escapeHtml(title)}</strong><span class="selection-label">${position>=0?'第 '+(position+1)+' '+preparationUnit(item):'未选择'}</span></label><button data-material-action="remove-record" class="remove-record-button" title="从本岗位填写材料中删除整条记录，资料库和其他岗位保留">删除本次记录</button></div>
    ${entry.scope_message?`<p class="scope-note">${escapeHtml(entry.scope_message)}</p>`:''}
    ${recordUsesVersions(entry)?`<div class="record-version-bar"><label>整组版本<select data-set-version aria-label="${escapeHtml(title)}整组版本"><option value="" ${!entry.selected_set?'selected':''}>本次字段组合</option>${(entry.set_versions||[]).map(v=>`<option value="${escapeHtml(v.id)}" ${entry.selected_set===v.id?'selected':''}>${escapeHtml(v.name)}</option>`).join('')}</select></label><button data-new-set-version>新建版本</button><button data-material-action="remove-version" ${!entry.selected_set?'disabled':''} title="仅从本岗位版本选项中删除，资料库版本和当前内容保留">删除</button>${entry.hidden_version_count?'<button data-material-action="restore-versions">恢复版本选项</button>':''}</div>`:''}
-   <details data-set-details data-expansion-key="${sessionId}/${item.group_id}/${entry.id}"><summary>查看或编辑完整字段 · ${entry.choices.length} 项</summary>${setFields(entry,item)}<div class="group-save"><p>可以留空；保存整组内容：</p><div class="button-row"><button data-set-save="session" class="primary">仅供本次使用</button>${recordUsesVersions(entry)?'<button data-set-save="update">保存资料组</button><button data-set-save="new">另存为新版本</button>':''}</div></div></details>
+   <div data-linked-sources>${(entry.linked_source_choices||[]).map(c=>versionEditor(c,c.source_entry_id,item)).join('')}</div>
+   <details data-set-details data-expansion-key="${sessionId}/${item.group_id}/${entry.id}"><summary>查看或编辑完整字段 · ${entry.choices.length} 项</summary>${setFields(entry,item)}<div class="group-save"><p>可以留空；保存整组内容：</p><div class="button-row"><button data-set-save="session" class="primary">仅供本次使用</button>${state.profile_contract===30?'<button data-set-save="update">预览差异并回库</button>':''}${recordUsesVersions(entry)?(state.profile_contract===30?'':'<button data-set-save="update">保存资料组</button>')+'<button data-set-save="new">另存为新版本</button>':''}</div></div></details>
    ${canChoose?`<div class="button-row"><button data-move-entry="up" ${position<=0?'disabled':''}>向上</button><button data-move-entry="down" ${position<0||position===selected.length-1?'disabled':''}>向下</button></div>`:''}
   </article>`;
  }).join('')||'<p class="empty">暂无资料，可新增一组后填写；字段允许留空。</p>'}<div data-module-missing>${preparationMissingGroups(application.missing.filter(i=>i.website_field.id===item.website_field.id))}</div></div></section>`;
 }
-function setSaveRecord(entry,root){return {entry_id:entry.id,values:{...Object.fromEntries(entry.choices.map(c=>[c.field.id,c.content])),...Object.fromEntries($$('[data-set-value]',root).map(e=>[e.dataset.setValue,e.value]))},expected_values:Object.fromEntries(entry.choices.map(c=>[c.field.id,c.content])),revisions:Object.fromEntries(entry.choices.map(c=>[c.field.id,c.selected?.revision]))};}
+function setSaveRecord(entry,root){return {entry_id:entry.id,edit_token:entry.edit_token,values:{...Object.fromEntries(entry.choices.map(c=>[c.field.id,c.content])),...Object.fromEntries($$('[data-set-value]',root).map(e=>[e.dataset.setValue,e.value]))},expected_values:Object.fromEntries(entry.choices.map(c=>[c.field.id,c.content])),revisions:Object.fromEntries(entry.choices.map(c=>[c.field.id,c.selected?.revision]))};}
 async function clearSetDrafts(sid,item,entries){for(const entry of entries)for(const c of entry.choices)answerDrafts.delete(sid+'/'+item.group_id+'/'+entry.id+'/'+c.field.id);await answerDrafts.settled(sid);}
 async function openSetVersion(item,entries,composition=false){
  if(preparationSaves?.busy(sessionId))throw Error('请等待当前选择保存完成');
@@ -42,6 +43,7 @@ async function openSetVersion(item,entries,composition=false){
   event.preventDefault();const button=$('#set-version-submit');if(button.disabled)return;button.disabled=true;
   try{
    if(sessionId!==sid)throw Error('岗位已切换，请重新打开');
+   if(state.profile_contract===30){const records=entries.map(e=>setSaveRecord(e,$(`[data-new-set="${e.id}"]`,dialog))),name=$('#set-version-name').value;dialog.close();await previewMaterialWriteback(item,records,'new',name,composition);return;}
    await answerDrafts.settled(sid);await api('/api/website/set-answer',{session_id:sid,website_id:item.website_field.id,records:entries.map(e=>setSaveRecord(e,$(`[data-new-set="${e.id}"]`,dialog))),mode:'new',name:$('#set-version-name').value,composition});
    for(const key of [...answerDrafts.keys()])if(key.startsWith(draftPrefix))answerDrafts.delete(key);await answerDrafts.settled(sid);dialog.close();await refresh();toast('新版本已保存，旧版本保留');
   }finally{button.disabled=false;}
@@ -55,6 +57,7 @@ function bindMaterialSets(){
  $$('[data-set-save]',root).forEach(button=>button.onclick=safe(async()=>{
   const row=button.closest('[data-material-entry]'),item=materialItem(row.closest('[data-material-module]').dataset.materialModule),entry=materialEntry(item,row.dataset.materialEntry),sid=sessionId;
   if(preparationSaves?.busy(sid))throw Error('请等待当前选择保存完成');
+  if(state.profile_contract===30&&button.dataset.setSave!=='session'){await previewMaterialWriteback(item,[setSaveRecord(entry,row)],button.dataset.setSave);return;}
   button.disabled=true;
   try{await answerDrafts.settled(sid);await api('/api/website/set-answer',{session_id:sid,website_id:item.website_field.id,records:[setSaveRecord(entry,row)],mode:button.dataset.setSave,name:'整组编辑版本'});await clearSetDrafts(sid,item,[entry]);if(sessionId===sid)await refresh();toast('整组资料已保存');}finally{button.disabled=false;}
  }));
@@ -82,6 +85,7 @@ function patchMaterialSets(){
   const ids=item.selected.map(e=>e.id);$('[data-choice-count]',section).textContent=`已选 ${ids.length} / 全部 ${(item.catalog||item.options).length} ${preparationUnit(item)}`;
   for(const row of $$('[data-material-entry]',section)){
    const entry=materialEntry(item,row.dataset.materialEntry);if(!entry)continue;
+   const linked=$('[data-linked-sources]',row);if(linked)linked.innerHTML=(entry.linked_source_choices||[]).map(c=>versionEditor(c,c.source_entry_id,item)).join('');
    if(recordUsesVersions(entry)){
    const select=$('[data-set-version]',row);select.innerHTML='<option value="">本次字段组合</option>'+entry.set_versions.map(v=>`<option value="${escapeHtml(v.id)}">${escapeHtml(v.name)}</option>`).join('');select.value=entry.selected_set||'';
    $('[data-material-action="remove-version"]',row).disabled=!entry.selected_set;
@@ -140,4 +144,28 @@ function patchScalarMaterials(){
    $$('[data-version-content]',next).forEach((e,i)=>{if(drafts[i]?.dirty)e.value=drafts[i].value;});
   }else root.append(next);
  }
+}
+
+async function previewMaterialWriteback(item,records,mode,name='新表达版本',composition=false){
+ const sid=sessionId,preview=await api('/api/website/sync-preview',{session_id:sid,website_id:item.website_field.id,records});
+ const requestId=crypto.randomUUID();
+ profileLibrary.ask('选择同步到资料库的变化',preview.records.map((record,index)=>`<section><h3>${escapeHtml(entryTitle(materialEntry(item,record.entry_id)))}</h3>${record.differences.map(diff=>`<label class="checkbox-label"><input type="checkbox" name="field" value="${index}/${escapeHtml(diff.field_id)}" ${diff.clear?'':'checked'}><span>${escapeHtml(diff.label)} · ${escapeHtml(diff.impact)}<br>原值：${escapeHtml(diff.old||'未填写')}<br>新值：${escapeHtml(diff.new||'清空（需明确勾选）')}</span></label>${diff.new_definition?`<label class="checkbox-label"><input type="checkbox" name="definition" value="${index}/${escapeHtml(diff.field_id)}">同时创建此对象的新属性“${escapeHtml(diff.label)}”（与选中答案共同保存）</label>`:''}`).join('')||'<p>没有需要同步的答案变化。</p>'}<details><summary>可同时保存的字段对应</summary>${record.relation_candidates.map(r=>`<label class="checkbox-label"><input name="relation" type="checkbox" value="${index}/${escapeHtml(r.question_id)}">${escapeHtml(r.label)} → ${escapeHtml(r.field_label)}${r.new_definition?'（须同时勾选新属性与答案）':''}</label>`).join('')}</details></section>`).join('')+`<label>选中对应的复用范围<select name="relation_scope"><option value="site" ${preview.site_scope_available?'':'disabled'}>本站、当前租户及表单</option><option value="general">明确确认为通用含义</option></select></label>`,async form=>{
+  if(sessionId!==sid)throw Error('岗位已切换，请重新打开');
+  const selected=form.getAll('field'),relations=form.getAll('relation'),definitions=form.getAll('definition');
+  if(!selected.length&&!relations.length)return;
+  const valuesFor=(list,index)=>list.filter(x=>x.startsWith(index+'/')).map(x=>x.slice(x.indexOf('/')+1));
+  const payload=records.map((record,index)=>({...record,edit_token:preview.records[index].edit_token,sync_token:preview.records[index].sync_token,selected_fields:valuesFor(selected,index),confirmed_field_ids:valuesFor(definitions,index),relations:valuesFor(relations,index).map(question_id=>({question_id,scope:form.get('relation_scope'),confirmed:true}))})).filter(r=>r.selected_fields.length||r.relations.length);
+  await api('/api/website/set-answer',{session_id:sid,website_id:item.website_field.id,records:payload,mode,name,composition,request_id:requestId});
+  for(const record of payload){const entry=materialEntry(item,record.entry_id);for(const fid of record.selected_fields){const choice=entry.choices.find(c=>c.field.id===fid);if(choice)answerDrafts.delete(draftKey(answerRef(item,entry.id,choice)));}}await answerDrafts.settled(sid);await refresh();toast('已同步选中变化，未选字段和草稿保持原样');
+ });
+}
+
+async function previewSingleWriteback(ref,value){
+ const sid=sessionId,preview=await api('/api/website/answer-preview',{session_id:sid,...ref,value}),requestId=crypto.randomUUID();
+ const relationHtml=`<label><input name="save_relation" type="checkbox">同时确认并保存此网站问题到“${escapeHtml(preview.label)}”的字段对应</label><label>对应复用范围<select name="relation_scope"><option value="site" ${preview.site_scope_available?'':'disabled'}>本站当前租户及表单</option><option value="general" ${preview.site_scope_available?'':'selected'}>通用含义（保留对象限制）</option></select></label>`;
+ profileLibrary.ask('同步此字段到资料库',`<p>${escapeHtml(preview.label)} · ${escapeHtml(preview.impact)}</p><p>原值：${escapeHtml(preview.old||'未填写')}</p><p>新值：${escapeHtml(value||'清空')}</p>${preview.new_definition?'<p>同时在此对象创建已核对的新属性。</p>':''}${preview.expression?'<label>保存方式<select name="mode"><option value="update">更新所选表达版本</option><option value="new">另存新表达版本</option></select></label><label>新版本名称<input name="name" value="本次表达"></label>':''}${value===''?'<label><input name="clear" type="checkbox" required>确认清空当前字段</label>':''}${relationHtml}`,async form=>{
+  if(sessionId!==sid)throw Error('岗位已切换，请重新核对');
+  await api('/api/website/answer',{session_id:sid,...ref,value,mode:form.get('mode')||'update',name:form.get('name')||'',version_id:preview.version_id,expected_revision:preview.expected_revision,request_id:requestId,preview_token:preview.token,relation_options:form.has('save_relation')?{scope:form.get('relation_scope'),confirmed:true}:null});
+  answerDrafts.delete(draftKey(ref));await answerDrafts.settled(sid);await refresh();toast('此字段已同步到资料库');
+ });
 }

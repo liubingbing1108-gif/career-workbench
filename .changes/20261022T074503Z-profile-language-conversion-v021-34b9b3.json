@@ -1,0 +1,21 @@
+{
+  "kind": "docs",
+  "summary": "Permit score-based language proficiency suggestions and ground proposed options in observed recruitment forms; keep exact conversion rules pending user review.",
+  "capabilities": [
+    "profile"
+  ],
+  "validation": "check_docs.py passed for 107 Markdown files and 669 relative links; check_project.py passed with 36 records before receipt. Reviewed existing language-form validation and primary recruitment/exam sources. Verified new acceptance rows and removal of blanket conversion prohibitions. No runtime tests.",
+  "compatibility": "Planning documentation only; no code, Skill, API or runtime changes. Exact option/threshold choices remain proposals, not implementation requirements.",
+  "handoff": {
+    "task": "profile-language-conversion-v021",
+    "status": "complete",
+    "next": "Present the observed four-option proposal and score-conversion workflow plainly for user review, then define concrete conversion rules without claiming a universal official mapping. Keep full field catalog confirmation before implementation. Shared planning indexes synchronized.",
+    "docs": [],
+    "docs_reason": "Updated private authoritative profile planning and acceptance/index documents with source evidence and explicit confirmed-versus-proposed boundaries. Public runtime contracts unchanged."
+  },
+  "id": "20261022T074503Z-profile-language-conversion-v021-34b9b3",
+  "files": [
+    "docs/PROJECT_ACTIVITY.md"
+  ],
+  "release": "0.4.0"
+}

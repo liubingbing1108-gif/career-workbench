@@ -1,0 +1,3733 @@
+{
+  "schema_version": 1,
+  "prd": "0.30",
+  "fields": "F0.31",
+  "versions": "V0.14",
+  "rows": [
+    {
+      "audit_id": "01-01",
+      "label": "中文姓名",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；保存规则见字段专题F0.2",
+      "legacy_fields": [
+        "name"
+      ],
+      "status": "active",
+      "current_fields": [
+        "name"
+      ],
+      "nullable": true,
+      "save_unit": "field"
+    },
+    {
+      "audit_id": "01-02",
+      "label": "姓",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；保存规则见字段专题F0.2",
+      "legacy_fields": [
+        "surname"
+      ],
+      "status": "active",
+      "current_fields": [
+        "surname"
+      ],
+      "nullable": true,
+      "save_unit": "field"
+    },
+    {
+      "audit_id": "01-03",
+      "label": "名",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；保存规则见字段专题F0.2",
+      "legacy_fields": [
+        "given_name"
+      ],
+      "status": "active",
+      "current_fields": [
+        "given_name"
+      ],
+      "nullable": true,
+      "save_unit": "field"
+    },
+    {
+      "audit_id": "01-04",
+      "label": "姓名拼音",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；保存规则见字段专题F0.2",
+      "legacy_fields": [
+        "name_pinyin"
+      ],
+      "status": "active",
+      "current_fields": [
+        "name_pinyin"
+      ],
+      "nullable": true,
+      "save_unit": "field"
+    },
+    {
+      "audit_id": "01-05",
+      "label": "英文名",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；保存规则见字段专题F0.2",
+      "legacy_fields": [
+        "english_name"
+      ],
+      "status": "active",
+      "current_fields": [
+        "english_name"
+      ],
+      "nullable": true,
+      "save_unit": "field"
+    },
+    {
+      "audit_id": "01-06",
+      "label": "曾用名",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；保存规则见字段专题F0.2",
+      "legacy_fields": [
+        "former_name"
+      ],
+      "status": "active",
+      "current_fields": [
+        "former_name"
+      ],
+      "nullable": true,
+      "save_unit": "field"
+    },
+    {
+      "audit_id": "01-07",
+      "label": "性别",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；可空、单项保存，见字段专题",
+      "legacy_fields": [
+        "gender"
+      ],
+      "status": "active",
+      "current_fields": [
+        "gender"
+      ],
+      "nullable": true,
+      "save_unit": "field"
+    },
+    {
+      "audit_id": "01-08",
+      "label": "出生日期",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；保留实际精度，不补未知日，见字段专题",
+      "legacy_fields": [
+        "birth_date"
+      ],
+      "status": "active",
+      "current_fields": [
+        "birth_date"
+      ],
+      "nullable": true,
+      "save_unit": "field"
+    },
+    {
+      "audit_id": "01-09",
+      "label": "国籍/地区",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；可空、单项保存，见字段专题",
+      "legacy_fields": [
+        "nationality"
+      ],
+      "status": "active",
+      "current_fields": [
+        "nationality"
+      ],
+      "nullable": true,
+      "save_unit": "field"
+    },
+    {
+      "audit_id": "01-10",
+      "label": "民族",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；可空、单项保存，见字段专题",
+      "legacy_fields": [
+        "ethnicity"
+      ],
+      "status": "active",
+      "current_fields": [
+        "ethnicity"
+      ],
+      "nullable": true,
+      "save_unit": "field"
+    },
+    {
+      "audit_id": "01-11",
+      "label": "政治面貌",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；可空、单项保存，见字段专题",
+      "legacy_fields": [
+        "political_status"
+      ],
+      "status": "active",
+      "current_fields": [
+        "political_status"
+      ],
+      "nullable": true,
+      "save_unit": "field"
+    },
+    {
+      "audit_id": "01-12",
+      "label": "入党/团日期",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；只用一个字段，可空、不补未知日期，见字段专题",
+      "legacy_fields": [
+        "political_joined"
+      ],
+      "status": "active",
+      "current_fields": [
+        "political_joined"
+      ],
+      "nullable": true,
+      "save_unit": "field"
+    },
+    {
+      "audit_id": "01-13",
+      "label": "婚姻状况",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；可空、单项保存，见字段专题",
+      "legacy_fields": [
+        "marital_status"
+      ],
+      "status": "active",
+      "current_fields": [
+        "marital_status"
+      ],
+      "nullable": true,
+      "save_unit": "field"
+    },
+    {
+      "audit_id": "01-14",
+      "label": "籍贯",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；独立、可空、不自动复制、不补未知区县，见字段专题",
+      "legacy_fields": [
+        "native_place"
+      ],
+      "status": "active",
+      "current_fields": [
+        "native_place"
+      ],
+      "nullable": true,
+      "save_unit": "field"
+    },
+    {
+      "audit_id": "01-15",
+      "label": "生源地",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；独立、可空、不自动复制、不补未知区县，见字段专题",
+      "legacy_fields": [
+        "student_origin"
+      ],
+      "status": "active",
+      "current_fields": [
+        "student_origin"
+      ],
+      "nullable": true,
+      "save_unit": "field"
+    },
+    {
+      "audit_id": "01-16",
+      "label": "生活照",
+      "save_rule": "当前值",
+      "decision": "分开引用原件已定；具体文件选择/管理细节随22类核对",
+      "legacy_fields": [
+        "life_photo"
+      ],
+      "status": "active",
+      "current_fields": [
+        "life_photo"
+      ],
+      "nullable": true,
+      "save_unit": "field"
+    },
+    {
+      "audit_id": "01-17",
+      "label": "证件照",
+      "save_rule": "当前值",
+      "decision": "分开引用原件已定；具体文件选择/管理细节随22类核对",
+      "legacy_fields": [
+        "id_photo"
+      ],
+      "status": "active",
+      "current_fields": [
+        "id_photo"
+      ],
+      "nullable": true,
+      "save_unit": "field"
+    },
+    {
+      "audit_id": "01-18",
+      "label": "身高（厘米）",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；可空、允许小数、单项保存，见字段专题",
+      "legacy_fields": [
+        "height_cm"
+      ],
+      "status": "active",
+      "current_fields": [
+        "height_cm"
+      ],
+      "nullable": true,
+      "save_unit": "field"
+    },
+    {
+      "audit_id": "01-19",
+      "label": "体重（千克）",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；可空、允许小数、单项保存，见字段专题",
+      "legacy_fields": [
+        "weight_kg"
+      ],
+      "status": "active",
+      "current_fields": [
+        "weight_kg"
+      ],
+      "nullable": true,
+      "save_unit": "field"
+    },
+    {
+      "audit_id": "01-20",
+      "label": "健康情况",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；可空、单项保存、不自动推断，见字段专题",
+      "legacy_fields": [
+        "health_status"
+      ],
+      "status": "active",
+      "current_fields": [
+        "health_status"
+      ],
+      "nullable": true,
+      "save_unit": "field"
+    },
+    {
+      "audit_id": "02-01",
+      "label": "证件类型",
+      "save_rule": "当前证件的当前值",
+      "decision": "已确认待实施；可空、按当前证件保存，见字段专题",
+      "legacy_fields": [
+        "identity_type"
+      ],
+      "status": "active",
+      "current_fields": [
+        "identity_type"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "02-02",
+      "label": "证件号码",
+      "save_rule": "当前证件的当前值",
+      "decision": "已确认待实施；文本、可空、不跨证件混用，见字段专题",
+      "legacy_fields": [
+        "identity_number"
+      ],
+      "status": "active",
+      "current_fields": [
+        "identity_number"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "02-03",
+      "label": "有效起始日期",
+      "save_rule": "当前证件的当前值",
+      "decision": "已确认待实施；可空、不补未知日期，见字段专题",
+      "legacy_fields": [
+        "identity_valid_from"
+      ],
+      "status": "active",
+      "current_fields": [
+        "identity_valid_from"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "02-04",
+      "label": "有效截止日期",
+      "save_rule": "当前证件的当前值",
+      "decision": "已确认待实施；可空、不补未知日期，见字段专题",
+      "legacy_fields": [
+        "identity_valid_until"
+      ],
+      "status": "active",
+      "current_fields": [
+        "identity_valid_until"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "03-01",
+      "label": "主用手机区号",
+      "save_rule": "当前值",
+      "decision": "仅一对，P47已确认",
+      "legacy_fields": [
+        "phone_code"
+      ],
+      "status": "active",
+      "current_fields": [
+        "phone_code"
+      ],
+      "nullable": true,
+      "save_unit": "field"
+    },
+    {
+      "audit_id": "03-02",
+      "label": "主用手机",
+      "save_rule": "当前值",
+      "decision": "仅一对，P47已确认",
+      "legacy_fields": [
+        "phone"
+      ],
+      "status": "active",
+      "current_fields": [
+        "phone"
+      ],
+      "nullable": true,
+      "save_unit": "field"
+    },
+    {
+      "audit_id": "03-03",
+      "label": "邮箱",
+      "save_rule": "本人独立字段当前值",
+      "decision": "已确认待实施；原主用邮箱简名，可空、单项保存",
+      "legacy_fields": [
+        "email"
+      ],
+      "status": "active",
+      "current_fields": [
+        "email"
+      ],
+      "nullable": true,
+      "save_unit": "field"
+    },
+    {
+      "audit_id": "03-04",
+      "label": "备用邮箱（已排除）",
+      "save_rule": "不纳入新预设",
+      "decision": "用户已确认不需要；保留编号追溯，旧值不自动删除或覆盖主用邮箱，见字段专题",
+      "legacy_fields": [
+        "backup_email"
+      ],
+      "status": "excluded",
+      "current_fields": [],
+      "nullable": true,
+      "save_unit": "none"
+    },
+    {
+      "audit_id": "03-05",
+      "label": "微信号",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；从原“平台＋账号”按含义展开，可空、文本、单项保存",
+      "legacy_fields": [
+        "social_platform",
+        "social_account"
+      ],
+      "status": "active",
+      "current_fields": [
+        "wechat"
+      ],
+      "nullable": true,
+      "save_unit": "field"
+    },
+    {
+      "audit_id": "03-06",
+      "label": "QQ号",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；从原“平台＋账号”按含义展开，可空、文本、单项保存",
+      "legacy_fields": [
+        "social_platform",
+        "social_account"
+      ],
+      "status": "active",
+      "current_fields": [
+        "qq"
+      ],
+      "nullable": true,
+      "save_unit": "field"
+    },
+    {
+      "audit_id": "03-07",
+      "label": "其他联系账号",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；按平台命名的独立字段，可空、单项保存，不丢旧平台名称",
+      "legacy_fields": [
+        "social_platform",
+        "social_account"
+      ],
+      "status": "custom",
+      "current_fields": [],
+      "nullable": true,
+      "save_unit": "none"
+    },
+    {
+      "audit_id": "04-01",
+      "label": "地址用途（已排除）",
+      "save_rule": "不纳入新预设",
+      "decision": "已确认不用用途字段；直接现居地址、通讯地址两个入口，旧户籍资料不自动清理",
+      "legacy_fields": [],
+      "status": "excluded",
+      "current_fields": [],
+      "nullable": true,
+      "save_unit": "none"
+    },
+    {
+      "audit_id": "04-02",
+      "label": "国家/地区",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；两处各自保存、可空，不补未知值、不自动互相复制",
+      "legacy_fields": [
+        "residence_country",
+        "mailing_country"
+      ],
+      "status": "active",
+      "current_fields": [
+        "residence_country",
+        "mailing_country"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "04-03",
+      "label": "省/直辖市",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；两处各自保存、可空，不补未知值、不自动互相复制",
+      "legacy_fields": [
+        "residence_province",
+        "mailing_province"
+      ],
+      "status": "active",
+      "current_fields": [
+        "residence_province",
+        "mailing_province"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "04-04",
+      "label": "市",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；两处各自保存、可空，不补未知值、不自动互相复制",
+      "legacy_fields": [
+        "residence_city",
+        "mailing_city"
+      ],
+      "status": "active",
+      "current_fields": [
+        "residence_city",
+        "mailing_city"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "04-05",
+      "label": "区/县",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；两处各自保存、可空，不补未知值、不自动互相复制",
+      "legacy_fields": [
+        "residence_district",
+        "mailing_district"
+      ],
+      "status": "active",
+      "current_fields": [
+        "residence_district",
+        "mailing_district"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "04-06",
+      "label": "详细地址",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；两处各自保存、可空，不补未知值、不自动互相复制",
+      "legacy_fields": [
+        "residence_address",
+        "mailing_address"
+      ],
+      "status": "active",
+      "current_fields": [
+        "residence_address",
+        "mailing_address"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "04-07",
+      "label": "邮编",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；两处各自保存、可空，不补未知值、不自动互相复制",
+      "legacy_fields": [
+        "residence_postcode",
+        "mailing_postcode"
+      ],
+      "status": "active",
+      "current_fields": [
+        "residence_postcode",
+        "mailing_postcode"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "05-01",
+      "label": "学校名称",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；可空、当前教育独立保存，未知不猜填",
+      "legacy_fields": [
+        "school"
+      ],
+      "status": "active",
+      "current_fields": [
+        "school"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "05-02",
+      "label": "学院/院系",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；可空、当前教育独立保存，未知不猜填",
+      "legacy_fields": [
+        "college"
+      ],
+      "status": "active",
+      "current_fields": [
+        "college"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "05-03",
+      "label": "学校所在地",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；可空、当前教育独立保存，未知不猜填",
+      "legacy_fields": [
+        "school_location"
+      ],
+      "status": "active",
+      "current_fields": [
+        "school_location"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "05-04",
+      "label": "专业名称",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；可空、当前教育独立保存，未知不猜填",
+      "legacy_fields": [
+        "major"
+      ],
+      "status": "active",
+      "current_fields": [
+        "major"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "05-05",
+      "label": "专业类别",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；可空、当前教育独立保存，未知不猜填",
+      "legacy_fields": [
+        "major_category"
+      ],
+      "status": "active",
+      "current_fields": [
+        "major_category"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "05-06",
+      "label": "第二专业/辅修专业",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；可空、当前教育独立保存，未知不猜填",
+      "legacy_fields": [
+        "minor_major"
+      ],
+      "status": "active",
+      "current_fields": [
+        "minor_major"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "05-07",
+      "label": "学历层次",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；可空、当前教育独立保存，未知不猜填",
+      "legacy_fields": [
+        "degree"
+      ],
+      "status": "active",
+      "current_fields": [
+        "degree"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "05-08",
+      "label": "学位名称",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；可空、当前教育独立保存，未知不猜填",
+      "legacy_fields": [
+        "degree_name"
+      ],
+      "status": "active",
+      "current_fields": [
+        "degree_name"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "05-09",
+      "label": "学习形式",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；可空、当前教育独立保存，未知不猜填",
+      "legacy_fields": [
+        "study_mode"
+      ],
+      "status": "active",
+      "current_fields": [
+        "study_mode"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "05-10",
+      "label": "是否双学位",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；可空、当前教育独立保存，未知不猜填",
+      "legacy_fields": [
+        "double_degree"
+      ],
+      "status": "active",
+      "current_fields": [
+        "double_degree"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "05-11",
+      "label": "培养方式",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；可空、当前教育独立保存，未知不猜填",
+      "legacy_fields": [
+        "training_mode"
+      ],
+      "status": "active",
+      "current_fields": [
+        "training_mode"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "05-12",
+      "label": "入学日期",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；可空、当前教育独立保存，未知不猜填",
+      "legacy_fields": [
+        "education_started"
+      ],
+      "status": "active",
+      "current_fields": [
+        "education_started"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "05-13",
+      "label": "毕业时间",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；可空、当前教育独立保存，未知不猜填",
+      "legacy_fields": [
+        "graduation_date"
+      ],
+      "status": "active",
+      "current_fields": [
+        "graduation_date"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "05-14",
+      "label": "在读/毕业/结业状态",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；可空、当前教育独立保存，未知不猜填",
+      "legacy_fields": [
+        "study_status"
+      ],
+      "status": "active",
+      "current_fields": [
+        "study_status"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "05-15",
+      "label": "学位取得状态",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；可空、当前教育独立保存，未知不猜填",
+      "legacy_fields": [
+        "degree_status"
+      ],
+      "status": "active",
+      "current_fields": [
+        "degree_status"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "05-16",
+      "label": "学位取得日期",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；可空、当前教育独立保存，未知不猜填",
+      "legacy_fields": [
+        "degree_awarded"
+      ],
+      "status": "active",
+      "current_fields": [
+        "degree_awarded"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "05-17",
+      "label": "GPA",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；可空、当前教育独立保存，未知不猜填",
+      "legacy_fields": [
+        "gpa"
+      ],
+      "status": "active",
+      "current_fields": [
+        "gpa"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "05-18",
+      "label": "GPA满分",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；可空、当前教育独立保存，未知不猜填",
+      "legacy_fields": [
+        "gpa_max"
+      ],
+      "status": "active",
+      "current_fields": [
+        "gpa_max"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "05-19",
+      "label": "平均成绩",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；可空、当前教育独立保存，未知不猜填",
+      "legacy_fields": [
+        "average_score"
+      ],
+      "status": "active",
+      "current_fields": [
+        "average_score"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "05-20",
+      "label": "平均成绩满分",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；可空、当前教育独立保存，未知不猜填",
+      "legacy_fields": [
+        "average_score_max"
+      ],
+      "status": "active",
+      "current_fields": [
+        "average_score_max"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "05-21",
+      "label": "排名名次",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；可空、当前教育独立保存，未知不猜填",
+      "legacy_fields": [
+        "rank"
+      ],
+      "status": "active",
+      "current_fields": [
+        "rank"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "05-22",
+      "label": "排名总人数",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；可空、当前教育独立保存，未知不猜填",
+      "legacy_fields": [
+        "rank_total"
+      ],
+      "status": "active",
+      "current_fields": [
+        "rank_total"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "05-23",
+      "label": "排名范围",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；可空、当前教育独立保存，未知不猜填",
+      "legacy_fields": [
+        "rank_scope"
+      ],
+      "status": "active",
+      "current_fields": [
+        "rank_scope"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "05-24",
+      "label": "主修课程",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；可空、当前教育独立保存，未知不猜填",
+      "legacy_fields": [
+        "courses"
+      ],
+      "status": "active",
+      "current_fields": [
+        "courses"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "05-25",
+      "label": "研究方向",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；可空、当前教育独立保存，未知不猜填",
+      "legacy_fields": [
+        "research_direction"
+      ],
+      "status": "active",
+      "current_fields": [
+        "research_direction"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "05-26",
+      "label": "导师",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；可空、当前教育独立保存，未知不猜填",
+      "legacy_fields": [
+        "advisor"
+      ],
+      "status": "active",
+      "current_fields": [
+        "advisor"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "05-27",
+      "label": "毕业论文题目",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；可空、当前教育独立保存，未知不猜填",
+      "legacy_fields": [
+        "thesis_title"
+      ],
+      "status": "active",
+      "current_fields": [
+        "thesis_title"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "05-28",
+      "label": "教育经历完整说明（已排除）",
+      "save_rule": "不纳入新预设",
+      "decision": "已确认排除；旧内容及文件保留待核对，见字段专题",
+      "legacy_fields": [
+        "education_description"
+      ],
+      "status": "excluded",
+      "current_fields": [],
+      "nullable": true,
+      "save_unit": "none"
+    },
+    {
+      "audit_id": "05-29",
+      "label": "学号（已排除）",
+      "save_rule": "不纳入新预设",
+      "decision": "已确认排除；旧内容及文件保留待核对，见字段专题",
+      "legacy_fields": [
+        "student_number"
+      ],
+      "status": "excluded",
+      "current_fields": [],
+      "nullable": true,
+      "save_unit": "none"
+    },
+    {
+      "audit_id": "05-30",
+      "label": "毕业证编号（已排除）",
+      "save_rule": "不纳入新预设",
+      "decision": "已确认排除；旧内容及文件保留待核对，见字段专题",
+      "legacy_fields": [
+        "graduation_certificate"
+      ],
+      "status": "excluded",
+      "current_fields": [],
+      "nullable": true,
+      "save_unit": "none"
+    },
+    {
+      "audit_id": "05-31",
+      "label": "学位证编号（已排除）",
+      "save_rule": "不纳入新预设",
+      "decision": "已确认排除；旧内容及文件保留待核对，见字段专题",
+      "legacy_fields": [
+        "degree_certificate"
+      ],
+      "status": "excluded",
+      "current_fields": [],
+      "nullable": true,
+      "save_unit": "none"
+    },
+    {
+      "audit_id": "05-32",
+      "label": "交换/联合培养说明（已排除）",
+      "save_rule": "不纳入新预设",
+      "decision": "已确认排除；旧内容及文件保留待核对，见字段专题",
+      "legacy_fields": [
+        "exchange_description"
+      ],
+      "status": "excluded",
+      "current_fields": [],
+      "nullable": true,
+      "save_unit": "none"
+    },
+    {
+      "audit_id": "05-33",
+      "label": "成绩单及学历/学位证明（已排除）",
+      "save_rule": "不纳入新预设",
+      "decision": "已确认排除；旧内容及文件保留待核对，见字段专题",
+      "legacy_fields": [
+        "education_files"
+      ],
+      "status": "excluded",
+      "current_fields": [],
+      "nullable": true,
+      "save_unit": "none"
+    },
+    {
+      "audit_id": "06-01",
+      "label": "单位名称",
+      "save_rule": "任职各版本共用",
+      "decision": "已确认待实施；可空、当前经历保存，未知不猜填",
+      "legacy_fields": [
+        "company"
+      ],
+      "status": "active",
+      "current_fields": [
+        "company"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "06-02",
+      "label": "部门",
+      "save_rule": "任职各版本共用",
+      "decision": "已确认待实施；可空、当前经历保存，未知不猜填",
+      "legacy_fields": [
+        "department"
+      ],
+      "status": "active",
+      "current_fields": [
+        "department"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "06-03",
+      "label": "职位名称",
+      "save_rule": "任职各版本共用",
+      "decision": "已确认待实施；可空、当前经历保存，未知不猜填",
+      "legacy_fields": [
+        "role"
+      ],
+      "status": "active",
+      "current_fields": [
+        "role"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "06-04",
+      "label": "经历性质",
+      "save_rule": "任职各版本共用",
+      "decision": "已确认待实施；可空、当前经历保存，未知不猜填",
+      "legacy_fields": [
+        "employment_type"
+      ],
+      "status": "active",
+      "current_fields": [
+        "employment_type"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "06-05",
+      "label": "工作地点",
+      "save_rule": "任职各版本共用",
+      "decision": "已确认待实施；可空、当前经历保存，未知不猜填",
+      "legacy_fields": [
+        "employment_location"
+      ],
+      "status": "active",
+      "current_fields": [
+        "employment_location"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "06-06",
+      "label": "开始时间",
+      "save_rule": "任职各版本共用",
+      "decision": "已确认待实施；可空、当前经历保存，未知不猜填",
+      "legacy_fields": [
+        "started"
+      ],
+      "status": "active",
+      "current_fields": [
+        "started"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "06-07",
+      "label": "结束时间",
+      "save_rule": "任职各版本共用",
+      "decision": "已确认待实施；可空、当前经历保存，未知不猜填",
+      "legacy_fields": [
+        "ended"
+      ],
+      "status": "active",
+      "current_fields": [
+        "ended"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "06-08",
+      "label": "是否仍在职",
+      "save_rule": "任职各版本共用",
+      "decision": "已确认待实施；可空、当前经历保存，未知不猜填",
+      "legacy_fields": [
+        "still_employed"
+      ],
+      "status": "active",
+      "current_fields": [
+        "still_employed"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "06-09",
+      "label": "完整经历描述",
+      "save_rule": "任职随版本",
+      "decision": "已确认待实施；可空、当前经历保存，未知不猜填",
+      "legacy_fields": [
+        "description"
+      ],
+      "status": "active",
+      "current_fields": [
+        "description"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "06-10",
+      "label": "工作职责",
+      "save_rule": "任职随版本",
+      "decision": "已确认待实施；可空、当前经历保存，未知不猜填",
+      "legacy_fields": [
+        "responsibilities"
+      ],
+      "status": "active",
+      "current_fields": [
+        "responsibilities"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "06-11",
+      "label": "工作成果",
+      "save_rule": "任职随版本",
+      "decision": "已确认待实施；可空、当前经历保存，未知不猜填",
+      "legacy_fields": [
+        "achievements"
+      ],
+      "status": "active",
+      "current_fields": [
+        "achievements"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "06-12",
+      "label": "所属行业",
+      "save_rule": "任职各版本共用",
+      "decision": "已确认待实施；可空、当前经历保存，未知不猜填",
+      "legacy_fields": [
+        "industry"
+      ],
+      "status": "active",
+      "current_fields": [
+        "industry"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "06-13",
+      "label": "单位性质",
+      "save_rule": "任职各版本共用",
+      "decision": "已确认待实施；可空、当前经历保存，未知不猜填",
+      "legacy_fields": [
+        "company_type"
+      ],
+      "status": "active",
+      "current_fields": [
+        "company_type"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "06-14",
+      "label": "单位规模",
+      "save_rule": "任职各版本共用",
+      "decision": "已确认待实施；可空、当前经历保存，未知不猜填",
+      "legacy_fields": [
+        "company_size"
+      ],
+      "status": "active",
+      "current_fields": [
+        "company_size"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "06-15",
+      "label": "离职原因",
+      "save_rule": "任职各版本共用",
+      "decision": "已确认保留；实习共用，可空、不自动推断",
+      "legacy_fields": [
+        "leaving_reason"
+      ],
+      "status": "active",
+      "current_fields": [
+        "leaving_reason"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "06-16",
+      "label": "证明人姓名",
+      "save_rule": "任职共用且直接归本段",
+      "decision": "已确认待实施；最多一位、可空，直接归本段",
+      "legacy_fields": [
+        "reference_name"
+      ],
+      "status": "active",
+      "current_fields": [
+        "reference_name"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "06-17",
+      "label": "证明人职位",
+      "save_rule": "任职共用且直接归本段",
+      "decision": "已确认待实施；同一证明人职位文本，可空",
+      "legacy_fields": [
+        "reference_role"
+      ],
+      "status": "active",
+      "current_fields": [
+        "reference_role"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "06-18",
+      "label": "证明人联系方式",
+      "save_rule": "任职共用且直接归本段",
+      "decision": "已确认待实施；电话/邮箱或两者文本，可空",
+      "legacy_fields": [
+        "reference_contact"
+      ],
+      "status": "active",
+      "current_fields": [
+        "reference_contact"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "06-19",
+      "label": "证明附件",
+      "save_rule": "任职各版本共用",
+      "decision": "已确认待实施；零至多份原件引用，更换引用不删原件",
+      "legacy_fields": [
+        "employment_files"
+      ],
+      "status": "active",
+      "current_fields": [
+        "employment_files"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "06-20",
+      "label": "关联证明人（已排除）",
+      "save_rule": "不采用联系人关联",
+      "decision": "V0.12已明确否定；用实习自身三项信息，旧关联及来源保留待核对",
+      "legacy_fields": [],
+      "status": "excluded",
+      "current_fields": [],
+      "nullable": true,
+      "save_unit": "none"
+    },
+    {
+      "audit_id": "07-01",
+      "label": "项目名称",
+      "save_rule": "各版本共用",
+      "decision": "已确认待实施；可空、当前项目保存，未知不猜填",
+      "legacy_fields": [
+        "project_name"
+      ],
+      "status": "active",
+      "current_fields": [
+        "project_name"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "07-02",
+      "label": "项目类型",
+      "save_rule": "各版本共用",
+      "decision": "已确认待实施；可空、当前项目保存，未知不猜填",
+      "legacy_fields": [
+        "project_type"
+      ],
+      "status": "active",
+      "current_fields": [
+        "project_type"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "07-03",
+      "label": "所属单位/学校",
+      "save_rule": "各版本共用",
+      "decision": "已确认待实施；可空、当前项目保存，未知不猜填",
+      "legacy_fields": [
+        "project_organization"
+      ],
+      "status": "active",
+      "current_fields": [
+        "project_organization"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "07-04",
+      "label": "项目地点",
+      "save_rule": "各版本共用",
+      "decision": "已确认待实施；可空、当前项目保存，未知不猜填",
+      "legacy_fields": [
+        "project_location"
+      ],
+      "status": "active",
+      "current_fields": [
+        "project_location"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "07-05",
+      "label": "开始时间",
+      "save_rule": "各版本共用",
+      "decision": "已确认待实施；可空、当前项目保存，未知不猜填",
+      "legacy_fields": [
+        "project_started"
+      ],
+      "status": "active",
+      "current_fields": [
+        "project_started"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "07-06",
+      "label": "结束时间",
+      "save_rule": "各版本共用",
+      "decision": "已确认待实施；可空、当前项目保存，未知不猜填",
+      "legacy_fields": [
+        "project_ended"
+      ],
+      "status": "active",
+      "current_fields": [
+        "project_ended"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "07-07",
+      "label": "是否仍在进行",
+      "save_rule": "各版本共用",
+      "decision": "已确认待实施；可空、当前项目保存，未知不猜填",
+      "legacy_fields": [
+        "project_ongoing"
+      ],
+      "status": "active",
+      "current_fields": [
+        "project_ongoing"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "07-08",
+      "label": "本人角色/职务",
+      "save_rule": "各版本共用",
+      "decision": "已确认待实施；可空、当前项目保存，未知不猜填",
+      "legacy_fields": [
+        "project_role"
+      ],
+      "status": "active",
+      "current_fields": [
+        "project_role"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "07-09",
+      "label": "团队人数",
+      "save_rule": "各版本共用",
+      "decision": "已确认待实施；整数，可空、不推算、不自动取整",
+      "legacy_fields": [
+        "project_team_size"
+      ],
+      "status": "active",
+      "current_fields": [
+        "project_team_size"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "07-10",
+      "label": "完整项目描述",
+      "save_rule": "随版本切换",
+      "decision": "已确认待实施；可空、当前项目保存，未知不猜填",
+      "legacy_fields": [
+        "project_description"
+      ],
+      "status": "active",
+      "current_fields": [
+        "project_description"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "07-11",
+      "label": "项目背景/目标",
+      "save_rule": "随版本切换",
+      "decision": "已确认待实施；可空、当前项目保存，未知不猜填",
+      "legacy_fields": [
+        "project_background"
+      ],
+      "status": "active",
+      "current_fields": [
+        "project_background"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "07-12",
+      "label": "本人职责",
+      "save_rule": "随版本切换",
+      "decision": "已确认待实施；可空、当前项目保存，未知不猜填",
+      "legacy_fields": [
+        "project_responsibilities"
+      ],
+      "status": "active",
+      "current_fields": [
+        "project_responsibilities"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "07-13",
+      "label": "实施过程（已排除）",
+      "save_rule": "不纳入新预设",
+      "decision": "用户本轮取消；旧内容/版本保留，不自动拼入其他表达",
+      "legacy_fields": [
+        "project_process"
+      ],
+      "status": "excluded",
+      "current_fields": [],
+      "nullable": true,
+      "save_unit": "none"
+    },
+    {
+      "audit_id": "07-14",
+      "label": "项目成果",
+      "save_rule": "随版本切换",
+      "decision": "已确认待实施；可空、当前项目保存，未知不猜填",
+      "legacy_fields": [
+        "project_results"
+      ],
+      "status": "active",
+      "current_fields": [
+        "project_results"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "07-15",
+      "label": "使用工具/技术/方法（已排除）",
+      "save_rule": "不设独立字段",
+      "decision": "V0.12已确认取消；旧值及来源保留待核对，不自动拼入描述",
+      "legacy_fields": [
+        "project_tools"
+      ],
+      "status": "excluded",
+      "current_fields": [],
+      "nullable": true,
+      "save_unit": "none"
+    },
+    {
+      "audit_id": "07-16",
+      "label": "项目/作品链接",
+      "save_rule": "各版本共用",
+      "decision": "已确认待实施；一条当前链接，可空",
+      "legacy_fields": [
+        "project_link"
+      ],
+      "status": "active",
+      "current_fields": [
+        "project_link"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "07-17",
+      "label": "相关附件",
+      "save_rule": "各版本共用",
+      "decision": "已确认待实施；零至多份原件引用，更换引用不删文件",
+      "legacy_fields": [
+        "project_files"
+      ],
+      "status": "active",
+      "current_fields": [
+        "project_files"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "08-01",
+      "label": "活动名称",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；可空、当前活动保存，不猜未知信息",
+      "legacy_fields": [
+        "campus_title"
+      ],
+      "status": "active",
+      "current_fields": [
+        "campus_title"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "08-02",
+      "label": "活动类型",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；可空、当前活动保存，不猜未知信息",
+      "legacy_fields": [
+        "activity_type"
+      ],
+      "status": "active",
+      "current_fields": [
+        "activity_type"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "08-03",
+      "label": "组织/主办单位（已排除）",
+      "save_rule": "不纳入新预设",
+      "decision": "已确认排除；旧值及来源保留，不自动拼入其他字段",
+      "legacy_fields": [
+        "activity_organization"
+      ],
+      "status": "excluded",
+      "current_fields": [],
+      "nullable": true,
+      "save_unit": "none"
+    },
+    {
+      "audit_id": "08-04",
+      "label": "活动地点（已排除）",
+      "save_rule": "不纳入新预设",
+      "decision": "已确认排除；旧值及来源保留，不自动拼入其他字段",
+      "legacy_fields": [
+        "activity_location"
+      ],
+      "status": "excluded",
+      "current_fields": [],
+      "nullable": true,
+      "save_unit": "none"
+    },
+    {
+      "audit_id": "08-05",
+      "label": "开始时间",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；可空、当前活动保存，不猜未知信息",
+      "legacy_fields": [
+        "campus_started"
+      ],
+      "status": "active",
+      "current_fields": [
+        "campus_started"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "08-06",
+      "label": "结束时间",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；可空、当前活动保存，不猜未知信息",
+      "legacy_fields": [
+        "campus_ended"
+      ],
+      "status": "active",
+      "current_fields": [
+        "campus_ended"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "08-07",
+      "label": "是否仍在进行",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；可空、当前活动保存，不猜未知信息",
+      "legacy_fields": [
+        "activity_ongoing"
+      ],
+      "status": "active",
+      "current_fields": [
+        "activity_ongoing"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "08-08",
+      "label": "本人角色/职务",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；可空、当前活动保存，不猜未知信息",
+      "legacy_fields": [
+        "activity_role"
+      ],
+      "status": "active",
+      "current_fields": [
+        "activity_role"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "08-09",
+      "label": "完整活动描述",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；可空、当前活动保存，不猜未知信息",
+      "legacy_fields": [
+        "campus_description"
+      ],
+      "status": "active",
+      "current_fields": [
+        "campus_description"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "08-10",
+      "label": "本人职责",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；可空、当前活动保存，不猜未知信息",
+      "legacy_fields": [
+        "activity_responsibilities"
+      ],
+      "status": "active",
+      "current_fields": [
+        "activity_responsibilities"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "08-11",
+      "label": "活动成果",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；可空、当前活动保存，不猜未知信息",
+      "legacy_fields": [
+        "activity_results"
+      ],
+      "status": "active",
+      "current_fields": [
+        "activity_results"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "08-12",
+      "label": "参与/服务时长（已排除）",
+      "save_rule": "不纳入新预设",
+      "decision": "已确认排除；旧值及来源保留，不自动拼入其他字段",
+      "legacy_fields": [
+        "activity_duration"
+      ],
+      "status": "excluded",
+      "current_fields": [],
+      "nullable": true,
+      "save_unit": "none"
+    },
+    {
+      "audit_id": "08-13",
+      "label": "时长单位（已排除）",
+      "save_rule": "不纳入新预设",
+      "decision": "已确认排除；旧值及来源保留，不自动拼入其他字段",
+      "legacy_fields": [
+        "activity_duration_unit"
+      ],
+      "status": "excluded",
+      "current_fields": [],
+      "nullable": true,
+      "save_unit": "none"
+    },
+    {
+      "audit_id": "08-14",
+      "label": "证明附件",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；零至多份原件引用，更换引用不删文件",
+      "legacy_fields": [
+        "activity_files"
+      ],
+      "status": "active",
+      "current_fields": [
+        "activity_files"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "09-01",
+      "label": "语种",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；文本可空，当前语言保存",
+      "legacy_fields": [
+        "language_name"
+      ],
+      "status": "active",
+      "current_fields": [
+        "language_name"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "09-02",
+      "label": "总体熟练程度",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；四档自选、可空，不推断或换算",
+      "legacy_fields": [
+        "language_level"
+      ],
+      "status": "active",
+      "current_fields": [
+        "language_level"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "09-03",
+      "label": "听力水平",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；四档自选、可空，不推断或换算",
+      "legacy_fields": [
+        "listening"
+      ],
+      "status": "active",
+      "current_fields": [
+        "listening"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "09-04",
+      "label": "口语水平",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；四档自选、可空，不推断或换算",
+      "legacy_fields": [
+        "speaking"
+      ],
+      "status": "active",
+      "current_fields": [
+        "speaking"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "09-05",
+      "label": "阅读水平",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；四档自选、可空，不推断或换算",
+      "legacy_fields": [
+        "reading"
+      ],
+      "status": "active",
+      "current_fields": [
+        "reading"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "09-06",
+      "label": "写作水平",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；四档自选、可空，不推断或换算",
+      "legacy_fields": [
+        "writing"
+      ],
+      "status": "active",
+      "current_fields": [
+        "writing"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "09-07",
+      "label": "能力说明（已排除）",
+      "save_rule": "不纳入新预设",
+      "decision": "已确认排除；旧值/来源保留，不自动转入总体或分项",
+      "legacy_fields": [
+        "language_description"
+      ],
+      "status": "excluded",
+      "current_fields": [],
+      "nullable": true,
+      "save_unit": "none"
+    },
+    {
+      "audit_id": "09-08",
+      "label": "听说综合水平（已排除）",
+      "save_rule": "不纳入新预设",
+      "decision": "已确认排除；旧值/来源保留，不自动转入总体或分项",
+      "legacy_fields": [],
+      "status": "excluded",
+      "current_fields": [],
+      "nullable": true,
+      "save_unit": "none"
+    },
+    {
+      "audit_id": "09-09",
+      "label": "读写综合水平（已排除）",
+      "save_rule": "不纳入新预设",
+      "decision": "已确认排除；旧值/来源保留，不自动转入总体或分项",
+      "legacy_fields": [],
+      "status": "excluded",
+      "current_fields": [],
+      "nullable": true,
+      "save_unit": "none"
+    },
+    {
+      "audit_id": "09-10",
+      "label": "关联考试名称",
+      "save_rule": "引用考试记录",
+      "decision": "关联方式已确认；引用第10类，可关联多种考试，不重复存成绩/日期",
+      "legacy_fields": [],
+      "status": "reference",
+      "current_fields": [
+        "exam_name"
+      ],
+      "nullable": true,
+      "save_unit": "reference"
+    },
+    {
+      "audit_id": "09-11",
+      "label": "关联考试成绩",
+      "save_rule": "引用考试记录",
+      "decision": "关联方式已确认；引用第10类，可关联多种考试，不重复存成绩/日期",
+      "legacy_fields": [],
+      "status": "reference",
+      "current_fields": [
+        "language_score"
+      ],
+      "nullable": true,
+      "save_unit": "reference"
+    },
+    {
+      "audit_id": "09-12",
+      "label": "关联考试获得日期",
+      "save_rule": "引用考试记录",
+      "decision": "关联方式已确认；引用第10类，可关联多种考试，不重复存成绩/日期",
+      "legacy_fields": [],
+      "status": "reference",
+      "current_fields": [
+        "obtained_date"
+      ],
+      "nullable": true,
+      "save_unit": "reference"
+    },
+    {
+      "audit_id": "09-13",
+      "label": "是否母语",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；新增，可空，不从国籍/等级/语种推断",
+      "legacy_fields": [],
+      "status": "active",
+      "current_fields": [
+        "is_native"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "10-01",
+      "label": "考试名称",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；可空、同次结果、当前考试保存",
+      "legacy_fields": [
+        "exam_name"
+      ],
+      "status": "active",
+      "current_fields": [
+        "exam_name"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "10-02",
+      "label": "考试语种",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；可空、同次结果、当前考试保存",
+      "legacy_fields": [
+        "exam_language"
+      ],
+      "status": "active",
+      "current_fields": [
+        "exam_language"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "10-03",
+      "label": "报考级别",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；可空、同次结果、当前考试保存",
+      "legacy_fields": [
+        "exam_level"
+      ],
+      "status": "active",
+      "current_fields": [
+        "exam_level"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "10-04",
+      "label": "获得日期",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；唯一日期、不补未知部分，旧考试日期不自动改标",
+      "legacy_fields": [
+        "exam_date"
+      ],
+      "status": "active",
+      "current_fields": [
+        "obtained_date"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "10-05",
+      "label": "总分",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；可空、同次结果、当前考试保存",
+      "legacy_fields": [
+        "language_score"
+      ],
+      "status": "active",
+      "current_fields": [
+        "language_score"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "10-06",
+      "label": "证书/成绩单编号（已排除）",
+      "save_rule": "不纳入新预设",
+      "decision": "已确认排除；旧值及来源保留，不自动删除或改标",
+      "legacy_fields": [
+        "exam_number"
+      ],
+      "status": "excluded",
+      "current_fields": [],
+      "nullable": true,
+      "save_unit": "none"
+    },
+    {
+      "audit_id": "10-07",
+      "label": "有效期说明（已排除）",
+      "save_rule": "不纳入新预设",
+      "decision": "已确认排除；旧值及来源保留，不自动删除或改标",
+      "legacy_fields": [
+        "exam_validity"
+      ],
+      "status": "excluded",
+      "current_fields": [],
+      "nullable": true,
+      "save_unit": "none"
+    },
+    {
+      "audit_id": "10-08",
+      "label": "成绩证明附件",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；零至多份同次原件引用",
+      "legacy_fields": [
+        "exam_files"
+      ],
+      "status": "active",
+      "current_fields": [
+        "exam_files"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "10-09",
+      "label": "考试子类型/类别（已排除）",
+      "save_rule": "不纳入新预设",
+      "decision": "P50取消分类维护；旧值/来源保留待迁移核对，不重建分类入口",
+      "legacy_fields": [],
+      "status": "excluded",
+      "current_fields": [],
+      "nullable": true,
+      "save_unit": "none"
+    },
+    {
+      "audit_id": "10-10",
+      "label": "成绩状态（已排除）",
+      "save_rule": "不纳入新预设",
+      "decision": "已确认排除；旧值及来源保留，不自动删除或改标",
+      "legacy_fields": [],
+      "status": "excluded",
+      "current_fields": [],
+      "nullable": true,
+      "save_unit": "none"
+    },
+    {
+      "audit_id": "10-11",
+      "label": "总分口径/满分（已排除）",
+      "save_rule": "不纳入新预设",
+      "decision": "已确认排除；旧值及来源保留，不自动删除或改标",
+      "legacy_fields": [],
+      "status": "excluded",
+      "current_fields": [],
+      "nullable": true,
+      "save_unit": "none"
+    },
+    {
+      "audit_id": "10-12",
+      "label": "考试结果（已排除）",
+      "save_rule": "不纳入新预设",
+      "decision": "已确认排除；旧值及来源保留，不自动删除或改标",
+      "legacy_fields": [],
+      "status": "excluded",
+      "current_fields": [],
+      "nullable": true,
+      "save_unit": "none"
+    },
+    {
+      "audit_id": "10-13",
+      "label": "分项名称",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；分项可多组，各组名称/成绩/口径对应，可空",
+      "legacy_fields": [
+        "exam_subscores"
+      ],
+      "status": "active",
+      "current_fields": [
+        "exam_components"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "10-14",
+      "label": "分项成绩",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；分项可多组，各组名称/成绩/口径对应，可空",
+      "legacy_fields": [
+        "exam_subscores"
+      ],
+      "status": "active",
+      "current_fields": [
+        "exam_components"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "10-15",
+      "label": "分项口径/满分",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；分项可多组，各组名称/成绩/口径对应，可空",
+      "legacy_fields": [
+        "exam_subscores"
+      ],
+      "status": "active",
+      "current_fields": [
+        "exam_components"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "11-01",
+      "label": "技能名称",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；可空、当前技能保存，不自动推断",
+      "legacy_fields": [
+        "skill_name"
+      ],
+      "status": "active",
+      "current_fields": [
+        "skill_name"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "11-02",
+      "label": "技能类别",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；可空、当前技能保存，不自动推断",
+      "legacy_fields": [
+        "skill_category"
+      ],
+      "status": "active",
+      "current_fields": [
+        "skill_category"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "11-03",
+      "label": "熟练程度",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；四档手选、可空、不推断",
+      "legacy_fields": [
+        "skill_level"
+      ],
+      "status": "active",
+      "current_fields": [
+        "skill_level"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "11-04",
+      "label": "使用年限",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；以年为单位允许小数、可空，不推断或自动增长",
+      "legacy_fields": [
+        "skill_years"
+      ],
+      "status": "active",
+      "current_fields": [
+        "skill_years"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "11-05",
+      "label": "技能说明",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；可空、当前技能保存，不自动推断",
+      "legacy_fields": [
+        "skill_description"
+      ],
+      "status": "active",
+      "current_fields": [
+        "skill_description"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "12-01",
+      "label": "证书/资格名称",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；可空、当前资格保存，不猜填",
+      "legacy_fields": [
+        "certificate_name"
+      ],
+      "status": "active",
+      "current_fields": [
+        "certificate_name"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "12-02",
+      "label": "等级",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；可空、当前资格保存，不猜填",
+      "legacy_fields": [
+        "certificate_level"
+      ],
+      "status": "active",
+      "current_fields": [
+        "certificate_level"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "12-03",
+      "label": "颁发机构（已排除）",
+      "save_rule": "不纳入新预设",
+      "decision": "已确认排除；旧值和来源保留，不自动删除或拼入其他字段",
+      "legacy_fields": [
+        "certificate_issuer"
+      ],
+      "status": "excluded",
+      "current_fields": [],
+      "nullable": true,
+      "save_unit": "none"
+    },
+    {
+      "audit_id": "12-04",
+      "label": "取得日期",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；可空、当前资格保存，不猜填",
+      "legacy_fields": [
+        "certificate_date"
+      ],
+      "status": "active",
+      "current_fields": [
+        "certificate_date"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "12-05",
+      "label": "有效期（已排除）",
+      "save_rule": "不纳入新预设",
+      "decision": "已确认排除；旧值和来源保留，不自动删除或拼入其他字段",
+      "legacy_fields": [
+        "certificate_validity"
+      ],
+      "status": "excluded",
+      "current_fields": [],
+      "nullable": true,
+      "save_unit": "none"
+    },
+    {
+      "audit_id": "12-06",
+      "label": "证书编号（已排除）",
+      "save_rule": "不纳入新预设",
+      "decision": "已确认排除；旧值和来源保留，不自动删除或拼入其他字段",
+      "legacy_fields": [
+        "certificate_number"
+      ],
+      "status": "excluded",
+      "current_fields": [],
+      "nullable": true,
+      "save_unit": "none"
+    },
+    {
+      "audit_id": "12-07",
+      "label": "取得状态",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；可空、当前资格保存，不猜填",
+      "legacy_fields": [
+        "certificate_progress"
+      ],
+      "status": "active",
+      "current_fields": [
+        "certificate_progress"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "12-08",
+      "label": "已通过科目",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；可空、当前资格保存，不猜填",
+      "legacy_fields": [
+        "certificate_subjects"
+      ],
+      "status": "active",
+      "current_fields": [
+        "certificate_subjects"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "12-09",
+      "label": "证明附件",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；零至多份原件引用，更换引用不删文件",
+      "legacy_fields": [
+        "certificate_files"
+      ],
+      "status": "active",
+      "current_fields": [
+        "certificate_files"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "13-01",
+      "label": "奖项名称",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；可空，每次获奖独立保存",
+      "legacy_fields": [
+        "award_name"
+      ],
+      "status": "active",
+      "current_fields": [
+        "award_name"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "13-02",
+      "label": "获奖时间",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；可空，保留实际精度/学年/届次，不补未知日期",
+      "legacy_fields": [
+        "award_date"
+      ],
+      "status": "active",
+      "current_fields": [
+        "award_date"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "13-03",
+      "label": "颁发单位",
+      "save_rule": "不纳入新预设",
+      "decision": "已确认排除；旧值、来源和历史保留待核对",
+      "legacy_fields": [
+        "award_issuer"
+      ],
+      "status": "excluded",
+      "current_fields": [],
+      "nullable": true,
+      "save_unit": "none"
+    },
+    {
+      "audit_id": "13-04",
+      "label": "奖项级别",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；可空，不推断，与等次分开",
+      "legacy_fields": [
+        "award_level"
+      ],
+      "status": "active",
+      "current_fields": [
+        "award_level"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "13-05",
+      "label": "获奖等次",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；可空，不推断，与级别分开",
+      "legacy_fields": [
+        "award_prize"
+      ],
+      "status": "active",
+      "current_fields": [
+        "award_prize"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "13-06",
+      "label": "个人/团体",
+      "save_rule": "不纳入新预设",
+      "decision": "已确认排除；旧值、来源和历史保留待核对",
+      "legacy_fields": [
+        "award_subject"
+      ],
+      "status": "excluded",
+      "current_fields": [],
+      "nullable": true,
+      "save_unit": "none"
+    },
+    {
+      "audit_id": "13-07",
+      "label": "本人角色",
+      "save_rule": "不纳入新预设",
+      "decision": "已确认排除；旧值、来源和历史保留待核对",
+      "legacy_fields": [
+        "award_role"
+      ],
+      "status": "excluded",
+      "current_fields": [],
+      "nullable": true,
+      "save_unit": "none"
+    },
+    {
+      "audit_id": "13-08",
+      "label": "完整获奖说明",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；可空，多行文本，无长期表达版本",
+      "legacy_fields": [
+        "award_details"
+      ],
+      "status": "active",
+      "current_fields": [
+        "award_details"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "13-09",
+      "label": "证明附件",
+      "save_rule": "当前引用",
+      "decision": "已确认待实施；可空、多份原件引用，不因更换引用删除原件",
+      "legacy_fields": [
+        "award_files"
+      ],
+      "status": "active",
+      "current_fields": [
+        "award_files"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "14-01",
+      "label": "论文名称",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；可空，每篇独立保存",
+      "legacy_fields": [
+        "academic_name"
+      ],
+      "status": "active",
+      "current_fields": [
+        "academic_name"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "14-02",
+      "label": "本人角色/作者排序",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；一个文本字段，可空、不推断",
+      "legacy_fields": [
+        "academic_role"
+      ],
+      "status": "active",
+      "current_fields": [
+        "academic_role"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "14-03",
+      "label": "完整说明",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；可空、多行，无长期表达版本",
+      "legacy_fields": [
+        "academic_description"
+      ],
+      "status": "active",
+      "current_fields": [
+        "academic_description"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "14-04",
+      "label": "链接",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；可空，一条当前链接",
+      "legacy_fields": [
+        "academic_link"
+      ],
+      "status": "active",
+      "current_fields": [
+        "academic_link"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "14-05",
+      "label": "附件",
+      "save_rule": "当前引用",
+      "decision": "已确认待实施；可空、多份原件引用",
+      "legacy_fields": [
+        "academic_files"
+      ],
+      "status": "active",
+      "current_fields": [
+        "academic_files"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "14-06",
+      "label": "期刊/会议名称",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；可空，不猜填",
+      "legacy_fields": [
+        "journal"
+      ],
+      "status": "active",
+      "current_fields": [
+        "journal"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "14-07",
+      "label": "发表日期",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；可空，不补未知部分",
+      "legacy_fields": [
+        "publication_date"
+      ],
+      "status": "active",
+      "current_fields": [
+        "publication_date"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "14-08",
+      "label": "发表状态",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；可空，手填，不自动联动",
+      "legacy_fields": [
+        "publication_status"
+      ],
+      "status": "active",
+      "current_fields": [
+        "publication_status"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "14-09",
+      "label": "DOI",
+      "save_rule": "不纳入新预设",
+      "decision": "已确认排除；旧值、来源与历史保留待核对",
+      "legacy_fields": [
+        "doi"
+      ],
+      "status": "excluded",
+      "current_fields": [],
+      "nullable": true,
+      "save_unit": "none"
+    },
+    {
+      "audit_id": "15-01",
+      "label": "专利名称",
+      "save_rule": "不纳入新预设",
+      "decision": "已确认排除；专利整类移除，旧值、来源、原件与历史保留待核对",
+      "legacy_fields": [
+        "academic_name"
+      ],
+      "status": "excluded",
+      "current_fields": [],
+      "nullable": true,
+      "save_unit": "none"
+    },
+    {
+      "audit_id": "15-02",
+      "label": "本人角色/发明人排序",
+      "save_rule": "不纳入新预设",
+      "decision": "已确认排除；专利整类移除，旧值、来源、原件与历史保留待核对",
+      "legacy_fields": [
+        "academic_role"
+      ],
+      "status": "excluded",
+      "current_fields": [],
+      "nullable": true,
+      "save_unit": "none"
+    },
+    {
+      "audit_id": "15-03",
+      "label": "完整说明",
+      "save_rule": "不纳入新预设",
+      "decision": "已确认排除；专利整类移除，旧值、来源、原件与历史保留待核对",
+      "legacy_fields": [
+        "academic_description"
+      ],
+      "status": "excluded",
+      "current_fields": [],
+      "nullable": true,
+      "save_unit": "none"
+    },
+    {
+      "audit_id": "15-04",
+      "label": "链接",
+      "save_rule": "不纳入新预设",
+      "decision": "已确认排除；专利整类移除，旧值、来源、原件与历史保留待核对",
+      "legacy_fields": [
+        "academic_link"
+      ],
+      "status": "excluded",
+      "current_fields": [],
+      "nullable": true,
+      "save_unit": "none"
+    },
+    {
+      "audit_id": "15-05",
+      "label": "附件",
+      "save_rule": "不纳入新预设",
+      "decision": "已确认排除；专利整类移除，旧值、来源、原件与历史保留待核对",
+      "legacy_fields": [
+        "academic_files"
+      ],
+      "status": "excluded",
+      "current_fields": [],
+      "nullable": true,
+      "save_unit": "none"
+    },
+    {
+      "audit_id": "15-06",
+      "label": "专利类型",
+      "save_rule": "不纳入新预设",
+      "decision": "已确认排除；专利整类移除，旧值、来源、原件与历史保留待核对",
+      "legacy_fields": [
+        "patent_type"
+      ],
+      "status": "excluded",
+      "current_fields": [],
+      "nullable": true,
+      "save_unit": "none"
+    },
+    {
+      "audit_id": "15-07",
+      "label": "申请日期",
+      "save_rule": "不纳入新预设",
+      "decision": "已确认排除；专利整类移除，旧值、来源、原件与历史保留待核对",
+      "legacy_fields": [
+        "patent_applied"
+      ],
+      "status": "excluded",
+      "current_fields": [],
+      "nullable": true,
+      "save_unit": "none"
+    },
+    {
+      "audit_id": "15-08",
+      "label": "授权日期",
+      "save_rule": "不纳入新预设",
+      "decision": "已确认排除；专利整类移除，旧值、来源、原件与历史保留待核对",
+      "legacy_fields": [
+        "patent_granted"
+      ],
+      "status": "excluded",
+      "current_fields": [],
+      "nullable": true,
+      "save_unit": "none"
+    },
+    {
+      "audit_id": "15-09",
+      "label": "申请号",
+      "save_rule": "不纳入新预设",
+      "decision": "已确认排除；专利整类移除，旧值、来源、原件与历史保留待核对",
+      "legacy_fields": [
+        "patent_application_number"
+      ],
+      "status": "excluded",
+      "current_fields": [],
+      "nullable": true,
+      "save_unit": "none"
+    },
+    {
+      "audit_id": "15-10",
+      "label": "专利号",
+      "save_rule": "不纳入新预设",
+      "decision": "已确认排除；专利整类移除，旧值、来源、原件与历史保留待核对",
+      "legacy_fields": [
+        "patent_number"
+      ],
+      "status": "excluded",
+      "current_fields": [],
+      "nullable": true,
+      "save_unit": "none"
+    },
+    {
+      "audit_id": "15-11",
+      "label": "专利状态",
+      "save_rule": "不纳入新预设",
+      "decision": "已确认排除；专利整类移除，旧值、来源、原件与历史保留待核对",
+      "legacy_fields": [
+        "patent_status"
+      ],
+      "status": "excluded",
+      "current_fields": [],
+      "nullable": true,
+      "save_unit": "none"
+    },
+    {
+      "audit_id": "16-01",
+      "label": "名称",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；可空，每件独立保存",
+      "legacy_fields": [
+        "portfolio_name"
+      ],
+      "status": "active",
+      "current_fields": [
+        "portfolio_name"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "16-02",
+      "label": "本人角色/作者排序",
+      "save_rule": "不纳入新预设",
+      "decision": "已确认排除；整个合并字段取消，旧值保留待核对",
+      "legacy_fields": [
+        "portfolio_role"
+      ],
+      "status": "excluded",
+      "current_fields": [],
+      "nullable": true,
+      "save_unit": "none"
+    },
+    {
+      "audit_id": "16-03",
+      "label": "完整说明",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；可空、多行，无长期表达版本",
+      "legacy_fields": [
+        "portfolio_description"
+      ],
+      "status": "active",
+      "current_fields": [
+        "portfolio_description"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "16-04",
+      "label": "链接",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；可空，一条当前链接",
+      "legacy_fields": [
+        "portfolio_link"
+      ],
+      "status": "active",
+      "current_fields": [
+        "portfolio_link"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "16-05",
+      "label": "附件",
+      "save_rule": "当前引用",
+      "decision": "已确认待实施；可空，多份原件引用",
+      "legacy_fields": [
+        "portfolio_files"
+      ],
+      "status": "active",
+      "current_fields": [
+        "portfolio_files"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "16-06",
+      "label": "作品类型",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；可空，不猜填",
+      "legacy_fields": [
+        "portfolio_type"
+      ],
+      "status": "active",
+      "current_fields": [
+        "portfolio_type"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "16-07",
+      "label": "发布平台",
+      "save_rule": "不纳入新预设",
+      "decision": "已确认排除；旧值、来源与历史保留待核对",
+      "legacy_fields": [
+        "portfolio_platform"
+      ],
+      "status": "excluded",
+      "current_fields": [],
+      "nullable": true,
+      "save_unit": "none"
+    },
+    {
+      "audit_id": "16-08",
+      "label": "发布日期",
+      "save_rule": "不纳入新预设",
+      "decision": "已确认排除；旧值、来源与历史保留待核对",
+      "legacy_fields": [
+        "portfolio_date"
+      ],
+      "status": "excluded",
+      "current_fields": [],
+      "nullable": true,
+      "save_unit": "none"
+    },
+    {
+      "audit_id": "16-09",
+      "label": "登记号",
+      "save_rule": "不纳入新预设",
+      "decision": "已确认排除；旧值、来源与历史保留待核对",
+      "legacy_fields": [
+        "portfolio_number"
+      ],
+      "status": "excluded",
+      "current_fields": [],
+      "nullable": true,
+      "save_unit": "none"
+    },
+    {
+      "audit_id": "17-01",
+      "label": "个人主页（原独立链接候选）",
+      "save_rule": "被成组方案替代",
+      "decision": "已确认不采用独立链接入口，见17-04/17-05",
+      "legacy_fields": [],
+      "status": "superseded",
+      "current_fields": [
+        "homepage_platform",
+        "homepage_url"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "17-02",
+      "label": "代码主页",
+      "save_rule": "不纳入新预设",
+      "decision": "已确认排除专用入口；旧值与来源保留待核对",
+      "legacy_fields": [],
+      "status": "excluded",
+      "current_fields": [],
+      "nullable": true,
+      "save_unit": "none"
+    },
+    {
+      "audit_id": "17-03",
+      "label": "其他公开主页（原独立链接候选）",
+      "save_rule": "被成组方案替代",
+      "decision": "已确认不采用独立链接入口，见17-04/17-05",
+      "legacy_fields": [],
+      "status": "superseded",
+      "current_fields": [
+        "homepage_platform",
+        "homepage_url"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "17-04",
+      "label": "平台名称",
+      "save_rule": "当前组内值",
+      "decision": "已确认待实施；可空，与本条主页地址成组保存",
+      "legacy_fields": [
+        "homepage_platform"
+      ],
+      "status": "active",
+      "current_fields": [
+        "homepage_platform"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "17-05",
+      "label": "主页地址",
+      "save_rule": "当前组内值",
+      "decision": "已确认待实施；可空，每条一个地址，不猜填",
+      "legacy_fields": [
+        "homepage_url"
+      ],
+      "status": "active",
+      "current_fields": [
+        "homepage_url"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "18-01",
+      "label": "姓名",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；可空，每位联系人独立保存，不推断",
+      "legacy_fields": [
+        "family_name"
+      ],
+      "status": "active",
+      "current_fields": [
+        "family_name"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "18-02",
+      "label": "与本人关系",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；可空，每位联系人独立保存，不推断",
+      "legacy_fields": [
+        "family_relation"
+      ],
+      "status": "active",
+      "current_fields": [
+        "family_relation"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "18-03",
+      "label": "用途（家庭成员/紧急联系人/证明人）",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；可空，用途手动多选，不自动扩大；证明人仅标记",
+      "legacy_fields": [
+        "contact_purpose"
+      ],
+      "status": "active",
+      "current_fields": [
+        "contact_purpose"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "18-04",
+      "label": "联系电话",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；可空，一条号码，文本保存，不与本人或任职同步",
+      "legacy_fields": [
+        "family_phone"
+      ],
+      "status": "active",
+      "current_fields": [
+        "family_phone"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "18-05",
+      "label": "区号",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；可空，一对区号号码，不默认区号",
+      "legacy_fields": [
+        "family_phone_code"
+      ],
+      "status": "active",
+      "current_fields": [
+        "family_phone_code"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "18-06",
+      "label": "邮箱",
+      "save_rule": "不纳入新预设",
+      "decision": "已确认排除；旧值、来源与历史保留待核对",
+      "legacy_fields": [
+        "family_email"
+      ],
+      "status": "excluded",
+      "current_fields": [],
+      "nullable": true,
+      "save_unit": "none"
+    },
+    {
+      "audit_id": "18-07",
+      "label": "工作单位",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；可空，每位联系人独立保存，不推断",
+      "legacy_fields": [
+        "family_company"
+      ],
+      "status": "active",
+      "current_fields": [
+        "family_company"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "18-08",
+      "label": "职务",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；可空，每位联系人独立保存，不推断",
+      "legacy_fields": [
+        "family_role"
+      ],
+      "status": "active",
+      "current_fields": [
+        "family_role"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "18-09",
+      "label": "工作/退休状态",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；可空，每位联系人独立保存，不推断",
+      "legacy_fields": [
+        "family_work_status"
+      ],
+      "status": "active",
+      "current_fields": [
+        "family_work_status"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "18-10",
+      "label": "出生日期",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；可空，不补未知部分，不从年龄猜生日",
+      "legacy_fields": [
+        "family_birth_date"
+      ],
+      "status": "active",
+      "current_fields": [
+        "family_birth_date"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "18-11",
+      "label": "政治面貌",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；可空，每位联系人独立保存，不推断",
+      "legacy_fields": [
+        "family_political_status"
+      ],
+      "status": "active",
+      "current_fields": [
+        "family_political_status"
+      ],
+      "nullable": true,
+      "save_unit": "object"
+    },
+    {
+      "audit_id": "18-12",
+      "label": "适用的证明经历",
+      "save_rule": "不纳入新预设",
+      "decision": "已确认排除；旧值、来源与历史保留待核对",
+      "legacy_fields": [],
+      "status": "excluded",
+      "current_fields": [],
+      "nullable": true,
+      "save_unit": "none"
+    },
+    {
+      "audit_id": "19-01",
+      "label": "意向岗位/方向",
+      "save_rule": "不纳入新预设",
+      "decision": "已确认排除；求职意向整类移除，旧值、来源与历史保留待核对",
+      "legacy_fields": [
+        "preferred_role"
+      ],
+      "status": "excluded",
+      "current_fields": [],
+      "nullable": true,
+      "save_unit": "none"
+    },
+    {
+      "audit_id": "19-02",
+      "label": "意向行业",
+      "save_rule": "不纳入新预设",
+      "decision": "已确认排除；求职意向整类移除，旧值、来源与历史保留待核对",
+      "legacy_fields": [
+        "preferred_industry"
+      ],
+      "status": "excluded",
+      "current_fields": [],
+      "nullable": true,
+      "save_unit": "none"
+    },
+    {
+      "audit_id": "19-03",
+      "label": "工作性质",
+      "save_rule": "不纳入新预设",
+      "decision": "已确认排除；求职意向整类移除，旧值、来源与历史保留待核对",
+      "legacy_fields": [
+        "preferred_work_type"
+      ],
+      "status": "excluded",
+      "current_fields": [],
+      "nullable": true,
+      "save_unit": "none"
+    },
+    {
+      "audit_id": "19-04",
+      "label": "意向城市及优先顺序",
+      "save_rule": "不纳入新预设",
+      "decision": "已确认排除；求职意向整类移除，旧值、来源与历史保留待核对",
+      "legacy_fields": [
+        "preferred_cities"
+      ],
+      "status": "excluded",
+      "current_fields": [],
+      "nullable": true,
+      "save_unit": "none"
+    },
+    {
+      "audit_id": "19-05",
+      "label": "最早到岗日期",
+      "save_rule": "不纳入新预设",
+      "decision": "已确认排除；求职意向整类移除，旧值、来源与历史保留待核对",
+      "legacy_fields": [
+        "available_date"
+      ],
+      "status": "excluded",
+      "current_fields": [],
+      "nullable": true,
+      "save_unit": "none"
+    },
+    {
+      "audit_id": "19-06",
+      "label": "离职通知期",
+      "save_rule": "不纳入新预设",
+      "decision": "已确认排除；求职意向整类移除，旧值、来源与历史保留待核对",
+      "legacy_fields": [
+        "notice_period"
+      ],
+      "status": "excluded",
+      "current_fields": [],
+      "nullable": true,
+      "save_unit": "none"
+    },
+    {
+      "audit_id": "19-07",
+      "label": "可持续实习时长",
+      "save_rule": "不纳入新预设",
+      "decision": "已确认排除；求职意向整类移除，旧值、来源与历史保留待核对",
+      "legacy_fields": [
+        "internship_duration"
+      ],
+      "status": "excluded",
+      "current_fields": [],
+      "nullable": true,
+      "save_unit": "none"
+    },
+    {
+      "audit_id": "19-08",
+      "label": "每周可工作天数",
+      "save_rule": "不纳入新预设",
+      "decision": "已确认排除；求职意向整类移除，旧值、来源与历史保留待核对",
+      "legacy_fields": [
+        "days_per_week"
+      ],
+      "status": "excluded",
+      "current_fields": [],
+      "nullable": true,
+      "save_unit": "none"
+    },
+    {
+      "audit_id": "19-09",
+      "label": "是否接受出差",
+      "save_rule": "不纳入新预设",
+      "decision": "已确认排除；求职意向整类移除，旧值、来源与历史保留待核对",
+      "legacy_fields": [
+        "accept_travel"
+      ],
+      "status": "excluded",
+      "current_fields": [],
+      "nullable": true,
+      "save_unit": "none"
+    },
+    {
+      "audit_id": "19-10",
+      "label": "是否接受异地工作",
+      "save_rule": "不纳入新预设",
+      "decision": "已确认排除；求职意向整类移除，旧值、来源与历史保留待核对",
+      "legacy_fields": [
+        "accept_other_city"
+      ],
+      "status": "excluded",
+      "current_fields": [],
+      "nullable": true,
+      "save_unit": "none"
+    },
+    {
+      "audit_id": "19-11",
+      "label": "是否接受工作地点调动",
+      "save_rule": "不纳入新预设",
+      "decision": "已确认排除；求职意向整类移除，旧值、来源与历史保留待核对",
+      "legacy_fields": [
+        "accept_relocation"
+      ],
+      "status": "excluded",
+      "current_fields": [],
+      "nullable": true,
+      "save_unit": "none"
+    },
+    {
+      "audit_id": "20-01",
+      "label": "期望薪资或范围",
+      "save_rule": "不纳入新预设",
+      "decision": "已确认排除；期望薪资整类移除，旧值、口径、来源与历史保留待核对",
+      "legacy_fields": [
+        "expected_salary"
+      ],
+      "status": "excluded",
+      "current_fields": [],
+      "nullable": true,
+      "save_unit": "none"
+    },
+    {
+      "audit_id": "20-02",
+      "label": "币种",
+      "save_rule": "不纳入新预设",
+      "decision": "已确认排除；期望薪资整类移除，旧值、口径、来源与历史保留待核对",
+      "legacy_fields": [
+        "salary_currency"
+      ],
+      "status": "excluded",
+      "current_fields": [],
+      "nullable": true,
+      "save_unit": "none"
+    },
+    {
+      "audit_id": "20-03",
+      "label": "计薪周期",
+      "save_rule": "不纳入新预设",
+      "decision": "已确认排除；期望薪资整类移除，旧值、口径、来源与历史保留待核对",
+      "legacy_fields": [
+        "salary_period"
+      ],
+      "status": "excluded",
+      "current_fields": [],
+      "nullable": true,
+      "save_unit": "none"
+    },
+    {
+      "audit_id": "20-04",
+      "label": "税前/税后",
+      "save_rule": "不纳入新预设",
+      "decision": "已确认排除；期望薪资整类移除，旧值、口径、来源与历史保留待核对",
+      "legacy_fields": [
+        "salary_tax"
+      ],
+      "status": "excluded",
+      "current_fields": [],
+      "nullable": true,
+      "save_unit": "none"
+    },
+    {
+      "audit_id": "20-05",
+      "label": "是否面议",
+      "save_rule": "不纳入新预设",
+      "decision": "已确认排除；期望薪资整类移除，旧值、口径、来源与历史保留待核对",
+      "legacy_fields": [
+        "salary_negotiable"
+      ],
+      "status": "excluded",
+      "current_fields": [],
+      "nullable": true,
+      "save_unit": "none"
+    },
+    {
+      "audit_id": "21-01",
+      "label": "自我介绍",
+      "save_rule": "合并至21-15",
+      "decision": "已确认合并；不保留独立入口，不自动拼接旧正文",
+      "legacy_fields": [
+        "statement_type",
+        "statement_title",
+        "statement_content"
+      ],
+      "status": "merged",
+      "current_fields": [
+        "personal_statement"
+      ],
+      "nullable": true,
+      "save_unit": "field"
+    },
+    {
+      "audit_id": "21-02",
+      "label": "自我评价",
+      "save_rule": "合并至21-15",
+      "decision": "已确认合并；不保留独立入口，不自动拼接旧正文",
+      "legacy_fields": [],
+      "status": "merged",
+      "current_fields": [
+        "personal_statement"
+      ],
+      "nullable": true,
+      "save_unit": "field"
+    },
+    {
+      "audit_id": "21-03",
+      "label": "个人优势",
+      "save_rule": "合并至21-15",
+      "decision": "已确认合并；不保留独立入口，不自动拼接旧正文",
+      "legacy_fields": [],
+      "status": "merged",
+      "current_fields": [
+        "personal_statement"
+      ],
+      "nullable": true,
+      "save_unit": "field"
+    },
+    {
+      "audit_id": "21-04",
+      "label": "不足与改进",
+      "save_rule": "合并至21-15",
+      "decision": "已确认合并；不保留独立入口，不自动拼接旧正文",
+      "legacy_fields": [],
+      "status": "merged",
+      "current_fields": [
+        "personal_statement"
+      ],
+      "nullable": true,
+      "save_unit": "field"
+    },
+    {
+      "audit_id": "21-05",
+      "label": "兴趣爱好",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；可空，独立保存正文，无附加说明/长期版本",
+      "legacy_fields": [
+        "statement_type",
+        "statement_title",
+        "statement_content"
+      ],
+      "status": "active",
+      "current_fields": [
+        "hobbies"
+      ],
+      "nullable": true,
+      "save_unit": "field"
+    },
+    {
+      "audit_id": "21-06",
+      "label": "个人特长",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；可空，独立保存正文，无附加说明/长期版本",
+      "legacy_fields": [
+        "statement_type",
+        "statement_title",
+        "statement_content"
+      ],
+      "status": "active",
+      "current_fields": [
+        "personal_strengths"
+      ],
+      "nullable": true,
+      "save_unit": "field"
+    },
+    {
+      "audit_id": "21-07",
+      "label": "职业规划",
+      "save_rule": "不纳入新预设",
+      "decision": "已确认排除；旧值、来源及历史保留待核对",
+      "legacy_fields": [],
+      "status": "excluded",
+      "current_fields": [],
+      "nullable": true,
+      "save_unit": "none"
+    },
+    {
+      "audit_id": "21-08",
+      "label": "求职动机",
+      "save_rule": "不纳入新预设",
+      "decision": "已确认排除；旧值、来源及历史保留待核对",
+      "legacy_fields": [],
+      "status": "excluded",
+      "current_fields": [],
+      "nullable": true,
+      "save_unit": "none"
+    },
+    {
+      "audit_id": "21-09",
+      "label": "代表事例",
+      "save_rule": "不纳入新预设",
+      "decision": "已确认排除；旧值、来源及历史保留待核对",
+      "legacy_fields": [],
+      "status": "excluded",
+      "current_fields": [],
+      "nullable": true,
+      "save_unit": "none"
+    },
+    {
+      "audit_id": "21-10",
+      "label": "其他个人陈述",
+      "save_rule": "不纳入新预设",
+      "decision": "已确认排除；旧值、来源及历史保留待核对",
+      "legacy_fields": [],
+      "status": "excluded",
+      "current_fields": [],
+      "nullable": true,
+      "save_unit": "none"
+    },
+    {
+      "audit_id": "21-11",
+      "label": "正文语言",
+      "save_rule": "不纳入新预设",
+      "decision": "已确认排除；旧值、来源及历史保留待核对",
+      "legacy_fields": [
+        "statement_language"
+      ],
+      "status": "excluded",
+      "current_fields": [],
+      "nullable": true,
+      "save_unit": "none"
+    },
+    {
+      "audit_id": "21-12",
+      "label": "适用范围",
+      "save_rule": "不纳入新预设",
+      "decision": "已确认排除；旧值、来源及历史保留待核对",
+      "legacy_fields": [
+        "statement_scope"
+      ],
+      "status": "excluded",
+      "current_fields": [],
+      "nullable": true,
+      "save_unit": "none"
+    },
+    {
+      "audit_id": "21-13",
+      "label": "适用岗位方向",
+      "save_rule": "不纳入新预设",
+      "decision": "已确认排除；旧值、来源及历史保留待核对",
+      "legacy_fields": [
+        "statement_role"
+      ],
+      "status": "excluded",
+      "current_fields": [],
+      "nullable": true,
+      "save_unit": "none"
+    },
+    {
+      "audit_id": "21-14",
+      "label": "适用公司",
+      "save_rule": "不纳入新预设",
+      "decision": "已确认排除；旧值、来源及历史保留待核对",
+      "legacy_fields": [
+        "statement_company"
+      ],
+      "status": "excluded",
+      "current_fields": [],
+      "nullable": true,
+      "save_unit": "none"
+    },
+    {
+      "audit_id": "21-15",
+      "label": "个人陈述",
+      "save_rule": "当前值",
+      "decision": "已确认待实施；合并21-01—21-04，可空，独立保存正文，无附加说明/长期版本",
+      "legacy_fields": [
+        "statement_type",
+        "statement_title",
+        "statement_content"
+      ],
+      "status": "active",
+      "current_fields": [
+        "personal_statement"
+      ],
+      "nullable": true,
+      "save_unit": "field"
+    },
+    {
+      "audit_id": "22-01",
+      "label": "资料名称",
+      "save_rule": "不纳入新编辑表单",
+      "decision": "已确认排除用户维护字段；旧属性、来源、历史及既有引用保留待核对",
+      "legacy_fields": [],
+      "status": "excluded",
+      "current_fields": [],
+      "nullable": true,
+      "save_unit": "attachment"
+    },
+    {
+      "audit_id": "22-02",
+      "label": "附件类型",
+      "save_rule": "与文件成组保存",
+      "decision": "已确认待实施；可空，手动填写/选择，不自动猜填",
+      "legacy_fields": [],
+      "status": "attachment_metadata",
+      "current_fields": [
+        "files.attachment_type"
+      ],
+      "nullable": true,
+      "save_unit": "attachment"
+    },
+    {
+      "audit_id": "22-03",
+      "label": "文件语言",
+      "save_rule": "不纳入新编辑表单",
+      "decision": "已确认排除用户维护字段；旧属性、来源、历史及既有引用保留待核对",
+      "legacy_fields": [],
+      "status": "excluded",
+      "current_fields": [],
+      "nullable": true,
+      "save_unit": "attachment"
+    },
+    {
+      "audit_id": "22-04",
+      "label": "文件版本名称",
+      "save_rule": "不纳入新编辑表单",
+      "decision": "已确认排除用户维护字段；旧属性、来源、历史及既有引用保留待核对",
+      "legacy_fields": [],
+      "status": "excluded",
+      "current_fields": [],
+      "nullable": true,
+      "save_unit": "attachment"
+    },
+    {
+      "audit_id": "22-05",
+      "label": "适用岗位",
+      "save_rule": "不纳入新编辑表单",
+      "decision": "已确认排除用户维护字段；旧属性、来源、历史及既有引用保留待核对",
+      "legacy_fields": [],
+      "status": "excluded",
+      "current_fields": [],
+      "nullable": true,
+      "save_unit": "attachment"
+    },
+    {
+      "audit_id": "22-06",
+      "label": "适用公司",
+      "save_rule": "不纳入新编辑表单",
+      "decision": "已确认排除用户维护字段；旧属性、来源、历史及既有引用保留待核对",
+      "legacy_fields": [],
+      "status": "excluded",
+      "current_fields": [],
+      "nullable": true,
+      "save_unit": "attachment"
+    },
+    {
+      "audit_id": "22-07",
+      "label": "关联资料",
+      "save_rule": "不纳入新编辑表单",
+      "decision": "已确认排除用户维护字段；旧属性、来源、历史及既有引用保留待核对",
+      "legacy_fields": [],
+      "status": "excluded",
+      "current_fields": [],
+      "nullable": true,
+      "save_unit": "attachment"
+    },
+    {
+      "audit_id": "22-08",
+      "label": "原文件（上传附件按钮）",
+      "save_rule": "与类型成组保存",
+      "decision": "已确认待实施；必须有实际文件，不创建空文件占位，原件独立保留",
+      "legacy_fields": [],
+      "status": "upload",
+      "current_fields": [
+        "files.body"
+      ],
+      "nullable": true,
+      "save_unit": "attachment"
+    },
+    {
+      "audit_id": "22-09",
+      "label": "原文件名",
+      "save_rule": "系统内部记录",
+      "decision": "已确认不作表单字段；无需用户维护，仅保留必要文件信息",
+      "legacy_fields": [],
+      "status": "internal",
+      "current_fields": [
+        "files.name"
+      ],
+      "nullable": true,
+      "save_unit": "attachment"
+    },
+    {
+      "audit_id": "22-10",
+      "label": "文件格式",
+      "save_rule": "系统内部记录",
+      "decision": "已确认不作表单字段；无需用户维护，仅保留必要文件信息",
+      "legacy_fields": [],
+      "status": "internal",
+      "current_fields": [
+        "files.name"
+      ],
+      "nullable": true,
+      "save_unit": "attachment"
+    },
+    {
+      "audit_id": "22-11",
+      "label": "文件大小",
+      "save_rule": "系统内部记录",
+      "decision": "已确认不作表单字段；无需用户维护，仅保留必要文件信息",
+      "legacy_fields": [],
+      "status": "internal",
+      "current_fields": [
+        "files.size"
+      ],
+      "nullable": true,
+      "save_unit": "attachment"
+    },
+    {
+      "audit_id": "22-12",
+      "label": "上传时间",
+      "save_rule": "系统内部记录",
+      "decision": "已确认不作表单字段；无需用户维护，仅保留必要文件信息",
+      "legacy_fields": [],
+      "status": "internal",
+      "current_fields": [
+        "files.uploaded_at"
+      ],
+      "nullable": true,
+      "save_unit": "attachment"
+    }
+  ]
+}

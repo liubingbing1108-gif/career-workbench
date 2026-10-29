@@ -1,0 +1,21 @@
+{
+  "kind": "docs",
+  "summary": "Confirm shared project organization and prepare a consolidated proposal for remaining version decisions.",
+  "capabilities": [
+    "profile"
+  ],
+  "validation": "check_docs PASS: 114 Markdown files, 764 relative links, D01-D100; check_project PASS: catalog, references and 64 records. Read back V0.11 organization rules, V-40 through V-43 and pending B01-B06 proposal. No product tests; scenarios remain implementation targets.",
+  "compatibility": "Only assigned private version PRD edited. No code, Skill, runtime data, original files, website, deployment or migration changes. Remaining proposal is explicitly unapproved; field definitions and relation design remain dependencies. Other task's field documents untouched.",
+  "handoff": {
+    "task": "profile-version-project-organization-v011",
+    "status": "complete",
+    "next": "Present B01-B06 together for one user confirmation or consolidated exceptions; stop asking one field at a time. After acceptance update formal ownership and acceptance cases, without implementation authorization.",
+    "docs": [],
+    "docs_reason": "Assigned version PRD V0.11 contains confirmed organization scope and explicitly pending consolidated proposal; no duplicate main-document edits."
+  },
+  "id": "20261022T112600Z-profile-version-project-organization-v011-fb07fb",
+  "files": [
+    "docs/PROJECT_ACTIVITY.md"
+  ],
+  "release": "0.4.0"
+}

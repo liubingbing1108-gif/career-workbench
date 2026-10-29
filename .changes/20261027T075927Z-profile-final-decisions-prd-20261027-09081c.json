@@ -1,0 +1,23 @@
+{
+  "kind": "docs",
+  "summary": "Finalize profile requirement decisions and align cross-topic implementation tasks and acceptance criteria.",
+  "capabilities": [
+    "profile",
+    "mapping",
+    "import"
+  ],
+  "validation": "Re-read latest messages in five relevant topic discussions and delivery reports. Verified 262 unique catalog IDs; A87/F114/V64/D19/S9 sequential acceptance coverage; superseded rules absent; implementation entry paths present. Document checks passed 115 Markdown files, 803 relative links and decision coverage. Two ad hoc literal-reference checks failed because they did not expand valid numeric ranges; corrected range-expansion checks passed without changing requirements. No runtime or live-data tests.",
+  "compatibility": "Documentation only; no application code, Skill, active data, deployment or product release changed. Requirements cover one current document per type, exams without category maintenance with optional language links, and expression versions for all employment kinds. Implementation and migration remain pending.",
+  "handoff": {
+    "task": "profile-final-decisions-prd-20261027",
+    "status": "complete",
+    "next": "When implementation is authorized, follow the consolidated task and acceptance matrix, design storage/API compatibility, and rehearse migration without reopening settled product decisions.",
+    "docs": [],
+    "docs_reason": "Private PRD, field/version/removal topics, catalog, compatibility, acceptance, cross-discussion audit and navigation were synchronized; exact private file paths stay in local receipts."
+  },
+  "id": "20261027T075927Z-profile-final-decisions-prd-20261027-09081c",
+  "files": [
+    "docs/PROJECT_ACTIVITY.md"
+  ],
+  "release": "0.4.0"
+}

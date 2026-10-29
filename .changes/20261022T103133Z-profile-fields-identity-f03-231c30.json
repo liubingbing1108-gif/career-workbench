@@ -1,0 +1,21 @@
+{
+  "kind": "docs",
+  "summary": "Confirm four basic identity fields with partial birth-date preservation and reconcile field-catalog differences against current profile planning topics.",
+  "capabilities": [
+    "profile"
+  ],
+  "validation": "check_docs.py PASS; check_project.py PASS. Catalog readback confirmed 258 unique review rows, ten approved identity fields and removal of the stale leaving-reason variant proposal. Compared source field definitions and planning documents only; no runtime data or implementation tests.",
+  "compatibility": "Documentation only. Existing field identifiers remain traceable; no code, Skill, API, runtime storage, migration or browser changes.",
+  "handoff": {
+    "task": "profile-fields-identity-f03",
+    "status": "complete",
+    "next": "Review political status, joined date and marital status next, including the pending proposal to distinguish party and youth-league joining dates. Continue explaining old/new field differences per batch; other field definitions and reference structures remain pending.",
+    "docs": [],
+    "docs_reason": "Updated the owning local field PRD and review catalog, including identity acceptance targets and a source-linked difference matrix. Referenced confirmed version/removal topic decisions without changing those topics or the shared guide."
+  },
+  "id": "20261022T103133Z-profile-fields-identity-f03-231c30",
+  "files": [
+    "docs/PROJECT_ACTIVITY.md"
+  ],
+  "release": "0.4.0"
+}

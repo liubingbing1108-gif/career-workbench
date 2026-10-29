@@ -118,14 +118,16 @@ $('#resume-file').onchange=safe(async event=>{
   }finally{event.target.value='';event.target.disabled=false;}
 });
 function importCandidateMarkup(c, grouped=false) {
-  return `<div class="candidate ${grouped?'set-field':''}" data-candidate="${c.id}">${grouped?'':`<input type="checkbox" data-import-scalar aria-label="选择增量 ${escapeHtml(c.label)}" ${c.selected?'checked':''}>`}<div class="candidate-title">${escapeHtml(c.label)}<span class="tag">${escapeHtml(({事实冲突:'新的答案，与默认不同',描述待检查:'新增描述版本'})[c.status]||c.status)}</span></div><div>${control({type:c.type,options:state.fields.find(f=>f.id===c.field_id)?.options||c.definition?.options||[]},c.value,`aria-label="预览 ${escapeHtml(c.label)}" data-candidate-value`)}${c.existing?`<div class="existing">当前默认：${escapeHtml(c.existing)}</div><label>替换哪个版本<select data-replace-version>${c.existing_versions.map(v=>`<option value="${v.id}" ${v.id===c.default_version_id?'selected':''}>${escapeHtml(versionName(v))}</option>`).join('')}</select></label>`:''}</div></div>`;
+  const newField=state.profile_contract===30&&!state.fields.some(f=>f.id===c.field_id)?`<label><input type="checkbox" data-confirm-new-field>已检查字段目录，确认“${escapeHtml(c.label)}”是此对象的新属性</label>`:'';
+  return `<div class="candidate ${grouped?'set-field':''}" data-candidate="${c.id}">${grouped?'':`<input type="checkbox" data-import-scalar aria-label="选择增量 ${escapeHtml(c.label)}" ${c.selected?'checked':''}>`}<div class="candidate-title">${escapeHtml(c.label)}<span class="tag">${escapeHtml(({事实冲突:'新的答案，与默认不同',描述待检查:'新增描述版本'})[c.status]||c.status)}</span></div><div>${control({type:c.type,options:state.fields.find(f=>f.id===c.field_id)?.options||c.definition?.options||[]},c.value,`aria-label="预览 ${escapeHtml(c.label)}" data-candidate-value`)}${c.existing?`<div class="existing">当前默认：${escapeHtml(c.existing)}</div><label>替换哪个版本<select data-replace-version>${c.existing_versions.map(v=>`<option value="${v.id}" ${v.id===c.default_version_id?'selected':''}>${escapeHtml(versionName(v))}</option>`).join('')}</select></label>`:''}${newField}</div></div>`;
 }
 function skillImportMarkup(unit,title){
   const rows=unit.rows,c=rows[0],task=state.imports.find(p=>p.id===c.import_id),reviewPending=task?.review_contract&&!task.review_completed,variants=c.representation_versions||[],conflicts=c.conflict_fields||[],blocked=rows.some(r=>r.validation_issues?.length);
   const identity=c.identity_review?`<div class="notice identity-review"><p>先确认是否同一条资料：${escapeHtml(c.identity_reason||'对象归属尚不确定')}</p><select data-identity-choice aria-label="选择已有资料或独立记录"><option value="">请选择</option><option value="__new">不同，是独立资料</option>${(c.identity_options||[]).map(v=>`<option value="${escapeHtml(v.id)}">同一条：${escapeHtml(v.label)}</option>`).join('')}</select><button data-confirm-identity="${c.id}">确认归属</button></div>`:'';
+  const currentProfile=state.profile_contract===30,canVersion=['employment','projects'].includes(unit.category);
   const previous=variants.length?`<details open><summary>已有版本（A）</summary>${variants.map(v=>`<article><strong>${escapeHtml(v.name)}</strong>${Object.entries(v.values).map(([fid,value])=>`<div class="summary-row"><span>${escapeHtml(state.fields.find(f=>f.id===fid)?.label||fid)}</span><span style="white-space:pre-wrap">${escapeHtml(value)}</span></div>`).join('')}</article>`).join('')}</details>`:'';
   const warning=conflicts.length?`<div class="notice">事实待核对：${conflicts.map(fid=>escapeHtml(rows.find(r=>r.field_id===fid)?.label||fid)).join('、')}。请核对后保留已有版，或确认采用本次事实。<label><input type="checkbox" data-confirm-facts>确认采用本次填写的事实</label></div>`:'';
-  return `<section class="import-set" data-import-unit data-skill-import data-import-category="${unit.category}"><header><label><input type="checkbox" data-import-set ${rows.every(r=>r.selected)?'checked':''}>${escapeHtml(title)}</label><span class="tag">${escapeHtml(c.status)}</span></header>${identity}${warning}${blocked?`<p class="notice">${rows.flatMap(r=>r.validation_issues||[]).filter((v,i,a)=>a.indexOf(v)===i).map(escapeHtml).join('；')}。此组尚不能保存。</p>`:''}${previous}<details open><summary>本次文件版本（B）</summary>${rows.map(r=>`<div class="candidate set-field" data-candidate="${r.id}"><label>${escapeHtml(r.label)}</label>${control({type:r.type,options:state.fields.find(f=>f.id===r.field_id)?.options||[]},r.value,'data-candidate-value aria-label="预览 '+escapeHtml(r.label)+'"')}</div>`).join('')}</details><details><summary>查看本次对象原文与来源</summary><p>${escapeHtml(c.source?.filename||'')}</p><pre style="white-space:pre-wrap">${escapeHtml(c.object_source||'')}</pre></details><div class="button-row"><button data-unit-import="ignore">${variants.length?'保留已有版（A）':'忽略本次'}</button><button data-unit-import="replace" ${blocked||c.identity_review||reviewPending?'disabled':''}>${variants.length?'保留本次版（B）':'保存此组'}</button>${variants.length?`<button data-unit-import="new" ${blocked||c.identity_review||conflicts.length||reviewPending?'disabled':''}>都保留（同一条资料的不同版本）</button>`:''}</div></section>`;
+  return `<section class="import-set" data-import-unit data-skill-import data-import-category="${unit.category}"><header><label><input type="checkbox" data-import-set ${rows.every(r=>r.selected)?'checked':''}>${escapeHtml(title)}</label><span class="tag">${escapeHtml(c.status)}</span></header>${identity}${warning}${currentProfile&&c.record_type==='exam'?'<label><input type="checkbox" data-confirm-exam-result>确认采用本次考试完整结果，缺失的日期、分项及证明留空</label>':''}${blocked?`<p class="notice">${rows.flatMap(r=>r.validation_issues||[]).filter((v,i,a)=>a.indexOf(v)===i).map(escapeHtml).join('；')}。此组尚不能保存。</p>`:''}${previous}<details open><summary>本次文件版本（B）</summary>${rows.map(r=>`<div class="candidate set-field" data-candidate="${r.id}"><label>${currentProfile?`<input type="checkbox" data-adopt ${r.selected?'checked':''}>采用 `:''}${escapeHtml(r.label)}</label>${control({type:r.type,options:state.fields.find(f=>f.id===r.field_id)?.options||[]},r.value,'data-candidate-value aria-label="预览 '+escapeHtml(r.label)+'"')}</div>`).join('')}</details><details><summary>查看本次对象原文与来源</summary><p>${escapeHtml(c.source?.filename||'')}</p><pre style="white-space:pre-wrap">${escapeHtml(c.object_source||'')}</pre></details><div class="button-row"><button data-unit-import="ignore">${variants.length?'保留已有版（A）':'忽略本次'}</button><button data-unit-import="replace" ${blocked||c.identity_review||reviewPending?'disabled':''}>${variants.length?'保留本次版（B）':'保存此组'}</button>${variants.length&&(!currentProfile||canVersion)?`<button data-unit-import="new" ${blocked||c.identity_review||conflicts.length||reviewPending?'disabled':''}>都保留（同一条资料的不同版本）</button>`:''}</div></section>`;
 }
 function importUnits(candidates) {
   const groups=new Map();
@@ -164,6 +166,7 @@ function openPreview(result) {
   $('#retry-import').hidden=!result?.semantic||result.candidates.some(c=>c.saved)||result.status==='识别中';
   $('#import-candidates').innerHTML=parsing?'<div class="empty">正在识别，资料组尚未生成。</div>':units.length?units.map(unit=>{
     const rows=unit.rows,first=rows[0],category=state.categories.find(cat=>cat.id===unit.category),title=first.group_title||rows.find(c=>['company','school','award_name','language_name','project_name','certificate_name','skill_name'].includes(c.field_id))?.value||category?.label;
+    if(state.profile_contract===30&&!first.parser_contract)return `<section class="import-set" data-legacy-import><h3>${escapeHtml(title||'旧解析结果')}</h3><p class="notice">此结果来自旧解析契约，保留原文与已有结果。请从原文件重新识别并核对后，再保存至当前资料。</p>${rows.map(c=>`<div class="summary-row"><span>${escapeHtml(c.label)}</span><span style="white-space:pre-wrap">${escapeHtml(c.value)}</span></div>`).join('')}</section>`;
     if(first.parser_contract)return skillImportMarkup(unit,title);
     if(!unit.repeatable)return `<section data-import-unit data-import-category="${unit.category}">${importCandidateMarkup(first)}<div class="button-row">${['replace','new','ignore'].map(mode=>`<button data-unit-import="${mode}">${{replace:'替换现有版本',new:'存为新版本',ignore:'忽略'}[mode]}</button>`).join('')}</div></section>`;
     return `<section class="import-set" data-import-unit data-import-category="${unit.category}"><header><label class="checkbox-label"><input type="checkbox" data-import-set aria-label="选择资料组 ${escapeHtml(title)}" ${rows.every(c=>c.selected)?'checked':''}><strong>${escapeHtml(title)}</strong></label><span class="tag">${escapeHtml(category?.label)} · ${rows.length} 项待处理</span></header>${first.identity_review?`<div class="notice identity-review"><p>请确认这是否为已有的同一段经历／同一次获奖。</p><select data-identity-choice aria-label="选择已有资料或独立记录"><option value="">请选择</option><option value="__new">不同，是独立资料</option>${(first.identity_choices||[]).map(id=>{const e=state.entries.find(e=>e.id===id);return `<option value="${id}">同一条：${escapeHtml(profileLibrary.title(e))} · ${escapeHtml(profileLibrary.meta(e))}</option>`;}).join('')}</select><button data-confirm-identity="${first.id}">确认归属</button></div>`:''}<details><summary>查看 / 修改整组资料</summary><div class="import-set-fields">${rows.map(c=>importCandidateMarkup(c,true)).join('')}</div></details><div class="button-row">${['replace','new','ignore'].map(mode=>`<button data-unit-import="${mode}">${{replace:'整组替换现有版本',new:'整组存为新版本',ignore:'忽略整组'}[mode]}</button>`).join('')}</div></section>`;
@@ -175,21 +178,23 @@ function openPreview(result) {
   const categorySelect=$('#import-category');
   categorySelect.innerHTML='<option value="">全部类别</option>'+state.categories.filter(c=>units.some(u=>u.category===c.id)).map(c=>`<option value="${c.id}">${escapeHtml(c.label)}</option>`).join('');
   categorySelect.onchange=()=>$$('[data-import-unit]').forEach(unit=>unit.hidden=!!categorySelect.value&&unit.dataset.importCategory!==categorySelect.value);
-  $('#import-count').textContent='按资料组保存或忽略；组内已确认的一致内容保持原样';
+  $('#import-count').textContent=state.profile_contract===30?'只采用勾选字段；未选内容保持不变':'按资料组保存或忽略；组内已确认的一致内容保持原样';
   $$('[data-unit-import]').forEach(b=>b.onclick=safe(()=>resolveIncrements(b.dataset.unitImport,$$('[data-candidate]',b.closest('[data-import-unit]')))));
   $$('[data-confirm-identity]').forEach(button=>button.onclick=safe(async()=>{const c=increments.candidates.find(c=>c.id===button.dataset.confirmIdentity),choice=$('[data-identity-choice]',button.closest('.identity-review')).value;if(!choice)throw Error('请选择同一条资料或独立资料');await api('/api/import/identity',{import_id:c.import_id,group:c.group,entry_id:choice==='__new'?null:choice,revision:increments.revisions[c.import_id]});const pid=preview?.id;await refresh();openPreview(state.imports.find(p=>p.id===pid));}));
+  $$('[data-import-set]').forEach(box=>box.onchange=()=>$$('[data-adopt]',box.closest('[data-import-unit]')).forEach(child=>child.checked=box.checked));
   if(!$('#import-dialog').open)$('#import-dialog').showModal();
 }
-$('#select-all-import').onclick=()=>$$('[data-import-unit]:not([hidden]) [data-import-set],[data-import-unit]:not([hidden]) [data-import-scalar]').forEach(c=>c.checked=true);
-$('#clear-import').onclick=()=>$$('[data-import-unit]:not([hidden]) [data-import-set],[data-import-unit]:not([hidden]) [data-import-scalar]').forEach(c=>c.checked=false);
+$('#select-all-import').onclick=()=>$$('[data-import-unit]:not([hidden]) [data-import-set],[data-import-unit]:not([hidden]) [data-import-scalar],[data-import-unit]:not([hidden]) [data-adopt]').forEach(c=>c.checked=true);
+$('#clear-import').onclick=()=>$$('[data-import-unit]:not([hidden]) [data-import-set],[data-import-unit]:not([hidden]) [data-import-scalar],[data-import-unit]:not([hidden]) [data-adopt]').forEach(c=>c.checked=false);
 $('#retry-import').onclick=safe(async()=>{
   $('#retry-import').disabled=true;
   try{toast('正在重新识别…');const result=await api('/api/import/retry',{import_id:preview.id,async:true});await refresh();await pollImportTasks();openPreview(result);}
   finally{$('#retry-import').disabled=false;}
 });
 async function resolveIncrements(mode,rows){
+  if(state.profile_contract===30)rows=rows.filter(row=>!$('[data-adopt]',row)||$('[data-adopt]',row).checked);
   if(!rows.length)throw new Error('请先选择要处理的增量');
-  const decisions=rows.map(row=>({candidate_id:row.dataset.candidate,mode,value:$('[data-candidate-value]',row).value,version_id:$('[data-replace-version]',row)?.value,confirm_facts:!!$('[data-confirm-facts]',row.closest('[data-import-unit]'))?.checked}));
+  const decisions=rows.map(row=>({candidate_id:row.dataset.candidate,mode,value:$('[data-candidate-value]',row).value,version_id:$('[data-replace-version]',row)?.value,confirm_new_field:!!$('[data-confirm-new-field]',row)?.checked,confirm_facts:!!$('[data-confirm-facts]',row.closest('[data-import-unit]'))?.checked,confirm_exam_result:!!$('[data-confirm-exam-result]',row.closest('[data-import-unit]'))?.checked}));
   const result=await api('/api/import/resolve',{decisions,revisions:increments.revisions});
   const previewId=preview?.id;await refresh();await pollImportTasks();openPreview(state.imports.find(p=>p.id===previewId));toast(`已保存 ${result.saved} 项，忽略 ${result.ignored} 项`);
   if(!increments.candidates.some(c=>!preview||c.import_id===preview.id))$('#import-dialog').close();
@@ -197,12 +202,12 @@ async function resolveIncrements(mode,rows){
 $$('[data-import-mode]').forEach(b=>b.onclick=safe(()=>resolveIncrements(b.dataset.importMode,$$('[data-import-unit]:not([hidden])').filter(unit=>$('[data-import-set],[data-import-scalar]',unit)?.checked).flatMap(unit=>$$('[data-candidate]',unit)))));
 
 function answerRef(item, entryId, choice, childId){
-  return {website_id:item.website_field.id,group_id:item.group_id,entry_id:entryId,field_id:choice?.field.id,child_id:childId||choice?.child_id};
+  return {website_id:item.website_field.id,group_id:item.group_id,entry_id:choice?.source_entry_id||entryId,field_id:choice?.field.id,child_id:childId||choice?.child_id};
 }
 function draftKey(ref){return sessionId+'/'+ref.group_id+'/'+ref.entry_id+'/'+(ref.field_id||ref.child_id||ref.website_id);}
 function versionEditor(choice, entryId, item){
   const ref=answerRef(item,entryId,choice),key=entryId+'/'+choice.field.id;
-  return `<div class="version-block" data-answer-key="${escapeHtml(key)}" data-answer-ref="${escapeHtml(JSON.stringify(ref))}"><label>${escapeHtml(choice.field.label)}${control(choice.field,answerDrafts.get(draftKey(ref))??choice.content,`data-version-content data-applied="${escapeHtml(choice.content)}"`)}</label><div class="button-row"><button data-version-mode="session">仅供本次使用</button></div></div>`;
+  return `<div class="version-block" data-answer-key="${escapeHtml(key)}" data-answer-ref="${escapeHtml(JSON.stringify(ref))}"><label>${escapeHtml(choice.field.label)}${control(choice.field,answerDrafts.get(draftKey(ref))??choice.content,`data-version-content data-applied="${escapeHtml(choice.content)}"`)}</label><div class="button-row"><button data-version-mode="session">仅供本次使用</button>${state.profile_contract===30?'<button data-single-sync>预览差异并回库</button>':''}</div></div>`;
 }
 
 function entryTitle(entry){
@@ -215,6 +220,7 @@ function entryEditors(entry,item){
   return choices.map(c=>versionEditor(c,entry.id,item)).join('');
 }
 function renderPractice(){
+  window.renderMappingRelationPanel?.();
   const expanded=new Set($$('[data-expansion-key]').filter(e=>e.open).map(e=>e.dataset.expansionKey));
   $('#session-select').innerHTML=state.sessions.map(s=>`<option value="${s.id}" ${s.id===sessionId?'selected':''}>${escapeHtml(s.name)}</option>`).join('');
   $('#session-select').hidden=!state.sessions.length;
@@ -273,6 +279,10 @@ function bindChoices(){
     await answerDrafts.settled(sessionId);
     await api('/api/website/answer',{session_id:sessionId,...ref,version_id:versionId,mode,value:input.value,expected_revision:version?.revision});
     answerDrafts.delete(draftKey(ref));await answerDrafts.settled(sessionId);await refresh();toast(button.textContent+'已完成');
+  }));
+  $$('[data-single-sync]').forEach(button=>button.onclick=safe(async()=>{
+    const block=button.closest('[data-answer-ref]'),ref=JSON.parse(block.dataset.answerRef),value=$('[data-version-content]',block).value;
+    await previewSingleWriteback(ref,value);
   }));
   $$('[data-add-material]').forEach(button=>button.onclick=safe(async()=>{await api('/api/website/entry',{session_id:sessionId,website_id:button.dataset.addMaterial});await refresh();toast('已添加待补充资料，请填写相关字段');}));
 }

@@ -1,0 +1,21 @@
+{
+  "kind": "docs",
+  "summary": "Document shared experience nature and employment status across expression versions, including save scope and acceptance scenarios.",
+  "capabilities": [
+    "profile"
+  ],
+  "validation": "check_docs PASS: 114 Markdown files, 763 relative links, D01-D100; check_project PASS: catalog, references and 59 records. Read back topic V0.8 and V-28 through V-31. Documentation only; scenarios are pending implementation, not product tests.",
+  "compatibility": "No code, Skill, API, runtime data, original files, website or deployment changes. Field schema, category transition and date linkage remain dependencies; P38 version scope retained.",
+  "handoff": {
+    "task": "profile-version-employment-status-v08",
+    "status": "complete",
+    "next": "Continue project field discussion with project name shared-versus-version ownership; contact references and field-definition dependencies remain pending.",
+    "docs": [],
+    "docs_reason": "Only the assigned private version PRD was updated to V0.8. It is a formal PRD component; no duplication into shared main documents is needed."
+  },
+  "id": "20261022T105036Z-profile-version-employment-status-v08-7c87e7",
+  "files": [
+    "docs/PROJECT_ACTIVITY.md"
+  ],
+  "release": "0.4.0"
+}

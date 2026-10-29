@@ -1,0 +1,21 @@
+{
+  "kind": "docs",
+  "summary": "Complete v0.3.0 publication and verify release downloads and exact-commit CI",
+  "capabilities": [
+    "distribution"
+  ],
+  "validation": "PR #1 merged; main and v0.3.0 resolve to c45caf856ca72347162b37e6e33652b31646983c. All 8 exact-commit CI jobs passed, including 433 Python and 111 Node checks, 15 isolated browser scripts and six installation configurations. Clean local install passed. Source and reachable history privacy checks passed. Three public assets anonymously downloaded and SHA256/archive integrity verified. Distributed runtime/skills/scripts match released tree.",
+  "compatibility": "Existing confirmed material and original attachments unchanged; extension 1.3.9 and protocol v1 unchanged. Category-specific profile version policy remains pending. Published tag is immutable; this post-publication receipt is for the next engineering snapshot.",
+  "handoff": {
+    "task": "resume-release-030",
+    "status": "complete",
+    "next": "Continue confirmed profile-management refactor separately; do not treat old award alternatives as acceptance of the newer version-scope policy",
+    "docs": [],
+    "docs_reason": "Release documentation and changelog already published; private final evidence and navigation updated without exporting personal records"
+  },
+  "id": "20261022T075501Z-resume-release-030-8980f7",
+  "files": [
+    "docs/PROJECT_ACTIVITY.md"
+  ],
+  "release": "0.4.0"
+}

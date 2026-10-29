@@ -1,0 +1,27 @@
+{
+  "kind": "docs",
+  "summary": "Document candidate profile APIs, atomic scalar writeback and guarded protocol-v1 corrections in the public export overlays.",
+  "capabilities": [
+    "profile",
+    "mapping",
+    "execution"
+  ],
+  "validation": "Source behavior covered by 368 profile tests, 50 extension tests and fictional material UI; public overlay links/catalog checks pending below.",
+  "compatibility": "Candidate documentation only; existing active service and installed extension unchanged.",
+  "handoff": {
+    "task": "profile-refactor-public-api",
+    "status": "complete",
+    "next": "Use the public API overlays in candidate export; overall profile implementation remains in progress.",
+    "docs": [
+      "docs/DATA_AND_API.md",
+      "prototypes/icbc-native-extension/API.md"
+    ],
+    "docs_reason": "Public source export uses these overlays; synchronization prevents shipping outdated API documentation."
+  },
+  "id": "20261027T112100Z-profile-refactor-public-api-5b9a75",
+  "files": [
+    "docs/DATA_AND_API.md",
+    "prototypes/icbc-native-extension/API.md"
+  ],
+  "release": "0.4.0"
+}

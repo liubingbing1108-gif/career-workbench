@@ -1,0 +1,22 @@
+{
+  "package": "application-field-mapper",
+  "rules_version": "1.1.0",
+  "contract_version": "application-field-mapper/v1",
+  "runtime_files": [
+    "SKILL.md",
+    "references/decisions.md",
+    "references/contract.md"
+  ],
+  "files": {
+    "SKILL.md": "d2ad30553cba4bf19cec6bd75f844d4788f566792033240f7738652eed11002f",
+    "fixtures/conformance.json": "63c22308beb4ebdb8cc10718ddfa8519a48baeb30fe1665c8f52ac47383ca5fa",
+    "fixtures/rejections.json": "c5ec64e8e13025aba332cb643fb43b6b9e801f23a123f94e7356f02e61acb1bb",
+    "references/contract.md": "ffb7867d7c06061f6868221514f7f3dabcedb1d2c7d24b23e357d2d0aa96e4e7",
+    "references/decisions.md": "4e5b792ee10271b482f38d0d7439851aba0c4962e490cf1f4e2144e2ac02d9fa",
+    "references/integration.md": "e188a7bbf2c85a6ba16132ba788bb49a9a19fc3aaeb89757701624bdaffb1254",
+    "references/service.md": "7f833e3feb2a89d280367e03a93d2e1624e5ce014325141ec0b60699ba4fa874",
+    "schemas/contract.schema.json": "9385a66b5a9226b26b2494cfbc2876b8285ef93b6347648d6c7c6e549f965cf8",
+    "scripts/test_contract.py": "b2c18d9072b575ef817f0be2019a96264598e92e7c171f9430df24136bb79b26",
+    "scripts/validate.py": "cdf596aab0ec38393e0a612d0cbc4b1dc036fe7b99443f1e7b7e2da2e3f1ae5b"
+  }
+}

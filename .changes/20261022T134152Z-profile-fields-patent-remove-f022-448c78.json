@@ -1,0 +1,21 @@
+{
+  "kind": "docs",
+  "summary": "Exclude the entire patent category and its eleven preset fields while preserving legacy mapping boundaries; prepare the portfolio work batch.",
+  "capabilities": [
+    "profile"
+  ],
+  "validation": "check_docs.py and check_project.py passed; targeted checks verified 259 unique review IDs, all eleven patent fields excluded, eleven legacy mappings qualified, eight retained paper fields unchanged, three acceptance targets and nine pending work fields. No runtime tests or full PR diff checks.",
+  "compatibility": "Documentation only; no code, Skill, API, runtime, migration, browser or release changes. Existing patent records, original files, references and history preserved for migration review; shared paper fields remain.",
+  "handoff": {
+    "task": "profile-fields-patent-remove-f022",
+    "status": "complete",
+    "next": "Batch-review nine portfolio work fields with optional current values, combined role/order text, partial publication date, one link, multiple attachments and text registration number. Patent category exclusion must be reflected in later model/import/UI compatibility implementation without automatic recategorization. Prior obtained-date and four-project-expression synchronization dependencies remain.",
+    "docs": [],
+    "docs_reason": "Updated the owning local field PRD and catalog; other topics unchanged."
+  },
+  "id": "20261022T134152Z-profile-fields-patent-remove-f022-448c78",
+  "files": [
+    "docs/PROJECT_ACTIVITY.md"
+  ],
+  "release": "0.4.0"
+}

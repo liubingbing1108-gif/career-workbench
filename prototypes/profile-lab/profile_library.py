@@ -26,6 +26,9 @@ def valid_token(state,entry,value):
 
 
 def view_record(state, entry):
+    from profile_contract import active, current_values
+    if active(state):
+        return {**copy.deepcopy(entry),'values':current_values(state,entry),'edit_token':token(state,entry),'record_versions':group_versions(state,entry),'versions_enabled':versions_enabled(state,entry)}
     return {**copy.deepcopy(entry),'edit_token':token(state,entry),'record_versions':group_versions(state,entry),'versions_enabled':versions_enabled(state,entry)}
 
 
@@ -34,6 +37,10 @@ class ProfileLibrary:
 
     def view(self):
         state=self.lab.state()
+        from profile_contract import active
+        if active(state):
+            from profile_current import flat_view
+            return flat_view(state)
         return dict(records=[{**view_record(state,e),'id':layout['id'],'source_entry_id':e['id'],'layout':layout,'profile_archived':bool(e.get('profile_archived') or layout.get('archived'))} for e,layout in views(state)],drafts=state.get('profile_drafts',{}),tree=state['profile_tree'],saved_requests={key:item['result'].get('view_id') for key,item in state.get('profile_receipts',{}).items() if item.get('complete')})
 
     def draft(self,data):
@@ -63,6 +70,12 @@ class ProfileLibrary:
         if receipt:
             if receipt['signature']!=signature:raise LabError('保存请求已使用，请重新保存',409)
             return receipt['result']
+        from profile_contract import active
+        if active(state):
+            from profile_current import save_record
+            result=save_record(state,data)
+            state['profile_receipts'][request_id]=dict(signature=signature,result=copy.deepcopy(result),complete=True)
+            return result
         new=not data.get('entry_id')
         if new:
             cat=data.get('category')
@@ -196,6 +209,8 @@ class ProfileLibrary:
         return incoming
 
     def tree(self,data):
+        from profile_contract import active
+        if active(self.lab.state()):raise LabError('新版资料不提供层级维护')
         def change(state):
             tree=state['profile_tree']
             old_tokens={e['id']:token(state,e) for e in state['entries']} if data.get('action') in ('archive','restore') else {}
@@ -264,6 +279,8 @@ class ProfileLibrary:
         return self.lab.mutate(change)
 
     def field_version(self,data):
+        from profile_contract import active
+        if active(self.lab.state()):raise LabError('表达版本属于整段任职或项目，不能独立增加字段版本')
         def change(state):
             entry=find(state['entries'],data['entry_id'])
             if not valid_token(state,entry,data.get('edit_token')):raise LabError('资料已更新，请刷新核对后再新增版本',409)
@@ -280,6 +297,13 @@ class ProfileLibrary:
         def change(state):
             entry=find(state['entries'],data['entry_id'])
             if not valid_token(state,entry,data.get('edit_token')):raise LabError('资料已更新，请刷新后重试',409)
+            from profile_contract import active
+            if active(state):
+                if not versions_enabled(state,entry):raise LabError('此对象没有表达版本')
+                chosen=data.get('set_id')
+                if chosen is not None:find(group_versions(state,entry),chosen)
+                entry['profile_default_set_id']=chosen
+                return view_record(state,entry)
             refs=data.get('field_versions',{})
             if data.get('set_id'):
                 chosen=find(group_versions(state,entry),data['set_id'])
@@ -306,6 +330,10 @@ class ProfileLibrary:
         """Delete library choices without destroying references in saved applications."""
         def change(state):
             entry=find(state['entries'],data['entry_id'])
+            from profile_contract import active
+            if active(state):
+                from profile_trash import version_action
+                return version_action(state,entry,data)
             if not valid_token(state,entry,data.get('edit_token')):raise LabError('资料已更新，草稿已保留，请重新核对',409)
             action=data.get('action');fid=data.get('field_id');vid=data.get('version_id')
             if action not in ('rename','delete'):raise LabError('未知版本操作')
@@ -354,6 +382,10 @@ class ProfileLibrary:
         return self.lab.mutate(change)
 
     def archive(self,data):
+        from profile_contract import active
+        if active(self.lab.state()):
+            from profile_trash import archive
+            return self.lab.mutate(lambda state:archive(state,data))
         eid=data.get('entry_id');archived=data.get('archived')
         if type(archived) is not bool:raise LabError('请选择删除或恢复')
         with self.lab.lock:
@@ -384,10 +416,15 @@ class ProfileLibrary:
 
     def attachment(self,data):
         def change(state):
+            from profile_contract import active
+            if active(state) and data.get('action') in {'delete','restore'}:
+                from profile_trash import file_action
+                return file_action(state,data)
             item=find(state['files'],data['file_id'])
             if data.get('revision',0)!=item.get('profile_revision',0):raise LabError('附件信息已更新，请刷新重试',409)
             metadata=data.get('metadata',{})
             allowed={'display_name','attachment_type','language','version_name','target_role','target_company','linked_entry','archived'}
+            if active(state):allowed={'attachment_type'}
             if set(metadata)-allowed:raise LabError('附件字段无效')
             for k,v in metadata.items():
                 if k=='archived':
@@ -420,14 +457,17 @@ class ProfileLibrary:
             return dict(saved=True)
         return self.lab.mutate(change)
 
-    def upload_attachment(self,filename,raw):
+    def upload_attachment(self,filename,raw,attachment_type=''):
         filename=Path(filename.replace('\\','/')).name
         if not filename or len(filename)>180 or not raw or len(raw)>8*1024*1024:raise LabError('请选择不超过 8 MiB 的文件')
         def change(state):
+            from profile_contract import active
+            if active(state) and (not isinstance(attachment_type,str) or len(attachment_type)>180):raise LabError('附件类型无效')
             checksum=hashlib.sha256(raw).hexdigest()
-            existing=next((f for f in state['files'] if f.get('sha256')==checksum and f['name']==filename and not f.get('archived')),None)
+            existing=next((f for f in state['files'] if f.get('sha256')==checksum and f['name']==filename and not f.get('archived') and (not active(state) or f.get('attachment_type','')==attachment_type)),None)
             if existing:return existing
             item=dict(id=uid('file'),name=filename,display_name=filename,size=len(raw),sha256=checksum,uploaded_at=time.time(),profile_revision=0)
+            if active(state):item['attachment_type']=attachment_type
             self.lab.db.execute('INSERT INTO files VALUES (?,?)',(item['id'],raw))
             state['files'].append(item);return item
         return self.lab.mutate(change)

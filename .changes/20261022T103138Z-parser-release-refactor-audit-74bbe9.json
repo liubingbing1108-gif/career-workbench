@@ -1,0 +1,22 @@
+{
+  "kind": "docs",
+  "summary": "Verify the shipped parser baseline and document mandatory compatibility work for the planned profile refactor.",
+  "capabilities": [
+    "profile",
+    "import"
+  ],
+  "validation": "Fresh GitHub reads confirm PR 1 merged and main/latest release v0.3.0 at c45caf856ca72347162b37e6e33652b31646983c. All 180 exported source/skill/script/dependency files match that commit using the existing export mapping. Configured Python: 38 targeted parser tests passed; two existing isolated browser scripts passed. Documentation and project contract checks passed. Initial system-Python dependency and sandbox loopback failures were resolved with the configured interpreter and approved isolated execution.",
+  "compatibility": "Documentation and existing-test audit only. No runtime source, Skill rules, dependencies, live profile data, or service deployment changed. Shipped parser safeguards must be preserved; old version scope, exam identity, field contracts, partial saving, manual authority, and deletion references require coordinated adaptation before the refactor can be declared compatible.",
+  "handoff": {
+    "task": "parser-release-refactor-audit",
+    "status": "complete",
+    "next": "Continue the user-confirmed field/version topics; implement the parser compatibility gates only when profile reconstruction enters implementation, preserving the shipped baseline and adding cross-feature acceptance coverage.",
+    "docs": [],
+    "docs_reason": "Private PRD, compatibility evidence, acceptance gates and shared planning indexes were updated in their registered local scopes. Public metadata records only generic engineering status; private documents and conversation references remain outside the existing export allowlist."
+  },
+  "id": "20261022T103138Z-parser-release-refactor-audit-74bbe9",
+  "files": [
+    "docs/PROJECT_ACTIVITY.md"
+  ],
+  "release": "0.4.0"
+}

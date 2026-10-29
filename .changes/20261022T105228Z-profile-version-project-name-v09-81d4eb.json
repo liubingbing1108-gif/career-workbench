@@ -1,0 +1,21 @@
+{
+  "kind": "docs",
+  "summary": "Confirm shared project name across expression versions with save scope and acceptance examples.",
+  "capabilities": [
+    "profile"
+  ],
+  "validation": "check_docs PASS: 114 Markdown files, 763 relative links, D01-D100; check_project PASS: catalog, references and 60 records. Read back V0.9 project-name rules and V-32 through V-35. Acceptance scenarios remain pending implementation; no product tests run.",
+  "compatibility": "Documentation only. No code, Skill, API, runtime data, original files, website, deployment or migration changes. Other project fields remain pending; project and version names are distinct.",
+  "handoff": {
+    "task": "profile-version-project-name-v09",
+    "status": "complete",
+    "next": "Ask whether project type is shared across expression versions; continue remaining project field ownership and relation dependencies.",
+    "docs": [],
+    "docs_reason": "Updated assigned private version PRD to V0.9 as a formal PRD component; no duplication into shared main documents."
+  },
+  "id": "20261022T105228Z-profile-version-project-name-v09-81d4eb",
+  "files": [
+    "docs/PROJECT_ACTIVITY.md"
+  ],
+  "release": "0.4.0"
+}

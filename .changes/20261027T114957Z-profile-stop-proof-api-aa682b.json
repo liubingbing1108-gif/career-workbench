@@ -1,0 +1,27 @@
+{
+  "kind": "docs",
+  "summary": "Document candidate field lifecycle, joint batch writeback, relation correction and same-core stop proof in public API overlays.",
+  "capabilities": [
+    "profile",
+    "mapping",
+    "execution"
+  ],
+  "validation": "Public overlay content matches candidate implementation; documentation links and project catalog pass. Runtime acceptance remains tracked by main refactor task.",
+  "compatibility": "Documentation only; no active service, personal data or release change.",
+  "handoff": {
+    "task": "profile-stop-proof-api",
+    "status": "complete",
+    "next": "Follow the main refactor candidate validation and migration gates.",
+    "docs": [
+      "docs/DATA_AND_API.md",
+      "prototypes/icbc-native-extension/API.md"
+    ],
+    "docs_reason": "Keep exported overlay contracts aligned with opt-in candidate APIs."
+  },
+  "id": "20261027T114957Z-profile-stop-proof-api-aa682b",
+  "files": [
+    "docs/DATA_AND_API.md",
+    "prototypes/icbc-native-extension/API.md"
+  ],
+  "release": "0.4.0"
+}

@@ -3,7 +3,7 @@ let client=Number.isInteger(tabId)?new JobFillClient(tabId):null;
 let launchTicket=new URLSearchParams(location.hash.slice(1)).get('launch');
 const statusBox=document.querySelector('#status');
 let launchDetails,retryTimer;
-let connection,connectedUrl,url,stopped=false,running=false,polling=false,counts={filled:0,verified:0};
+let connection,connectedUrl,connectedCoreId,url,stopped=false,running=false,polling=false,counts={filled:0,verified:0};
 const display=text=>statusBox.textContent=text;
 async function request(action,data={}){
  const response=await fetch('http://127.0.0.1:8768/api/executor/'+action,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({connection,url,...data})});
@@ -11,15 +11,44 @@ async function request(action,data={}){
 }
 async function target(){const tab=await chrome.tabs.get(tabId);if(!tab.url?.startsWith('https:'))throw Error('请先打开招聘官网，再从该页开启扩展');url=tab.url;document.querySelector('#target').textContent='目标官网：'+url;}
 if(!launchTicket)target().catch(e=>display(e.message));
+async function pair(core){
+ if(connection&&connectedUrl===url&&connectedCoreId===core.sessionId)return {connection,message:'继续读取当前官网'};
+ const capabilities={structuredIssues:1,correctionRetry:1};
+ if(core.capabilities?.stopProof===1||Object.hasOwn(core,'busy'))capabilities.stopProof=1;
+ const result=await request('connect',{code:launchDetails?.code||document.querySelector('#code').value.trim(),core_session_id:core.sessionId,capabilities});
+ connection=result.connection;connectedUrl=url;connectedCoreId=core.sessionId;return result;
+}
+async function confirmStopped(check){
+ const inspect=async()=>{const result=await client.call('executionState',{});if(!result.ok)throw Error(result.error.message);return result.result;};
+ const matches=state=>check.core_session_id&&state.sessionId===check.core_session_id&&state.sessionId===connectedCoreId&&state.page?.url===url;
+ if(!matches(await inspect()))throw Error('无法核对原执行页面；请返回原页，保留已填内容。');
+ const cancelled=await client.call('cancel',{});if(!cancelled.ok)throw Error(cancelled.error.message);
+ for(let i=0;i<30;i++){
+  const proof=await inspect();if(!matches(proof))throw Error('停止核验期间页面已变化，请返回原页核对。');
+  if(proof.busy===false&&proof.cancelled===true){await request('stop-proof',{job_id:check.job_id,proof});display('原页已确认停止，请回工作台重新核对预览。');return;}
+  await new Promise(resolve=>setTimeout(resolve,100));
+ }
+ throw Error('原页仍在停止中；请稍后重新连接核对。');
+}
 async function connect(){
  try{
-  await target();let scan;
+  await target();let scan,result;
   for(let attempt=0;attempt<30;attempt++){
-   scan=await client.call('scan',{});if(!scan.ok)throw Error(scan.error.message);
+   scan=await client.call('scan',{});
+   if(!scan.ok&&scan.error.code==='BUSY'){
+    const state=await client.call('executionState',{});if(!state.ok)throw Error(scan.error.message);
+    result=await pair(state.result);const pending=await request('stop-check');
+    if(!pending.stop_check)throw Error(scan.error.message);
+    await confirmStopped(pending.stop_check);scan=await client.call('scan',{});
+   }
+   if(!scan.ok)throw Error(scan.error.message);
    if(scan.result.fields?.some(field=>!field.disabled))break;
    if(attempt<29)await new Promise(resolve=>setTimeout(resolve,1000));
   }
   if(!scan.result.fields?.some(field=>!field.disabled))throw Error('请在官网完成登录或打开申请表，系统会自动继续读取');
+  result=await pair(scan.result);
+  const pending=await request('stop-check');
+  if(pending.stop_check){await confirmStopped(pending.stop_check);scan=await client.call('scan',{});if(!scan.ok)throw Error(scan.error.message);}
   const choices=new Map();let readFormat=false;
   for(const field of scan.result.fields){
    if(field.disabled)continue;
@@ -34,7 +63,6 @@ async function connect(){
   }
   if(readFormat){scan=await client.call('scan',{});if(!scan.ok)throw Error(scan.error.message);}
   for(const field of scan.result.fields)if(choices.has(field.fieldId))field.options=choices.get(field.fieldId);
-  const result=connection&&connectedUrl===url?{connection,message:'继续读取当前官网'}:await request('connect',{code:launchDetails?.code||document.querySelector('#code').value.trim()});connection=result.connection;connectedUrl=url;
   document.querySelector('#code').value='';document.querySelector('#connect').disabled=true;stopped=false;display(result.message);
   // Send only field metadata; existing website answers are never imported as profile facts.
   const snapshot={...scan.result,fields:scan.result.fields.map(({currentValue,...field})=>field)};
@@ -115,12 +143,13 @@ async function poll(){
   if(next.ticket){await acceptLaunch(next.ticket);if(!stopped)setTimeout(poll,1000);return;}
   const tab=await chrome.tabs.get(tabId);if(tab.url!==url)throw Error('官网已切换，连接已停止');
   const result=await request('poll');
+  if(result.stop_check)await confirmStopped(result.stop_check);
   if(result.stop){stopped=true;display(result.message);await client.call('cancel',{});}
   if(result.job){
    running=true;counts={filled:0,verified:0};
    const report=async progress=>{counts=progress;display(progress.message);const response=await request('report',{job_id:result.job.id,...progress});if(response.stop)stopped=true;};
    try{await JobFillMaterials.run(client,result.job.materials,report,()=>stopped);}
-   catch(e){await report({status:stopped?'paused':'failed',filled:counts.filled,verified:counts.verified,issues:[e.message],message:'填写已停止：'+e.message});}
+   catch(e){await report({status:stopped?'paused':'failed',stop_unconfirmed:!!e.stopUnconfirmed,filled:counts.filled,verified:counts.verified,issues:[e.message],message:(e.stopUnconfirmed?'等待停止确认：':'填写已停止：')+e.message});}
    finally{running=false;}
   }
   if(!stopped)setTimeout(poll,1000);else{polling=false;document.querySelector('#connect').disabled=false;}

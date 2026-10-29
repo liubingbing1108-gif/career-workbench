@@ -215,6 +215,8 @@ def grounded_candidates(state, blocks, filename, result):
                 rejected.append("一个字段标识或值无效")
                 continue
             definition = known.get(field_id) or catalog.get(field_id) or definitions.get(field_id)
+            if definition and definition.get('legacy_preserved'):
+                rejected.append('已取消预设不再写入：'+definition['label']);continue
             if definition is None:
                 label, kind = item.get("label", ""), item.get("type", "")
                 if not isinstance(label, str) or not 0 < len(label) <= 100 or kind not in KINDS or kind == "select":

@@ -1,0 +1,1436 @@
+{
+  "fictional": true,
+  "notes": "All records, questions, site and values are synthetic. This is a caller-supplied catalog projection, not a second standard catalog. fictional_* IDs demonstrate custom fields.",
+  "cases": [
+    {
+      "name": "all_decision_paths",
+      "request": {
+        "contract_version": "application-field-mapper/v1",
+        "request_id": "fictional-request-1",
+        "context": {
+          "preparation_id": "fictional-preparation_id-1",
+          "session_id": "fictional-session_id-1",
+          "target_revision": "fictional-target_revision-1",
+          "catalog_revision": "fictional-catalog_revision-1",
+          "relation_revision": "fictional-relation_revision-1",
+          "scan_revision": "fictional-scan_revision-1",
+          "profile_revision": "fictional-profile_revision-1"
+        },
+        "site": {
+          "origin": "https://careers.example.test",
+          "tenant": "fictional-tenant-a",
+          "form_key": "fictional-form-v1"
+        },
+        "questions": [
+          {
+            "id": "alias1",
+            "group_id": "",
+            "label": "项目角色",
+            "section": "虚构测试分区",
+            "instructions": "仅用于离线契约测试。",
+            "examples": [],
+            "control": "text",
+            "options": [],
+            "condition": "",
+            "required": false,
+            "length": {
+              "max": null,
+              "unit": "characters",
+              "encoding": ""
+            },
+            "object": {
+              "category": "projects",
+              "record_type": "",
+              "entry_id": "fictional-project-1",
+              "repeatable": true,
+              "allowed_entry_ids": [
+                "fictional-project-1"
+              ]
+            },
+            "unit": "",
+            "scale": "",
+            "semantic_fingerprint": "51d06e20bc80ee9772e7b8d04ca2ab4bf94929d4581a0713f9d3b9ab12da37ad"
+          },
+          {
+            "id": "alias2",
+            "group_id": "",
+            "label": "本人角色",
+            "section": "虚构测试分区",
+            "instructions": "仅用于离线契约测试。",
+            "examples": [],
+            "control": "text",
+            "options": [],
+            "condition": "",
+            "required": false,
+            "length": {
+              "max": null,
+              "unit": "characters",
+              "encoding": ""
+            },
+            "object": {
+              "category": "projects",
+              "record_type": "",
+              "entry_id": "fictional-project-1",
+              "repeatable": true,
+              "allowed_entry_ids": [
+                "fictional-project-1"
+              ]
+            },
+            "unit": "",
+            "scale": "",
+            "semantic_fingerprint": "f154dcbf74b0c8cbfb117f54143064d46d3033d372f5631ac5d2077284ae6284"
+          },
+          {
+            "id": "alias3",
+            "group_id": "",
+            "label": "担任角色",
+            "section": "虚构测试分区",
+            "instructions": "仅用于离线契约测试。",
+            "examples": [],
+            "control": "text",
+            "options": [],
+            "condition": "",
+            "required": false,
+            "length": {
+              "max": null,
+              "unit": "characters",
+              "encoding": ""
+            },
+            "object": {
+              "category": "projects",
+              "record_type": "",
+              "entry_id": "fictional-project-1",
+              "repeatable": true,
+              "allowed_entry_ids": [
+                "fictional-project-1"
+              ]
+            },
+            "unit": "",
+            "scale": "",
+            "semantic_fingerprint": "15337dc0b7655c2bcdbfd3dfb80b416377e8b6aacf0d5df290946a04933ccde6"
+          },
+          {
+            "id": "missing",
+            "group_id": "",
+            "label": "项目角色（缺值示例）",
+            "section": "虚构测试分区",
+            "instructions": "仅用于离线契约测试。",
+            "examples": [],
+            "control": "text",
+            "options": [],
+            "condition": "",
+            "required": false,
+            "length": {
+              "max": null,
+              "unit": "characters",
+              "encoding": ""
+            },
+            "object": {
+              "category": "projects",
+              "record_type": "",
+              "entry_id": "fictional-project-1",
+              "repeatable": true,
+              "allowed_entry_ids": [
+                "fictional-project-1"
+              ]
+            },
+            "unit": "",
+            "scale": "",
+            "semantic_fingerprint": "fd27e792040fec93d6d993761ad227bc627ff4dd4adaaa80fe30f03fdcd9d64d"
+          },
+          {
+            "id": "version",
+            "group_id": "",
+            "label": "项目描述，最多20字",
+            "section": "虚构测试分区",
+            "instructions": "仅用于离线契约测试。",
+            "examples": [],
+            "control": "text",
+            "options": [],
+            "condition": "",
+            "required": false,
+            "length": {
+              "max": 20,
+              "unit": "characters",
+              "encoding": ""
+            },
+            "object": {
+              "category": "projects",
+              "record_type": "",
+              "entry_id": "fictional-project-1",
+              "repeatable": true,
+              "allowed_entry_ids": [
+                "fictional-project-1"
+              ]
+            },
+            "unit": "",
+            "scale": "",
+            "semantic_fingerprint": "505c94b5d8d2de5be580f3358f713878e01e6a9c7081f7fda5384fdb2439c18e"
+          },
+          {
+            "id": "date",
+            "group_id": "",
+            "label": "毕业年月",
+            "section": "虚构测试分区",
+            "instructions": "仅用于离线契约测试。",
+            "examples": [],
+            "control": "text",
+            "options": [],
+            "condition": "",
+            "required": false,
+            "length": {
+              "max": null,
+              "unit": "characters",
+              "encoding": ""
+            },
+            "object": {
+              "category": "education",
+              "record_type": "",
+              "entry_id": "fictional-education-1",
+              "repeatable": true,
+              "allowed_entry_ids": [
+                "fictional-education-1"
+              ]
+            },
+            "unit": "",
+            "scale": "",
+            "semantic_fingerprint": "6fea8930d7cee84d0ed8025240ba3b4a92c093a2b11c93459adc87ceef60864f"
+          },
+          {
+            "id": "compose",
+            "group_id": "",
+            "label": "请填写项目职责与成果",
+            "section": "虚构测试分区",
+            "instructions": "仅用于离线契约测试。",
+            "examples": [],
+            "control": "text",
+            "options": [],
+            "condition": "",
+            "required": false,
+            "length": {
+              "max": null,
+              "unit": "characters",
+              "encoding": ""
+            },
+            "object": {
+              "category": "projects",
+              "record_type": "",
+              "entry_id": "fictional-project-1",
+              "repeatable": true,
+              "allowed_entry_ids": [
+                "fictional-project-1"
+              ]
+            },
+            "unit": "",
+            "scale": "",
+            "semantic_fingerprint": "297e14f5a1d38524ff09cd3bfda337aab412bedf9eba3dc706ce3fd0f9143ad4"
+          },
+          {
+            "id": "extract",
+            "group_id": "",
+            "label": "从项目完整描述中填写职责",
+            "section": "虚构测试分区",
+            "instructions": "仅用于离线契约测试。",
+            "examples": [],
+            "control": "text",
+            "options": [],
+            "condition": "",
+            "required": false,
+            "length": {
+              "max": null,
+              "unit": "characters",
+              "encoding": ""
+            },
+            "object": {
+              "category": "projects",
+              "record_type": "",
+              "entry_id": "fictional-project-1",
+              "repeatable": true,
+              "allowed_entry_ids": [
+                "fictional-project-1"
+              ]
+            },
+            "unit": "",
+            "scale": "",
+            "semantic_fingerprint": "3f55daf6e07abff30e4e760f90af4ddca6eb1f11173633c9306e8dbd09a5679d"
+          },
+          {
+            "id": "partial",
+            "group_id": "",
+            "label": "项目职责与预算",
+            "section": "虚构测试分区",
+            "instructions": "仅用于离线契约测试。",
+            "examples": [],
+            "control": "text",
+            "options": [],
+            "condition": "",
+            "required": false,
+            "length": {
+              "max": null,
+              "unit": "characters",
+              "encoding": ""
+            },
+            "object": {
+              "category": "projects",
+              "record_type": "",
+              "entry_id": "fictional-project-1",
+              "repeatable": true,
+              "allowed_entry_ids": [
+                "fictional-project-1"
+              ]
+            },
+            "unit": "",
+            "scale": "",
+            "semantic_fingerprint": "3cf3fdf143599f2716db38ecc4084d021a84a81c04f2085521fa109c2f2b75e1"
+          },
+          {
+            "id": "ambiguous",
+            "group_id": "",
+            "label": "个人陈述",
+            "section": "虚构测试分区",
+            "instructions": "仅用于离线契约测试。",
+            "examples": [],
+            "control": "text",
+            "options": [],
+            "condition": "",
+            "required": false,
+            "length": {
+              "max": null,
+              "unit": "characters",
+              "encoding": ""
+            },
+            "object": {
+              "category": "subjective",
+              "record_type": "",
+              "entry_id": "fictional-subjective-1",
+              "repeatable": true,
+              "allowed_entry_ids": [
+                "fictional-subjective-1"
+              ]
+            },
+            "unit": "",
+            "scale": "",
+            "semantic_fingerprint": "e287238eac2173242370013059ae1d5ce4a049aeffd1f5f51ede331c0735dd9a"
+          },
+          {
+            "id": "unknown",
+            "group_id": "",
+            "label": "补充信息",
+            "section": "虚构测试分区",
+            "instructions": "仅用于离线契约测试。",
+            "examples": [],
+            "control": "text",
+            "options": [],
+            "condition": "",
+            "required": false,
+            "length": {
+              "max": null,
+              "unit": "characters",
+              "encoding": ""
+            },
+            "object": {
+              "category": "",
+              "record_type": "",
+              "entry_id": null,
+              "repeatable": false,
+              "allowed_entry_ids": []
+            },
+            "unit": "",
+            "scale": "",
+            "semantic_fingerprint": "388b57a205d42e095c1d0d794b1b824526e33360ae2ced01110eff7c032a8fcf"
+          },
+          {
+            "id": "new",
+            "group_id": "",
+            "label": "项目预算币种",
+            "section": "虚构测试分区",
+            "instructions": "仅用于离线契约测试。",
+            "examples": [],
+            "control": "text",
+            "options": [],
+            "condition": "",
+            "required": false,
+            "length": {
+              "max": null,
+              "unit": "characters",
+              "encoding": ""
+            },
+            "object": {
+              "category": "projects",
+              "record_type": "",
+              "entry_id": "fictional-project-1",
+              "repeatable": true,
+              "allowed_entry_ids": [
+                "fictional-project-1"
+              ]
+            },
+            "unit": "",
+            "scale": "",
+            "semantic_fingerprint": "11c59bc7f63d3b13e87151e6dc67a83d455e57694fce1024c1d0611e38bb6265"
+          },
+          {
+            "id": "narrow",
+            "group_id": "",
+            "label": "尚待查全的家庭成员属性",
+            "section": "虚构测试分区",
+            "instructions": "仅用于离线契约测试。",
+            "examples": [],
+            "control": "text",
+            "options": [],
+            "condition": "",
+            "required": false,
+            "length": {
+              "max": null,
+              "unit": "characters",
+              "encoding": ""
+            },
+            "object": {
+              "category": "family",
+              "record_type": "",
+              "entry_id": null,
+              "repeatable": true,
+              "allowed_entry_ids": []
+            },
+            "unit": "",
+            "scale": "",
+            "semantic_fingerprint": "ec1068b4cde40fd9b74f4ba6ce9e55bcce44fda058440cb6100e0aa9d0a13181"
+          },
+          {
+            "id": "highest",
+            "group_id": "",
+            "label": "最高学历院校",
+            "section": "虚构测试分区",
+            "instructions": "仅用于离线契约测试。",
+            "examples": [],
+            "control": "text",
+            "options": [],
+            "condition": "",
+            "required": false,
+            "length": {
+              "max": null,
+              "unit": "characters",
+              "encoding": ""
+            },
+            "object": {
+              "category": "education",
+              "record_type": "",
+              "entry_id": "fictional-education-1",
+              "repeatable": true,
+              "allowed_entry_ids": [
+                "fictional-education-1"
+              ]
+            },
+            "unit": "",
+            "scale": "",
+            "semantic_fingerprint": "fb3c930e1466f6440667ead7d5d22cdf7ca01634eaeea63b410a745662a62fce"
+          },
+          {
+            "id": "language",
+            "group_id": "",
+            "label": "总体熟练程度",
+            "section": "虚构测试分区",
+            "instructions": "仅用于离线契约测试。",
+            "examples": [],
+            "control": "text",
+            "options": [],
+            "condition": "",
+            "required": false,
+            "length": {
+              "max": null,
+              "unit": "characters",
+              "encoding": ""
+            },
+            "object": {
+              "category": "language",
+              "record_type": "ability",
+              "entry_id": "fictional-language-1",
+              "repeatable": true,
+              "allowed_entry_ids": [
+                "fictional-language-1"
+              ]
+            },
+            "unit": "",
+            "scale": "",
+            "semantic_fingerprint": "b694f125b2165e12cc7bb41de431209b988d749431ce9204f2ab324bff07e849"
+          }
+        ],
+        "catalog": [
+          {
+            "id": "project_role",
+            "label": "本人角色/职务",
+            "category": "projects",
+            "type": "text",
+            "aliases": [
+              "项目角色",
+              "本人角色",
+              "担任角色"
+            ],
+            "record_types": [],
+            "entry_id": null,
+            "meaning": "本人角色/职务（仅为虚构测试目录投影）",
+            "unit": "",
+            "scale": "",
+            "revision": 1
+          },
+          {
+            "id": "project_responsibilities",
+            "label": "本人职责",
+            "category": "projects",
+            "type": "multiline",
+            "aliases": [],
+            "record_types": [],
+            "entry_id": null,
+            "meaning": "本人职责（仅为虚构测试目录投影）",
+            "unit": "",
+            "scale": "",
+            "revision": 1
+          },
+          {
+            "id": "project_results",
+            "label": "项目成果",
+            "category": "projects",
+            "type": "multiline",
+            "aliases": [],
+            "record_types": [],
+            "entry_id": null,
+            "meaning": "项目成果（仅为虚构测试目录投影）",
+            "unit": "",
+            "scale": "",
+            "revision": 1
+          },
+          {
+            "id": "project_description",
+            "label": "完整项目描述",
+            "category": "projects",
+            "type": "versioned_text",
+            "aliases": [],
+            "record_types": [],
+            "entry_id": null,
+            "meaning": "完整项目描述（仅为虚构测试目录投影）",
+            "unit": "",
+            "scale": "",
+            "revision": 1
+          },
+          {
+            "id": "graduation_date",
+            "label": "毕业时间",
+            "category": "education",
+            "type": "partial_date",
+            "aliases": [],
+            "record_types": [],
+            "entry_id": null,
+            "meaning": "毕业时间（仅为虚构测试目录投影）",
+            "unit": "",
+            "scale": "",
+            "revision": 1
+          },
+          {
+            "id": "school",
+            "label": "学校名称",
+            "category": "education",
+            "type": "text",
+            "aliases": [
+              "学校"
+            ],
+            "record_types": [],
+            "entry_id": null,
+            "meaning": "学校名称（仅为虚构测试目录投影）",
+            "unit": "",
+            "scale": "",
+            "revision": 1
+          },
+          {
+            "id": "degree",
+            "label": "学历",
+            "category": "education",
+            "type": "text",
+            "aliases": [],
+            "record_types": [],
+            "entry_id": null,
+            "meaning": "学历（仅为虚构测试目录投影）",
+            "unit": "",
+            "scale": "",
+            "revision": 1
+          },
+          {
+            "id": "family_company",
+            "label": "工作单位",
+            "category": "family",
+            "type": "text",
+            "aliases": [],
+            "record_types": [],
+            "entry_id": null,
+            "meaning": "工作单位（仅为虚构测试目录投影）",
+            "unit": "",
+            "scale": "",
+            "revision": 1
+          },
+          {
+            "id": "language_level",
+            "label": "总体熟练程度",
+            "category": "language",
+            "type": "text",
+            "aliases": [],
+            "record_types": [
+              "ability"
+            ],
+            "entry_id": null,
+            "meaning": "总体熟练程度（仅为虚构测试目录投影）",
+            "unit": "",
+            "scale": "",
+            "revision": 1
+          },
+          {
+            "id": "fictional_exam_score",
+            "label": "虚构考试总分",
+            "category": "language",
+            "type": "text",
+            "aliases": [],
+            "record_types": [
+              "exam"
+            ],
+            "entry_id": null,
+            "meaning": "虚构考试总分（仅为虚构测试目录投影）",
+            "unit": "",
+            "scale": "",
+            "revision": 1
+          },
+          {
+            "id": "fictional_self_review",
+            "label": "虚构自我评价",
+            "category": "subjective",
+            "type": "text",
+            "aliases": [],
+            "record_types": [],
+            "entry_id": null,
+            "meaning": "虚构自我评价（仅为虚构测试目录投影）",
+            "unit": "",
+            "scale": "",
+            "revision": 1
+          },
+          {
+            "id": "fictional_motivation",
+            "label": "虚构求职动机",
+            "category": "subjective",
+            "type": "text",
+            "aliases": [],
+            "record_types": [],
+            "entry_id": null,
+            "meaning": "虚构求职动机（仅为虚构测试目录投影）",
+            "unit": "",
+            "scale": "",
+            "revision": 1
+          }
+        ],
+        "search": {
+          "receipt": "search-full-1",
+          "catalog_revision": "fictional-catalog_revision-1",
+          "complete_categories": [
+            "projects",
+            "education",
+            "language",
+            "subjective"
+          ]
+        },
+        "relations": [],
+        "exclusions": [],
+        "availability_checks": [
+          {
+            "id": "check-alias1",
+            "question_id": "alias1",
+            "field_ids": [
+              "project_role"
+            ],
+            "status": "ready",
+            "entry_ids": [
+              "fictional-project-1"
+            ],
+            "version_refs": [],
+            "context": {
+              "preparation_id": "fictional-preparation_id-1",
+              "session_id": "fictional-session_id-1",
+              "target_revision": "fictional-target_revision-1",
+              "catalog_revision": "fictional-catalog_revision-1",
+              "relation_revision": "fictional-relation_revision-1",
+              "scan_revision": "fictional-scan_revision-1",
+              "profile_revision": "fictional-profile_revision-1"
+            }
+          },
+          {
+            "id": "check-alias2",
+            "question_id": "alias2",
+            "field_ids": [
+              "project_role"
+            ],
+            "status": "ready",
+            "entry_ids": [
+              "fictional-project-1"
+            ],
+            "version_refs": [],
+            "context": {
+              "preparation_id": "fictional-preparation_id-1",
+              "session_id": "fictional-session_id-1",
+              "target_revision": "fictional-target_revision-1",
+              "catalog_revision": "fictional-catalog_revision-1",
+              "relation_revision": "fictional-relation_revision-1",
+              "scan_revision": "fictional-scan_revision-1",
+              "profile_revision": "fictional-profile_revision-1"
+            }
+          },
+          {
+            "id": "check-alias3",
+            "question_id": "alias3",
+            "field_ids": [
+              "project_role"
+            ],
+            "status": "ready",
+            "entry_ids": [
+              "fictional-project-1"
+            ],
+            "version_refs": [],
+            "context": {
+              "preparation_id": "fictional-preparation_id-1",
+              "session_id": "fictional-session_id-1",
+              "target_revision": "fictional-target_revision-1",
+              "catalog_revision": "fictional-catalog_revision-1",
+              "relation_revision": "fictional-relation_revision-1",
+              "scan_revision": "fictional-scan_revision-1",
+              "profile_revision": "fictional-profile_revision-1"
+            }
+          },
+          {
+            "id": "check-missing",
+            "question_id": "missing",
+            "field_ids": [
+              "project_role"
+            ],
+            "status": "missing_value",
+            "entry_ids": [
+              "fictional-project-1"
+            ],
+            "version_refs": [],
+            "context": {
+              "preparation_id": "fictional-preparation_id-1",
+              "session_id": "fictional-session_id-1",
+              "target_revision": "fictional-target_revision-1",
+              "catalog_revision": "fictional-catalog_revision-1",
+              "relation_revision": "fictional-relation_revision-1",
+              "scan_revision": "fictional-scan_revision-1",
+              "profile_revision": "fictional-profile_revision-1"
+            }
+          },
+          {
+            "id": "check-version",
+            "question_id": "version",
+            "field_ids": [
+              "project_description"
+            ],
+            "status": "version_needed",
+            "entry_ids": [
+              "fictional-project-1"
+            ],
+            "version_refs": [],
+            "context": {
+              "preparation_id": "fictional-preparation_id-1",
+              "session_id": "fictional-session_id-1",
+              "target_revision": "fictional-target_revision-1",
+              "catalog_revision": "fictional-catalog_revision-1",
+              "relation_revision": "fictional-relation_revision-1",
+              "scan_revision": "fictional-scan_revision-1",
+              "profile_revision": "fictional-profile_revision-1"
+            }
+          }
+        ],
+        "source_spans": [
+          {
+            "id": "span1",
+            "field_id": "project_description",
+            "entry_id": "fictional-project-1",
+            "version_id": "fictional-group-version-1",
+            "revision": 1,
+            "text": "负责整理虚构数据。测试结果为示例，不是真实求职资料。"
+          }
+        ]
+      },
+      "response": {
+        "contract_version": "application-field-mapper/v1",
+        "request_id": "fictional-request-1",
+        "context": {
+          "preparation_id": "fictional-preparation_id-1",
+          "session_id": "fictional-session_id-1",
+          "target_revision": "fictional-target_revision-1",
+          "catalog_revision": "fictional-catalog_revision-1",
+          "relation_revision": "fictional-relation_revision-1",
+          "scan_revision": "fictional-scan_revision-1",
+          "profile_revision": "fictional-profile_revision-1"
+        },
+        "decisions": [
+          {
+            "question_id": "alias1",
+            "proposal_state": "candidate",
+            "semantic_status": "equivalent",
+            "category": "projects",
+            "record_type": "",
+            "selector": {
+              "selection": "one",
+              "entry_ids": [],
+              "filters": [],
+              "rank": null,
+              "required_values": [],
+              "min_items": null,
+              "max_items": null
+            },
+            "sources": [
+              {
+                "field_id": "project_role",
+                "covers": "项目角色"
+              }
+            ],
+            "alternatives": [],
+            "coverage": {
+              "covered": [
+                "项目角色"
+              ],
+              "uncovered": [],
+              "partial": false
+            },
+            "plan": {
+              "kind": "alias",
+              "transform": null,
+              "extracts": []
+            },
+            "availability": {
+              "status": "ready",
+              "check_id": "check-alias1"
+            },
+            "relation_id": null,
+            "new_attribute": null,
+            "request_expand_catalog": false,
+            "reason": "虚构样例：依据所给对象及属性定义提出候选。",
+            "clarification": ""
+          },
+          {
+            "question_id": "alias2",
+            "proposal_state": "candidate",
+            "semantic_status": "equivalent",
+            "category": "projects",
+            "record_type": "",
+            "selector": {
+              "selection": "one",
+              "entry_ids": [],
+              "filters": [],
+              "rank": null,
+              "required_values": [],
+              "min_items": null,
+              "max_items": null
+            },
+            "sources": [
+              {
+                "field_id": "project_role",
+                "covers": "本人角色"
+              }
+            ],
+            "alternatives": [],
+            "coverage": {
+              "covered": [
+                "本人角色"
+              ],
+              "uncovered": [],
+              "partial": false
+            },
+            "plan": {
+              "kind": "alias",
+              "transform": null,
+              "extracts": []
+            },
+            "availability": {
+              "status": "ready",
+              "check_id": "check-alias2"
+            },
+            "relation_id": null,
+            "new_attribute": null,
+            "request_expand_catalog": false,
+            "reason": "虚构样例：依据所给对象及属性定义提出候选。",
+            "clarification": ""
+          },
+          {
+            "question_id": "alias3",
+            "proposal_state": "candidate",
+            "semantic_status": "equivalent",
+            "category": "projects",
+            "record_type": "",
+            "selector": {
+              "selection": "one",
+              "entry_ids": [],
+              "filters": [],
+              "rank": null,
+              "required_values": [],
+              "min_items": null,
+              "max_items": null
+            },
+            "sources": [
+              {
+                "field_id": "project_role",
+                "covers": "担任角色"
+              }
+            ],
+            "alternatives": [],
+            "coverage": {
+              "covered": [
+                "担任角色"
+              ],
+              "uncovered": [],
+              "partial": false
+            },
+            "plan": {
+              "kind": "alias",
+              "transform": null,
+              "extracts": []
+            },
+            "availability": {
+              "status": "ready",
+              "check_id": "check-alias3"
+            },
+            "relation_id": null,
+            "new_attribute": null,
+            "request_expand_catalog": false,
+            "reason": "虚构样例：依据所给对象及属性定义提出候选。",
+            "clarification": ""
+          },
+          {
+            "question_id": "missing",
+            "proposal_state": "candidate",
+            "semantic_status": "equivalent",
+            "category": "projects",
+            "record_type": "",
+            "selector": {
+              "selection": "one",
+              "entry_ids": [],
+              "filters": [],
+              "rank": null,
+              "required_values": [],
+              "min_items": null,
+              "max_items": null
+            },
+            "sources": [
+              {
+                "field_id": "project_role",
+                "covers": "项目角色（缺值示例）"
+              }
+            ],
+            "alternatives": [],
+            "coverage": {
+              "covered": [
+                "项目角色（缺值示例）"
+              ],
+              "uncovered": [],
+              "partial": false
+            },
+            "plan": {
+              "kind": "alias",
+              "transform": null,
+              "extracts": []
+            },
+            "availability": {
+              "status": "missing_value",
+              "check_id": "check-missing"
+            },
+            "relation_id": null,
+            "new_attribute": null,
+            "request_expand_catalog": false,
+            "reason": "虚构样例：依据所给对象及属性定义提出候选。",
+            "clarification": ""
+          },
+          {
+            "question_id": "version",
+            "proposal_state": "candidate",
+            "semantic_status": "equivalent",
+            "category": "projects",
+            "record_type": "",
+            "selector": {
+              "selection": "one",
+              "entry_ids": [],
+              "filters": [],
+              "rank": null,
+              "required_values": [],
+              "min_items": null,
+              "max_items": null
+            },
+            "sources": [
+              {
+                "field_id": "project_description",
+                "covers": "项目描述，最多20字"
+              }
+            ],
+            "alternatives": [],
+            "coverage": {
+              "covered": [
+                "项目描述，最多20字"
+              ],
+              "uncovered": [],
+              "partial": false
+            },
+            "plan": {
+              "kind": "alias",
+              "transform": null,
+              "extracts": []
+            },
+            "availability": {
+              "status": "version_needed",
+              "check_id": "check-version"
+            },
+            "relation_id": null,
+            "new_attribute": null,
+            "request_expand_catalog": false,
+            "reason": "虚构样例：依据所给对象及属性定义提出候选。",
+            "clarification": ""
+          },
+          {
+            "question_id": "date",
+            "proposal_state": "candidate",
+            "semantic_status": "transform",
+            "category": "education",
+            "record_type": "",
+            "selector": {
+              "selection": "one",
+              "entry_ids": [],
+              "filters": [],
+              "rank": null,
+              "required_values": [],
+              "min_items": null,
+              "max_items": null
+            },
+            "sources": [
+              {
+                "field_id": "graduation_date",
+                "covers": "毕业年月"
+              }
+            ],
+            "alternatives": [],
+            "coverage": {
+              "covered": [
+                "毕业年月"
+              ],
+              "uncovered": [],
+              "partial": false
+            },
+            "plan": {
+              "kind": "transform",
+              "transform": "month",
+              "extracts": []
+            },
+            "availability": {
+              "status": "not_evaluated",
+              "check_id": null
+            },
+            "relation_id": null,
+            "new_attribute": null,
+            "request_expand_catalog": false,
+            "reason": "虚构样例：依据所给对象及属性定义提出候选。",
+            "clarification": ""
+          },
+          {
+            "question_id": "compose",
+            "proposal_state": "candidate",
+            "semantic_status": "compose",
+            "category": "projects",
+            "record_type": "",
+            "selector": {
+              "selection": "one",
+              "entry_ids": [],
+              "filters": [],
+              "rank": null,
+              "required_values": [],
+              "min_items": null,
+              "max_items": null
+            },
+            "sources": [
+              {
+                "field_id": "project_responsibilities",
+                "covers": "职责"
+              },
+              {
+                "field_id": "project_results",
+                "covers": "成果"
+              }
+            ],
+            "alternatives": [],
+            "coverage": {
+              "covered": [
+                "请填写项目职责与成果"
+              ],
+              "uncovered": [],
+              "partial": false
+            },
+            "plan": {
+              "kind": "compose",
+              "transform": null,
+              "extracts": []
+            },
+            "availability": {
+              "status": "not_evaluated",
+              "check_id": null
+            },
+            "relation_id": null,
+            "new_attribute": null,
+            "request_expand_catalog": false,
+            "reason": "虚构样例：依据所给对象及属性定义提出候选。",
+            "clarification": ""
+          },
+          {
+            "question_id": "extract",
+            "proposal_state": "candidate",
+            "semantic_status": "extract_candidate",
+            "category": "projects",
+            "record_type": "",
+            "selector": {
+              "selection": "one",
+              "entry_ids": [],
+              "filters": [],
+              "rank": null,
+              "required_values": [],
+              "min_items": null,
+              "max_items": null
+            },
+            "sources": [
+              {
+                "field_id": "project_description",
+                "covers": "从项目完整描述中填写职责"
+              }
+            ],
+            "alternatives": [],
+            "coverage": {
+              "covered": [
+                "从项目完整描述中填写职责"
+              ],
+              "uncovered": [],
+              "partial": false
+            },
+            "plan": {
+              "kind": "extract",
+              "transform": null,
+              "extracts": [
+                {
+                  "span_id": "span1",
+                  "start": 0,
+                  "end": 8,
+                  "covers": "职责"
+                }
+              ]
+            },
+            "availability": {
+              "status": "draft_required",
+              "check_id": null
+            },
+            "relation_id": null,
+            "new_attribute": null,
+            "request_expand_catalog": false,
+            "reason": "虚构样例：依据所给对象及属性定义提出候选。",
+            "clarification": ""
+          },
+          {
+            "question_id": "partial",
+            "proposal_state": "candidate",
+            "semantic_status": "ambiguous",
+            "category": "projects",
+            "record_type": "",
+            "selector": {
+              "selection": "one",
+              "entry_ids": [],
+              "filters": [],
+              "rank": null,
+              "required_values": [],
+              "min_items": null,
+              "max_items": null
+            },
+            "sources": [
+              {
+                "field_id": "project_responsibilities",
+                "covers": "项目职责与预算"
+              }
+            ],
+            "alternatives": [],
+            "coverage": {
+              "covered": [
+                "职责"
+              ],
+              "uncovered": [
+                "预算"
+              ],
+              "partial": true
+            },
+            "plan": {
+              "kind": "none",
+              "transform": null,
+              "extracts": []
+            },
+            "availability": {
+              "status": "not_evaluated",
+              "check_id": null
+            },
+            "relation_id": null,
+            "new_attribute": null,
+            "request_expand_catalog": false,
+            "reason": "虚构样例：依据所给对象及属性定义提出候选。",
+            "clarification": "现有职责可对应，预算含义及来源待确认。"
+          },
+          {
+            "question_id": "ambiguous",
+            "proposal_state": "candidate",
+            "semantic_status": "ambiguous",
+            "category": "subjective",
+            "record_type": "",
+            "selector": {
+              "selection": "one",
+              "entry_ids": [],
+              "filters": [],
+              "rank": null,
+              "required_values": [],
+              "min_items": null,
+              "max_items": null
+            },
+            "sources": [],
+            "alternatives": [
+              {
+                "field_ids": [
+                  "fictional_self_review"
+                ],
+                "reason": "可能问自我评价"
+              },
+              {
+                "field_ids": [
+                  "fictional_motivation"
+                ],
+                "reason": "可能问求职动机"
+              }
+            ],
+            "coverage": {
+              "covered": [],
+              "uncovered": [],
+              "partial": false
+            },
+            "plan": {
+              "kind": "none",
+              "transform": null,
+              "extracts": []
+            },
+            "availability": {
+              "status": "not_evaluated",
+              "check_id": null
+            },
+            "relation_id": null,
+            "new_attribute": null,
+            "request_expand_catalog": false,
+            "reason": "虚构样例：依据所给对象及属性定义提出候选。",
+            "clarification": "请补充个人陈述的题目说明。"
+          },
+          {
+            "question_id": "unknown",
+            "proposal_state": "candidate",
+            "semantic_status": "unresolved",
+            "category": "",
+            "record_type": "",
+            "selector": null,
+            "sources": [],
+            "alternatives": [],
+            "coverage": {
+              "covered": [],
+              "uncovered": [],
+              "partial": false
+            },
+            "plan": {
+              "kind": "none",
+              "transform": null,
+              "extracts": []
+            },
+            "availability": {
+              "status": "not_evaluated",
+              "check_id": null
+            },
+            "relation_id": null,
+            "new_attribute": null,
+            "request_expand_catalog": false,
+            "reason": "虚构样例：依据所给对象及属性定义提出候选。",
+            "clarification": "缺少对象和问题说明。"
+          },
+          {
+            "question_id": "new",
+            "proposal_state": "candidate",
+            "semantic_status": "new_attribute_candidate",
+            "category": "projects",
+            "record_type": "",
+            "selector": {
+              "selection": "one",
+              "entry_ids": [],
+              "filters": [],
+              "rank": null,
+              "required_values": [],
+              "min_items": null,
+              "max_items": null
+            },
+            "sources": [],
+            "alternatives": [],
+            "coverage": {
+              "covered": [],
+              "uncovered": [],
+              "partial": false
+            },
+            "plan": {
+              "kind": "none",
+              "transform": null,
+              "extracts": []
+            },
+            "availability": {
+              "status": "not_evaluated",
+              "check_id": null
+            },
+            "relation_id": null,
+            "new_attribute": {
+              "label": "项目预算币种",
+              "meaning": "本项目预算的计价币种",
+              "category": "projects",
+              "record_type": "",
+              "type": "text",
+              "unit": "",
+              "scale": "",
+              "search_receipt": "search-full-1"
+            },
+            "request_expand_catalog": false,
+            "reason": "虚构样例：依据所给对象及属性定义提出候选。",
+            "clarification": ""
+          },
+          {
+            "question_id": "narrow",
+            "proposal_state": "candidate",
+            "semantic_status": "unresolved",
+            "category": "family",
+            "record_type": "",
+            "selector": {
+              "selection": "one",
+              "entry_ids": [],
+              "filters": [],
+              "rank": null,
+              "required_values": [],
+              "min_items": null,
+              "max_items": null
+            },
+            "sources": [],
+            "alternatives": [],
+            "coverage": {
+              "covered": [],
+              "uncovered": [],
+              "partial": false
+            },
+            "plan": {
+              "kind": "none",
+              "transform": null,
+              "extracts": []
+            },
+            "availability": {
+              "status": "not_evaluated",
+              "check_id": null
+            },
+            "relation_id": null,
+            "new_attribute": null,
+            "request_expand_catalog": true,
+            "reason": "虚构样例：依据所给对象及属性定义提出候选。",
+            "clarification": "请求扩大到家庭成员类型的全部字段及别名再判断。"
+          },
+          {
+            "question_id": "highest",
+            "proposal_state": "candidate",
+            "semantic_status": "equivalent",
+            "category": "education",
+            "record_type": "",
+            "selector": {
+              "selection": "highest",
+              "entry_ids": [],
+              "filters": [],
+              "rank": {
+                "field_id": "degree",
+                "domain": "education_level",
+                "direction": "desc"
+              },
+              "required_values": [],
+              "min_items": null,
+              "max_items": null
+            },
+            "sources": [
+              {
+                "field_id": "school",
+                "covers": "最高学历院校"
+              }
+            ],
+            "alternatives": [],
+            "coverage": {
+              "covered": [
+                "最高学历院校"
+              ],
+              "uncovered": [],
+              "partial": false
+            },
+            "plan": {
+              "kind": "alias",
+              "transform": null,
+              "extracts": []
+            },
+            "availability": {
+              "status": "not_evaluated",
+              "check_id": null
+            },
+            "relation_id": null,
+            "new_attribute": null,
+            "request_expand_catalog": false,
+            "reason": "虚构样例：依据所给对象及属性定义提出候选。",
+            "clarification": ""
+          },
+          {
+            "question_id": "language",
+            "proposal_state": "candidate",
+            "semantic_status": "equivalent",
+            "category": "language",
+            "record_type": "ability",
+            "selector": {
+              "selection": "one",
+              "entry_ids": [],
+              "filters": [],
+              "rank": null,
+              "required_values": [],
+              "min_items": null,
+              "max_items": null
+            },
+            "sources": [
+              {
+                "field_id": "language_level",
+                "covers": "总体熟练程度"
+              }
+            ],
+            "alternatives": [],
+            "coverage": {
+              "covered": [
+                "总体熟练程度"
+              ],
+              "uncovered": [],
+              "partial": false
+            },
+            "plan": {
+              "kind": "alias",
+              "transform": null,
+              "extracts": []
+            },
+            "availability": {
+              "status": "not_evaluated",
+              "check_id": null
+            },
+            "relation_id": null,
+            "new_attribute": null,
+            "request_expand_catalog": false,
+            "reason": "虚构样例：依据所给对象及属性定义提出候选。",
+            "clarification": ""
+          }
+        ]
+      },
+      "expected_error": null
+    }
+  ]
+}

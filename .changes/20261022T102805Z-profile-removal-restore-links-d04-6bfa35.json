@@ -1,0 +1,21 @@
+{
+  "kind": "docs",
+  "summary": "Confirm automatic restoration of valid original profile relationships, preserving deliberate cancellations and deferring conflicting links without overwriting later edits.",
+  "capabilities": [
+    "profile"
+  ],
+  "validation": "check_docs.py passed: 114 Markdown files, 749 relative links and D01-D100 coverage. check_project.py passed with 49 change records before recording. Reviewed seven new acceptance targets for valid links, deliberate cancellation, changed or missing targets, conflicts, drafts, transaction failure, repeated requests and default-version protection. Runtime tests not run; documentation only.",
+  "compatibility": "No code, Skill, API, runtime data, deployment or website changes. The three scoped removal decisions are confirmed but unimplemented; field catalog, version ownership and legacy migration retain their separate boundaries.",
+  "handoff": {
+    "task": "profile-removal-restore-links-d04",
+    "status": "complete",
+    "next": "The main guide owner should consolidate all three confirmed removal decisions and reference the topic acceptance cases after checking shared-file occupancy. Keep legacy-archive migration and cross-topic consistency checks before implementation; no further product choice remains among the three assigned removal questions.",
+    "docs": [],
+    "docs_reason": "Updated only the private removal PRD topic to D0.4 with confirmed restoration behavior, valid-target and cancellation scope, conflict handling, cancellation/failure/history boundaries and seven acceptance targets. Shared-guide consolidation is explicitly listed because those files were registered by a concurrent task; public runtime contracts remain unchanged."
+  },
+  "id": "20261022T102805Z-profile-removal-restore-links-d04-6bfa35",
+  "files": [
+    "docs/PROJECT_ACTIVITY.md"
+  ],
+  "release": "0.4.0"
+}

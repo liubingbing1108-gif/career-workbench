@@ -1,0 +1,41 @@
+{
+  "kind": "docs",
+  "summary": "Prepare v0.4.0 profile-contract release and align public rules and upgrade instructions.",
+  "capabilities": [
+    "profile",
+    "mapping",
+    "import",
+    "execution",
+    "distribution"
+  ],
+  "validation": "Previously verified source passed 403 profile, 97 management, 42 script tests (one skipped), 120 JavaScript tests and 18 browser scripts. Publication changes are version metadata and documentation; document checks pass. Exact release CI and asset checks pending.",
+  "compatibility": "Explicit contract30 migration; extension 1.3.10/core 1.2.37/client 1.2.13 with protocol v1. Existing data remains local and old databases are not silently migrated.",
+  "handoff": {
+    "task": "profile-release-040",
+    "status": "in_progress",
+    "next": "Verify sanitized export and full PR baseline, publish through PR and successful exact-commit CI, build and read back immutable release assets, verify installed extension.",
+    "docs": [
+      "README.md",
+      "CHANGELOG.md",
+      "docs/PRODUCT_REQUIREMENTS.md",
+      "docs/DECISIONS.md",
+      "docs/OPERATIONS.md",
+      "docs/RELEASE.md",
+      "docs/HANDOFF_CONTEXT.md"
+    ],
+    "docs_reason": "Publish the implemented profile rules and explicit migration instructions; preserve older version notes as history."
+  },
+  "id": "20261029T114127Z-profile-release-040-592919",
+  "files": [
+    "CHANGELOG.md",
+    "README.md",
+    "docs/DECISIONS.md",
+    "docs/HANDOFF_CONTEXT.md",
+    "docs/OPERATIONS.md",
+    "docs/PRODUCT_REQUIREMENTS.md",
+    "docs/RELEASE.md",
+    "package-lock.json",
+    "package.json"
+  ],
+  "release": "0.4.0"
+}

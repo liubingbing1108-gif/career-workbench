@@ -1,0 +1,26 @@
+{
+  "kind": "refactor",
+  "summary": "Extend current-contract import acceptance across alias review, nonversioned objects, deletion recovery and source-review UI.",
+  "capabilities": [
+    "profile",
+    "import",
+    "mapping",
+    "execution"
+  ],
+  "validation": "27 current-import tests passed including five stable categories, explicit exam alias review with retained ability link, and restore/import retaining hidden settings without recreating manually cancelled links. Source-review browser passed both legacy and contract30 fixtures. Earlier full exported suite remains 400 profile, 97 management, 40 scripts, 120 JavaScript and 18 browser scripts.",
+  "compatibility": "Only synthetic tests and private migration candidate review changed since the prior receipt. Active databases, installed extension and real recruitment sites remain unchanged. Retired preset evidence is explicitly preserved according to the approved contract.",
+  "handoff": {
+    "task": "profile-refactor-implementation",
+    "status": "in_progress",
+    "next": "Await pending personal-data choices, finish disposition of old global metadata, recheck original database hashes, perform reviewed migration and local runtime/extension readback. Chrome extension manager is blank; do not restart browser or refresh recruiting pages without resolving that limitation.",
+    "docs": [],
+    "docs_reason": "Private parser compatibility, validation and implementation records now describe the additional verified acceptance cases; no public API changed."
+  },
+  "id": "20261027T124905Z-profile-refactor-implementation-1dc709",
+  "files": [
+    "prototypes/profile-lab/test_current_import_review.py",
+    "prototypes/profile-lab/test_import_questions_browser.cjs",
+    "prototypes/profile-lab/test_import_questions_fixture.py"
+  ],
+  "release": "0.4.0"
+}

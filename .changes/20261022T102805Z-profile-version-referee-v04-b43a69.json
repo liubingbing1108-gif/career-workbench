@@ -1,0 +1,21 @@
+{
+  "kind": "docs",
+  "summary": "Confirm shared referee name, title and contact information across internship expression versions, with scoped saves and historical protection.",
+  "capabilities": [
+    "profile"
+  ],
+  "validation": "python3 scripts/check_docs.py passed: 114 Markdown files, 749 relative links, D01-D100 coverage. python3 scripts/check_project.py passed: catalog, references and 49 change records; PR diff not checked. Read back the three field assignments and V-11 through V-14 planned acceptance examples. No product tests run for this documentation-only change.",
+  "compatibility": "No code, Skill, API, runtime data, original files, website or deployment changes. Contact linking, cardinality and cross-record save effects remain pending separate confirmation.",
+  "handoff": {
+    "task": "profile-version-referee-v04",
+    "status": "complete",
+    "next": "Confirm whether full internship description, responsibilities and achievements are the specific fields that switch together with expression versions. Contact association design remains a cross-topic dependency; do not infer approval from shared ownership.",
+    "docs": [],
+    "docs_reason": "Updated only the assigned private version PRD to V0.4 with three field assignments, save/cancel/failure/history rules, planned acceptance examples and contact dependencies. The main guide delegates this domain to the topic; no shared files were edited."
+  },
+  "id": "20261022T102805Z-profile-version-referee-v04-b43a69",
+  "files": [
+    "docs/PROJECT_ACTIVITY.md"
+  ],
+  "release": "0.4.0"
+}

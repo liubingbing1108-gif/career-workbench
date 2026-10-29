@@ -1,0 +1,21 @@
+{
+  "kind": "docs",
+  "summary": "Confirm independent contact fields and separate residence and mailing address saves; prepare the full education field batch.",
+  "capabilities": [
+    "profile"
+  ],
+  "validation": "check_docs and check_project passed; verified 258 unique review IDs and 33 education candidates against source presets. No product or live-data tests.",
+  "compatibility": "Documentation only; no code, Skill, API, runtime, migration, browser or release changes.",
+  "handoff": {
+    "task": "profile-fields-contact-address-f010",
+    "status": "complete",
+    "next": "Ask for bulk confirmation of all 33 education fields with per-education current-value saves, optional inputs, partial dates and source-file references; keep this proposal pending.",
+    "docs": [],
+    "docs_reason": "Updated the owning local field PRD and review catalog; other chats own version and shared guide updates."
+  },
+  "id": "20261022T114143Z-profile-fields-contact-address-f010-12d1a0",
+  "files": [
+    "docs/PROJECT_ACTIVITY.md"
+  ],
+  "release": "0.4.0"
+}

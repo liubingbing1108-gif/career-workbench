@@ -58,6 +58,8 @@ def active_fields(layout):
 
 
 def visible(state,entry,fid,session=None):
+    from profile_contract import active, fields_for as current_fields
+    if active(state):return fid in {f['id'] for f in current_fields(state,entry)}
     field=next((f for f in state['fields'] if f['id']==fid),{})
     if field.get('entry_id') and field['entry_id']!=entry['id']:return False
     layouts=[record_layout(state,entry)]
@@ -69,6 +71,8 @@ def visible(state,entry,fid,session=None):
 
 def mapping_fields(state):
     """Supply meanings and hierarchy labels, never raw personal values."""
+    from profile_contract import active
+    if active(state):return copy.deepcopy([f for f in state['fields'] if not f.get('legacy_preserved')])
     nodes={n['id']:n for n in state.get('profile_tree',{}).get('nodes',[])}
     result=copy.deepcopy(state['fields']);by_id={f['id']:f for f in result}
     for entry,layout in views(state):

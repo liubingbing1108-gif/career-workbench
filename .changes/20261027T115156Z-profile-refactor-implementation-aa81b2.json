@@ -1,0 +1,24 @@
+{
+  "kind": "refactor",
+  "summary": "Guard optional current-profile state in the progress renderer after isolated exported-project validation exposed legacy standalone progress failures.",
+  "capabilities": [
+    "profile",
+    "import",
+    "mapping",
+    "execution"
+  ],
+  "validation": "Exported candidate: 387 profile, 97 management and 37 script tests complete (1 skipped). First combined JavaScript run failed: 17 progress fixtures lacked global state; five browser cases loaded host Playwright 1.62.1 instead of project-pinned 1.58.2. Progress suite now passes; fresh candidate will reuse installed pinned dependencies for full rerun.",
+  "compatibility": "Contract30 opt-in remains. Protocol v1 gains optional stopProof/read-only executionState with same-core checks; source core 1.2.37 and extension 1.3.10 unchanged from this unreleased candidate. Active database/service, installed extension, actual websites and remote release untouched.",
+  "handoff": {
+    "task": "profile-refactor-implementation",
+    "status": "in_progress",
+    "next": "Run whole-project and exported-candidate validation; finish parser I-01 to I-08, legacy/global custom-field and migration edge cases, then read-only active inventory and isolated migration rehearsal before any switch.",
+    "docs": [],
+    "docs_reason": "Compatibility guard for optional state; no product rule or API change. Initial export test failures remain explicitly tracked until rerun."
+  },
+  "id": "20261027T115156Z-profile-refactor-implementation-aa81b2",
+  "files": [
+    "prototypes/profile-lab/web/preparation.js"
+  ],
+  "release": "0.4.0"
+}

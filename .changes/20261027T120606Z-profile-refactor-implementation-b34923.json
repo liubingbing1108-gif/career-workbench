@@ -1,0 +1,34 @@
+{
+  "kind": "refactor",
+  "summary": "Preserve deferred migration choices after explicit object classification, audit every historical attempt, and extend current-contract import and browser regression coverage.",
+  "capabilities": [
+    "profile",
+    "import",
+    "mapping",
+    "execution"
+  ],
+  "validation": "398 profile tests passed; 23 current import tests included. Expanded flat browser passed with explicit type followed by sitting choice. Previous exported full project passed 387 profile, 97 management, 37 script tests (one skip), 120 JavaScript tests and all 17 browser scripts. Latest source export rerun pending. Private isolated migration apply/replay/rollback and original-byte restoration passed; active source read-only.",
+  "compatibility": "Contract30 remains opt-in; classification does not implicitly choose old exam results. Missing historical material keeps cleanup blocked. Retired-category custom fields stay readable as evidence. No active service/database switch, extension installation, real website/model action or remote publication.",
+  "handoff": {
+    "task": "profile-refactor-implementation",
+    "status": "in_progress",
+    "next": "Finish remaining parser acceptance combinations, global legacy field and duplicate-identity migration decisions, management-linked rehearsal, and real model forward validation before activation. Latest full export rerun follows this record.",
+    "docs": [
+      "docs/AGENT_INTEGRATION.md"
+    ],
+    "docs_reason": "Implementation and acceptance evidence updated; private active inventory and rehearsal details stay in private documentation and excluded local artifacts. No new public endpoint."
+  },
+  "id": "20261027T120606Z-profile-refactor-implementation-b34923",
+  "files": [
+    "docs/AGENT_INTEGRATION.md",
+    "prototypes/profile-lab/profile_contract.py",
+    "prototypes/profile-lab/profile_migration.py",
+    "prototypes/profile-lab/profile_pending.py",
+    "prototypes/profile-lab/test_current_import_review.py",
+    "prototypes/profile-lab/test_profile_flat_browser.cjs",
+    "prototypes/profile-lab/test_profile_flat_fixture.py",
+    "prototypes/profile-lab/test_profile_pending.py",
+    "prototypes/profile-lab/web/profile-flat.js"
+  ],
+  "release": "0.4.0"
+}

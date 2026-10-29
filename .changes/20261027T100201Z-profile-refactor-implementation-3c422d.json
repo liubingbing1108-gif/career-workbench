@@ -1,0 +1,38 @@
+{
+  "kind": "refactor",
+  "summary": "Prepare gated flat-profile catalog, shared facts and expression versions, migration rehearsal and initial UI. Implementation remains incomplete and inactive.",
+  "capabilities": [
+    "profile",
+    "import",
+    "mapping"
+  ],
+  "validation": "54 profile Python tests pass including 11 new contract cases; node --check profile-flat.js passes. Full suite, UI, Skill and live migration not yet validated.",
+  "compatibility": "Explicit profile_contract=30 activation only; existing active database and executor protocol unchanged. No deployment or real website activity.",
+  "handoff": {
+    "task": "profile-refactor-implementation",
+    "status": "in_progress",
+    "next": "Finish migration/trash, flat UI, parser and mapping Skill integration, selected writeback and correction, then full isolated validation before any active switch.",
+    "docs": [],
+    "docs_reason": "Latest confirmed PRD is unchanged; private PROFILE_REFACTOR_IMPLEMENTATION.md records actual progress and incomplete acceptance."
+  },
+  "id": "20261027T100201Z-profile-refactor-implementation-3c422d",
+  "files": [
+    "prototypes/profile-lab/application.py",
+    "prototypes/profile-lab/lab.py",
+    "prototypes/profile-lab/material_sets.py",
+    "prototypes/profile-lab/profile_contract.py",
+    "prototypes/profile-lab/profile_current.py",
+    "prototypes/profile-lab/profile_group_versions.py",
+    "prototypes/profile-lab/profile_hierarchy.py",
+    "prototypes/profile-lab/profile_library.py",
+    "prototypes/profile-lab/profile_migration.py",
+    "prototypes/profile-lab/profile_schema.py",
+    "prototypes/profile-lab/profile_trash.py",
+    "prototypes/profile-lab/server.py",
+    "prototypes/profile-lab/test_profile_contract.py",
+    "prototypes/profile-lab/web/index.html",
+    "prototypes/profile-lab/web/profile-flat.js",
+    "prototypes/profile-lab/web/profile-library.css"
+  ],
+  "release": "0.4.0"
+}

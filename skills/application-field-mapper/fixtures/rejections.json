@@ -1,0 +1,198 @@
+{
+  "fictional": true,
+  "base_fixture": "conformance.json",
+  "notes": "Apply each independent change to a fresh copy of the synthetic positive fixture; each must be rejected with the specified code. No request is sent to a model.",
+  "cases": [
+    {
+      "name": "unknown_field",
+      "changes": [
+        {
+          "side": "response",
+          "path": [
+            "decisions",
+            0,
+            "sources",
+            0,
+            "field_id"
+          ],
+          "value": "fictional-unknown"
+        }
+      ],
+      "expected_error": "unknown_field"
+    },
+    {
+      "name": "cross_person",
+      "changes": [
+        {
+          "side": "response",
+          "path": [
+            "decisions",
+            0,
+            "sources",
+            0,
+            "field_id"
+          ],
+          "value": "family_company"
+        }
+      ],
+      "expected_error": "cross_category"
+    },
+    {
+      "name": "exam_is_not_ability",
+      "changes": [
+        {
+          "side": "response",
+          "path": [
+            "decisions",
+            14,
+            "sources",
+            0,
+            "field_id"
+          ],
+          "value": "fictional_exam_score"
+        }
+      ],
+      "expected_error": "cross_subtype"
+    },
+    {
+      "name": "missing_is_not_ready",
+      "changes": [
+        {
+          "side": "response",
+          "path": [
+            "decisions",
+            3,
+            "availability",
+            "status"
+          ],
+          "value": "ready"
+        }
+      ],
+      "expected_error": "availability_mismatch"
+    },
+    {
+      "name": "partial_is_not_equivalent",
+      "changes": [
+        {
+          "side": "response",
+          "path": [
+            "decisions",
+            8,
+            "semantic_status"
+          ],
+          "value": "equivalent"
+        }
+      ],
+      "expected_error": "partial_as_complete"
+    },
+    {
+      "name": "compose_is_not_alias",
+      "changes": [
+        {
+          "side": "response",
+          "path": [
+            "decisions",
+            6,
+            "plan",
+            "kind"
+          ],
+          "value": "alias"
+        }
+      ],
+      "expected_error": "plan_status_mismatch"
+    },
+    {
+      "name": "extract_must_be_draft",
+      "changes": [
+        {
+          "side": "response",
+          "path": [
+            "decisions",
+            7,
+            "availability",
+            "status"
+          ],
+          "value": "not_evaluated"
+        }
+      ],
+      "expected_error": "extract_not_draft"
+    },
+    {
+      "name": "extract_bounds",
+      "changes": [
+        {
+          "side": "response",
+          "path": [
+            "decisions",
+            7,
+            "plan",
+            "extracts",
+            0,
+            "end"
+          ],
+          "value": 999
+        }
+      ],
+      "expected_error": "extract_bounds"
+    },
+    {
+      "name": "narrow_search_cannot_create",
+      "changes": [
+        {
+          "side": "request",
+          "path": [
+            "search",
+            "complete_categories"
+          ],
+          "value": []
+        }
+      ],
+      "expected_error": "incomplete_search"
+    },
+    {
+      "name": "model_cannot_activate",
+      "changes": [
+        {
+          "side": "response",
+          "path": [
+            "decisions",
+            0,
+            "proposal_state"
+          ],
+          "value": "active"
+        }
+      ],
+      "expected_error": "schema_response"
+    },
+    {
+      "name": "date_precision_not_invented",
+      "changes": [
+        {
+          "side": "response",
+          "path": [
+            "decisions",
+            5,
+            "plan",
+            "transform"
+          ],
+          "value": "add_day_01"
+        }
+      ],
+      "expected_error": "schema_response"
+    },
+    {
+      "name": "stale_job_response",
+      "changes": [
+        {
+          "side": "response",
+          "path": [
+            "context",
+            "session_id"
+          ],
+          "value": "fictional-other-job"
+        }
+      ],
+      "expected_error": "stale_context"
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "kind": "docs",
+  "summary": "Prepare a complete profile field review catalog with examples, ownership, variant and reference proposals, and legacy field coverage.",
+  "capabilities": [
+    "profile"
+  ],
+  "validation": "check_docs.py passed: 108 Markdown files, 692 relative links. Catalog audit passed: all 232 source field definitions accounted for, 258 unique review rows, valid columns. No runtime tests or live data inspection.",
+  "compatibility": "Documentation only. Candidate fields are not approved implementation tasks. No code, Skill, API, runtime storage, permissions or deployment changes.",
+  "handoff": {
+    "task": "profile-field-catalog-v024",
+    "status": "complete",
+    "next": "Review candidate fields by topic and row with the user; record only explicitly confirmed scope before implementing.",
+    "docs": [],
+    "docs_reason": "Updated private candidate catalog, primary PRD and requirement/decision/acceptance/handoff/planning indexes. Public runtime contracts unchanged."
+  },
+  "id": "20261022T094805Z-profile-field-catalog-v024-a9aff2",
+  "files": [
+    "docs/PROJECT_ACTIVITY.md"
+  ],
+  "release": "0.4.0"
+}

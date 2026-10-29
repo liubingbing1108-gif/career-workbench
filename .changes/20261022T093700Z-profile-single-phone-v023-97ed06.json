@@ -1,0 +1,21 @@
+{
+  "kind": "docs",
+  "summary": "Document a single primary mobile number with dialing prefix and consolidate remaining profile design decisions.",
+  "capabilities": [
+    "profile"
+  ],
+  "validation": "check_docs.py passed: 107 Markdown files and 675 relative links; targeted specification review passed. Documentation only; runtime tests not run.",
+  "compatibility": "No code, Skill, API, runtime storage or deployment changes. Unconfirmed field catalogs remain outside implementation tasks.",
+  "handoff": {
+    "task": "profile-single-phone-v023",
+    "status": "complete",
+    "next": "Review the complete field catalog, shared versus variant experience fields, and remaining deletion/restoration behavior with the user before implementation.",
+    "docs": [],
+    "docs_reason": "Updated private authoritative PRD and requirement, decision, acceptance, handoff and planning indexes. Public runtime contracts unchanged."
+  },
+  "id": "20261022T093700Z-profile-single-phone-v023-97ed06",
+  "files": [
+    "docs/PROJECT_ACTIVITY.md"
+  ],
+  "release": "0.4.0"
+}

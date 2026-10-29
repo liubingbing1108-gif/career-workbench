@@ -1,0 +1,28 @@
+{
+  "kind": "refactor",
+  "summary": "Deliver contract30 profile workflow, reviewed migration and local runtime activation with retained historical evidence.",
+  "capabilities": [
+    "profile",
+    "import",
+    "mapping",
+    "execution"
+  ],
+  "validation": "Final exported suite passed: 403 profile, 97 management, 42 script tests (one skipped), 120 JavaScript tests and 18 browser scripts. Final reviewed-copy apply/replay/startup/rollback passed. Local runtime health and contract30 state read back; original BLOBs, management contents and session drafts/statuses retained. Installed extension version verified; local profile UI verified. Documentation checks passed.",
+  "compatibility": "Uses existing storage and service entry point; protocol v1 retained. Legacy previews invalidated without changing execution statuses. Missing historical material remains explicitly marked with related cleanup protection. Sample records removed from available library; source evidence retained. No remote publication or real recruitment-site operation.",
+  "handoff": {
+    "task": "profile-refactor-implementation",
+    "status": "complete",
+    "next": "No remaining work in this local delivery scope. Broader real-site persistence coverage and remote publication remain separately tracked.",
+    "docs": [
+      "docs/CAPABILITIES.json",
+      "docs/AGENT_INTEGRATION.md"
+    ],
+    "docs_reason": "Capability limitations and agent migration instructions now reflect the delivered contract and retained historical-evidence boundaries. Private requirements, acceptance, deployment and navigation records synchronized."
+  },
+  "id": "20261029T104657Z-profile-refactor-implementation-1279bf",
+  "files": [
+    "docs/AGENT_INTEGRATION.md",
+    "docs/CAPABILITIES.json"
+  ],
+  "release": "0.4.0"
+}

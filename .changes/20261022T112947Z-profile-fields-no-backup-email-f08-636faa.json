@@ -1,0 +1,21 @@
+{
+  "kind": "docs",
+  "summary": "Exclude the backup-email preset and adopt category-level batch field review while preserving explicit approval scope and legacy data.",
+  "capabilities": [
+    "profile"
+  ],
+  "validation": "check_docs.py PASS; check_project.py PASS. Readback verified 258 unique original review IDs, retired 03-04, legacy backup_email preservation and batch-review policy. No implementation tests or live-data access.",
+  "compatibility": "Documentation only. Original numbering retained; no runtime data deletion, code, Skill, API, migration or release changes.",
+  "handoff": {
+    "task": "profile-fields-no-backup-email-f08",
+    "status": "complete",
+    "next": "Present remaining contact fields 03-03 and 03-05 through 03-07 together with address fields 04-01 through 04-07 for batch review. Do not repeat individual-field questions or infer full approval from permission to batch review. Backup email is excluded; preserve legacy values before migration.",
+    "docs": [],
+    "docs_reason": "Updated the owning local field PRD and catalog, including exclusion scope, legacy mapping, acceptance examples and user-requested review cadence. Other topics and shared guide were not edited."
+  },
+  "id": "20261022T112947Z-profile-fields-no-backup-email-f08-636faa",
+  "files": [
+    "docs/PROJECT_ACTIVITY.md"
+  ],
+  "release": "0.4.0"
+}

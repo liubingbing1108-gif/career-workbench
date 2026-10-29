@@ -85,6 +85,8 @@ def validate_value(field, value):
         raise LabError("字段值必须为文本，且不能超过 30000 字符")
     if field.get("widget")=="boolean" and value not in ("","是","否","不适用"):
         raise LabError(field["label"]+"请选择是、否、未提供或不适用")
+    if field.get('boolean_values') and value not in ['', *field['boolean_values']]:
+        raise LabError(field['label']+'请选择是、否或留空')
     if value and field["type"] == "date":
         try:
             if date.fromisoformat(value).isoformat() != value:
@@ -94,8 +96,26 @@ def validate_value(field, value):
     if value and field["type"] == "number":
         if not re.fullmatch(r"-?\d+(\.\d+)?", value):
             raise LabError(f'{field["label"]}需要数字')
+        if field.get('integer') and not re.fullmatch(r'\d+', value):
+            raise LabError(f'{field["label"]}需要非负整数')
+    if field.get('widget') == 'multi_select' and value:
+        chosen=value.split('\n')
+        if len(chosen)!=len(set(chosen)) or set(chosen)-set(field.get('options',[])):
+            raise LabError(field['label']+'包含无效选项')
+    if field.get('widget') == 'exam_components' and value:
+        from decimal import Decimal, InvalidOperation
+        try:
+            rows=json.loads(value)
+            if not isinstance(rows,list) or len(rows)>100:raise ValueError()
+            for row in rows:
+                if not isinstance(row,dict) or set(row)-{'name','score','scale'}:raise ValueError()
+                if not all(isinstance(v,str) and len(v)<=500 for v in row.values()):raise ValueError()
+                for key in ('score','scale'):
+                    if row.get(key) and not Decimal(row[key]).is_finite():raise ValueError()
+        except (ValueError, TypeError, InvalidOperation):
+            raise LabError('分项成绩需要项目名称、数字成绩和分制组成的列表')
     if value and field["type"] == "partial_date":
-        if value != "至今":
+        if value != "至今" and value not in field.get('date_markers',[]):
             if not re.fullmatch(r"\d{4}(?:-\d{2}(?:-\d{2})?)?", value):
                 raise LabError(f'{field["label"]}需要 YYYY、YYYY-MM、YYYY-MM-DD 或至今')
             try:
@@ -228,6 +248,13 @@ def all_versions(state, entry_id, field_id):
 
 def default_version(state, entry, field_id):
     versions = [v for v in all_versions(state, entry["id"], field_id) if not v.get('profile_deleted')]
+    from profile_contract import active, expression_ids
+    if active(state):
+        selected=entry.get('default_versions',{}).get(field_id)
+        if field_id in expression_ids(state,entry):
+            version=next((v for v in entry.get('expression_versions',[]) if v['id']==entry.get('profile_default_set_id') and not v.get('deleted_at')),None)
+            selected=(version or {}).get('field_versions',{}).get(field_id)
+        return next((v for v in versions if v['id']==selected),None)
     return next((v for v in versions if v["id"] == entry.get("default_versions", {}).get(field_id)), versions[0] if versions else None)
 
 
@@ -248,7 +275,7 @@ def put_answer(state, entry, field, content, mode="new", target_id=None, name="�
             store.append(target)
     entry.setdefault("default_versions", {}).setdefault(field["id"], target["id"])
     current = default_version(state, entry, field["id"])
-    if field["type"] != "versioned_text":
+    if field["type"] != "versioned_text" and current is not None:
         entry["values"][field["id"]] = current["content"]
         entry["sources"][field["id"]] = current.get("source", {})
     return target
@@ -359,6 +386,50 @@ def reconcile_semantic_imports(state):
     reconcile(state)
 
 
+def normalize_startup(state):
+    """Shared deterministic startup upgrades, also used by migration rehearsal."""
+    for preview in state['imports']:
+        if preview.get('status') == '识别中':
+            preview.update(status='已中断', stage='已中断', error='服务重启中断了识别，原文件已保留，可以重试。')
+    state.setdefault("answer_versions", [])
+    for key, label, repeatable in CATEGORIES:
+        if not any(c['id'] == key for c in state['categories']):
+            state['categories'].append({'id': key, 'label': label, 'repeatable': repeatable})
+    for field in state["fields"]:
+        if field["id"] in {"started", "ended", "graduation_date"} and field["type"] == "date":
+            field["type"] = "partial_date"
+    for entry in state["entries"]:
+        for field_id, value in entry["values"].items():
+            field = next((f for f in state["fields"] if f["id"] == field_id), None)
+            if field and not all_versions(state, entry["id"], field_id):
+                put_answer(state, entry, field, value, name="已确认版本", source=entry["sources"].get(field_id))
+        for version in state["versions"]:
+            if version["entry_id"] == entry["id"]:
+                from profile_contract import active,expression_ids
+                if active(state) and version['field_id'] in expression_ids(state,entry):continue
+                entry["default_versions"].setdefault(version["field_id"], version["id"])
+    if state.get("profile_schema_version", 0) < 3:
+        # Older prototype overwrote scalar answers during explicit imports.
+        # Recover those confirmed alternatives from their retained provenance,
+        # while keeping the user's latest value as the default.
+        for preview in state["imports"]:
+            for c in preview["candidates"]:
+                if not c.get("saved") or c["type"] == "versioned_text":
+                    continue
+                entry_id = c.get("created_entry") or c.get("entry_id")
+                entry = next((e for e in state["entries"] if e["id"] == entry_id), None)
+                field = next((f for f in state["fields"] if f["id"] == c["field_id"]), None)
+                if entry and field:
+                    put_answer(state, entry, field, c["value"], name=preview["filename"], source=c["source"])
+    state["profile_schema_version"] = 3
+    from profile_schema import install
+    install(state)
+    for stored in state["categories"]:
+        from profile_contract import category_for
+        definition=category_for(state,stored["id"])
+        if definition:stored.update(label=definition[1],repeatable=definition[2])
+
+
 class Lab:
     def __init__(self, directory, recognizer=None):
         self.directory = Path(directory)
@@ -372,46 +443,7 @@ class Lab:
         if not self.db.execute("SELECT 1 FROM state WHERE id=1").fetchone():
             self.db.execute("INSERT INTO state VALUES (1,?)", (json.dumps(initial_state(), ensure_ascii=False),))
         self.db.commit()
-        # Widen date precision without changing any previously recorded value.
-        def migrate(state):
-            for preview in state['imports']:
-                if preview.get('status') == '识别中':
-                    preview.update(status='已中断', stage='已中断', error='服务重启中断了识别，原文件已保留，可以重试。')
-            state.setdefault("answer_versions", [])
-            for key, label, repeatable in CATEGORIES:
-                if not any(c['id'] == key for c in state['categories']):
-                    state['categories'].append({'id': key, 'label': label, 'repeatable': repeatable})
-            for field in state["fields"]:
-                if field["id"] in {"started", "ended", "graduation_date"} and field["type"] == "date":
-                    field["type"] = "partial_date"
-            for entry in state["entries"]:
-                for field_id, value in entry["values"].items():
-                    field = next((f for f in state["fields"] if f["id"] == field_id), None)
-                    if field and not all_versions(state, entry["id"], field_id):
-                        put_answer(state, entry, field, value, name="已确认版本", source=entry["sources"].get(field_id))
-                for version in state["versions"]:
-                    if version["entry_id"] == entry["id"]:
-                        entry["default_versions"].setdefault(version["field_id"], version["id"])
-            if state.get("profile_schema_version", 0) < 3:
-                # Older prototype overwrote scalar answers during explicit imports.
-                # Recover those confirmed alternatives from their retained provenance,
-                # while keeping the user's latest value as the default.
-                for preview in state["imports"]:
-                    for c in preview["candidates"]:
-                        if not c.get("saved") or c["type"] == "versioned_text":
-                            continue
-                        entry_id = c.get("created_entry") or c.get("entry_id")
-                        entry = next((e for e in state["entries"] if e["id"] == entry_id), None)
-                        field = next((f for f in state["fields"] if f["id"] == c["field_id"]), None)
-                        if entry and field:
-                            put_answer(state, entry, field, c["value"], name=preview["filename"], source=c["source"])
-            state["profile_schema_version"] = 3
-            from profile_schema import install
-            install(state)
-            for stored in state["categories"]:
-                definition=category(stored["id"])
-                if definition:stored.update(label=definition[1],repeatable=definition[2])
-        self.mutate(migrate)
+        self.mutate(normalize_startup)
 
     def state(self):
         with self.lock:
@@ -419,7 +451,12 @@ class Lab:
 
     def mutate(self, action):
         with self.lock, self.db:
+            if not self.db.in_transaction:self.db.execute('BEGIN IMMEDIATE')
             state = self.state()
+            from profile_contract import active
+            if active(state):
+                from profile_trash import expire
+                expire(state)
             result = action(state)
             reconcile_semantic_imports(state)
             self.db.execute("UPDATE state SET body=? WHERE id=1", (json.dumps(state, ensure_ascii=False),))
@@ -608,6 +645,10 @@ class Lab:
             # Confirmed historical imports keep their existing contract; new Skill
             # imports are saved as whole representations in the same transaction.
             tagged={c['id'] for p in state['imports'] if p.get('parser_contract') for c in p['candidates']}
+            if state.get('profile_contract')==30:
+                legacy={c['id'] for p in state['imports'] if not p.get('parser_contract') for c in p['candidates'] if candidate_pending(c)}
+                if any(d.get('candidate_id') in legacy and d.get('mode')!='ignore' for d in decisions):
+                    raise LabError('此候选来自旧解析契约，已保留原件与旧结果；请明确重新解析后再按新版规则核对保存',409)
             if len({d['candidate_id'] for d in decisions})!=len(decisions):raise LabError('同一增量不能重复处理')
             for pid, revision in (revisions or {}).items():
                 if revision != find(state["imports"], pid).get("revision", 1):
@@ -678,10 +719,12 @@ class Lab:
 
     @staticmethod
     def new_entry(state, cat):
+        from profile_contract import category_for,active
         if not category(cat):
             raise LabError("未知资料分类")
-        existing = [e for e in state["entries"] if e["category"] == cat and not e.get("profile_archived")]
-        if existing and not category(cat)[2]:
+        if active(state) and cat in {'preferences','social'}:raise LabError('此类别已取消，不再创建预设对象')
+        existing = [e for e in state["entries"] if e["category"] == cat and not e.get("profile_archived") and not e.get('legacy_only')]
+        if existing and not category_for(state,cat)[2]:
             return existing[0]
         entry = {"id": uid(cat), "category": cat, "values": {}, "sources": {}, "default_versions": {}}
         state["entries"].append(entry)
@@ -689,6 +732,9 @@ class Lab:
 
     def add_field(self, request):
         def add(state):
+            if state.get('profile_contract') == 30:
+                from profile_current import add_custom_field
+                return add_custom_field(state, request)
             label = request.get("label", "").strip()
             cat, kind = request.get("category"), request.get("type", "text")
             if not label or len(label) > 100 or not category(cat) or kind not in KINDS:
@@ -708,6 +754,8 @@ class Lab:
 
     def save_profile(self, values):
         def save(state):
+            if state.get('profile_contract') == 30:
+                raise LabError('请通过当前资料保存入口核对修改与编辑标识', 409)
             for patch in values:
                 field = find(state["fields"], patch["field_id"])
                 entry = find(state["entries"], patch["entry_id"])
@@ -719,6 +767,8 @@ class Lab:
 
     def create_version(self, entry_id, field_id, content, name="手填描述"):
         def create(state):
+            if state.get('profile_contract') == 30:
+                raise LabError('不再提供字段版本；请编辑任职或项目的表达版本', 409)
             field = find(state["fields"], field_id)
             entry = find(state["entries"], entry_id)
             if field["category"] != entry["category"]:
@@ -728,6 +778,8 @@ class Lab:
 
     def set_default(self, entry_id, field_id, version_id):
         def update(state):
+            if state.get('profile_contract') == 30:
+                raise LabError('请通过表达版本设置默认；普通字段只有当前值', 409)
             entry = find(state["entries"], entry_id)
             field = find(state["fields"], field_id)
             version = find(all_versions(state, entry_id, field_id), version_id)
@@ -746,6 +798,8 @@ class Lab:
 
     def answer(self, session_id, field_id, value, save_to_profile=False):
         def save(state):
+            if state.get('profile_contract') == 30:
+                raise LabError('请通过本次投递材料编辑入口保存', 409)
             session = find(state["sessions"], session_id)
             field = find(state["fields"], field_id)
             if field["type"] == "versioned_text" or category(field["category"])[2]:
@@ -761,6 +815,8 @@ class Lab:
 
     def edit_version(self, session_id, version_id, mode, content, expected_revision=None, name=""):
         def edit(state):
+            if state.get('profile_contract') == 30:
+                raise LabError('请通过本次投递材料编辑入口保存', 409)
             session = find(state["sessions"], session_id)
             version = find(state["versions"] + state["answer_versions"], version_id)
             field = find(state["fields"], version["field_id"])
@@ -796,6 +852,8 @@ class Lab:
 
     def select_version(self, session_id, version_id):
         def select(state):
+            if state.get('profile_contract') == 30:
+                raise LabError('请选择完整表达版本，不再单独切换字段版本', 409)
             session = find(state["sessions"], session_id)
             version = find(state["versions"] + state["answer_versions"], version_id)
             key = version["entry_id"] + "/" + version["field_id"]

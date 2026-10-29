@@ -1,0 +1,21 @@
+{
+  "kind": "docs",
+  "summary": "Confirm four identity-document fields with separate document ownership, optional values, preserved date precision and saves scoped to the current document.",
+  "capabilities": [
+    "profile"
+  ],
+  "validation": "check_docs.py PASS; check_project.py PASS. Readback verified 258 unique review rows, four confirmed identity-document fields, pending email fields and acceptance targets F-18 through F-21. No implementation or live-data tests.",
+  "compatibility": "Documentation only; existing field names and legacy mappings retained. No code, Skill, API, runtime storage, migration, browser or release changes.",
+  "handoff": {
+    "task": "profile-fields-documents-f07",
+    "status": "complete",
+    "next": "Review primary and backup email fields (03-03 and 03-04); phone scope is already settled. Document type, number and validity fields are confirmed; same-type multiple documents, renewal and permanent-validity representation remain explicit detail dependencies. Continue old/new comparisons without broadening approval.",
+    "docs": [],
+    "docs_reason": "Updated only the local owning field PRD and catalog with confirmed document rules, failure/history boundaries, acceptance targets and old/new comparison; shared guide and other topics untouched."
+  },
+  "id": "20261022T112429Z-profile-fields-documents-f07-e200fa",
+  "files": [
+    "docs/PROJECT_ACTIVITY.md"
+  ],
+  "release": "0.4.0"
+}

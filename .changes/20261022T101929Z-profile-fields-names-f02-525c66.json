@@ -1,0 +1,21 @@
+{
+  "kind": "docs",
+  "summary": "Confirm six profile name fields and their independent optional current-value storage in the field PRD topic.",
+  "capabilities": [
+    "profile"
+  ],
+  "validation": "python3 scripts/check_docs.py PASS; python3 scripts/check_project.py PASS; reviewed six confirmed catalog rows, scoped save behavior and acceptance examples. No product implementation tests or deployment performed.",
+  "compatibility": "Documentation only; no code, Skill, API, storage, runtime data, browser or permission changes.",
+  "handoff": {
+    "task": "profile-fields-names-f02",
+    "status": "complete",
+    "next": "Continue review with basic identity fields 01-07 through 01-10. Only the six name fields were newly approved; implementation and remaining field decisions are pending.",
+    "docs": [],
+    "docs_reason": "Updated the authoritative local field PRD topic and its review catalog within the assigned two-file scope. Other topics and shared guide were not changed; confirmation stays in its owning PRD topic."
+  },
+  "id": "20261022T101929Z-profile-fields-names-f02-525c66",
+  "files": [
+    "docs/PROJECT_ACTIVITY.md"
+  ],
+  "release": "0.4.0"
+}
