@@ -112,6 +112,8 @@
     ".changes/20261029T114127Z-profile-release-040-592919.json",
     ".changes/20261029T114600Z-mapper-distribution-receipt-0c35d6.json",
     ".changes/20261029T115347Z-release-ui-waits-f36eb8.json",
+    ".changes/20261029T115903Z-release-material-waits-0050e5.json",
+    ".changes/20261029T115939Z-profile-release-040-7ba7c4.json",
     ".github/ISSUE_TEMPLATE/work-item.md",
     ".github/PULL_REQUEST_TEMPLATE.md",
     ".github/workflows/ci.yml",

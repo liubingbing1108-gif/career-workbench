@@ -1,0 +1,22 @@
+{
+  "kind": "test",
+  "summary": "Wait for the current material-control response after draft settlement, not a stale preview status.",
+  "capabilities": [
+    "profile",
+    "distribution"
+  ],
+  "validation": "Affected material-controls browser test passes locally with fictional data; complete release CI follows.",
+  "compatibility": "Test synchronization only; no runtime code, data or permissions changed.",
+  "handoff": {
+    "task": "release-material-waits",
+    "status": "complete",
+    "next": "Run full CI for release candidate.",
+    "docs": [],
+    "docs_reason": "No product behavior change; synchronize browser tests with existing readiness and completion signals."
+  },
+  "id": "20261029T115903Z-release-material-waits-0050e5",
+  "files": [
+    "prototypes/profile-lab/test_material_controls_browser.cjs"
+  ],
+  "release": "0.4.0"
+}
