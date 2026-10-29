@@ -1,0 +1,23 @@
+{
+  "kind": "test",
+  "summary": "Wait for workbench readiness and completed saves/restores in legacy profile browser acceptance.",
+  "capabilities": [
+    "profile",
+    "distribution"
+  ],
+  "validation": "Both affected browser scripts pass locally with fictional data. PR CI exposed races in startup and async module restoration; complete CI rerun follows.",
+  "compatibility": "Test synchronization only; no runtime code, data or permissions changed.",
+  "handoff": {
+    "task": "release-ui-waits",
+    "status": "complete",
+    "next": "Run full CI for release candidate.",
+    "docs": [],
+    "docs_reason": "No product behavior change; synchronize browser tests with existing readiness and completion signals."
+  },
+  "id": "20261029T115347Z-release-ui-waits-f36eb8",
+  "files": [
+    "prototypes/profile-lab/test_profile_hierarchy_browser.cjs",
+    "prototypes/profile-lab/test_profile_library_browser.cjs"
+  ],
+  "release": "0.4.0"
+}
