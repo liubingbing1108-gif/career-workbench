@@ -1,0 +1,21 @@
+{
+  "kind": "docs",
+  "summary": "Confirm five skill fields with manual proficiency and decimal non-growing years; prepare the certificate batch.",
+  "capabilities": [
+    "profile"
+  ],
+  "validation": "check_docs and check_project passed; verified 259 stable IDs, five confirmed skill fields, nine pending certificate fields and F-66 through F-69. No runtime tests.",
+  "compatibility": "Documentation only; no code, Skill, API, runtime, migration, browser or release changes. Prior source values, versions, original files and history remain protected.",
+  "handoff": {
+    "task": "profile-fields-skills-confirm-f018",
+    "status": "complete",
+    "next": "Batch-review nine certificate fields, optional values, partial acquisition date, source-stated validity, textual identifier, manual progress and passed-subjects text, and multiple original attachments. Do not automatically apply language-exam exclusions to certificates. Prior date/project cross-topic sync dependencies remain.",
+    "docs": [],
+    "docs_reason": "Updated owning field PRD and catalog only, with confirmed skill rules and pending certificate proposal. Other topic files unchanged."
+  },
+  "id": "20261022T130042Z-profile-fields-skills-confirm-f018-3ec871",
+  "files": [
+    "docs/PROJECT_ACTIVITY.md"
+  ],
+  "release": "0.4.0"
+}

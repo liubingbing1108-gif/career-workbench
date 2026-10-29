@@ -1,0 +1,21 @@
+{
+  "kind": "docs",
+  "summary": "Align main PRD v0.28 with version topic V0.12 across ownership, default-first application selection, excluded fields and metadata, engineering tasks, migration and acceptance summaries.",
+  "capabilities": [
+    "profile"
+  ],
+  "validation": "check_docs PASS: 114 Markdown files, 766 relative links, D01-D100; check_project PASS: catalog, references and 68 records. Readback verified obsolete version summaries removed and V0.12 ownership, default selection, exclusions and acceptance references present. No product tests: documentation only.",
+  "compatibility": "No code, Skill, API, runtime data, original files, website, deployment or migration changes. No new product decisions. Main PRD and version-topic sync marker updated. Field-owner documents and independent design/acceptance files remain separate inputs to align before implementation.",
+  "handoff": {
+    "task": "profile-main-version-body-v028",
+    "status": "complete",
+    "next": "Use main PRD v0.28 and version topic V0.12 together; do not re-ask settled version decisions. Continue remaining field-structure and migration alignment under assigned ownership; implementation remains unauthorized.",
+    "docs": [],
+    "docs_reason": "User explicitly requested main-PRD synchronization. Relevant private PRD and current navigation/handoff entries updated; generated ledger handles continuity without duplicating private details."
+  },
+  "id": "20261022T114156Z-profile-main-version-body-v028-93af2b",
+  "files": [
+    "docs/PROJECT_ACTIVITY.md"
+  ],
+  "release": "0.4.0"
+}

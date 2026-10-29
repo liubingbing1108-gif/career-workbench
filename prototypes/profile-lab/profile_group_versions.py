@@ -5,13 +5,20 @@ from lab import all_versions,default_version,put_answer,find,uid,LabError
 VERSION_MODULES={'employment','projects','campus','preferences','subjective'}
 
 def enabled(state,entry,layout=None):
+    from profile_contract import active, EXPRESSIONS
+    if active(state):return entry['category'] in EXPRESSIONS
     from profile_hierarchy import record_layout
     return bool(entry.get('import_representation_versions')) or (layout or record_layout(state,entry))['module_id'] in VERSION_MODULES
 
 def base_version(state,entry):
+    from profile_contract import active
+    if active(state):
+        return copy.deepcopy(next((v for v in entry.get('expression_versions',[]) if v['id']==entry.get('profile_default_set_id')),dict(id=None,name='',field_versions={})))
     return copy.deepcopy(entry.get('profile_base_version') or dict(id='default',name=entry.get('profile_default_name') or '版本1',field_versions={f['id']:(default_version(state,entry,f['id']) or {}).get('id') for f in state['fields'] if f['category']==entry['category'] and (not f.get('entry_id') or f['entry_id']==entry['id'])}))
 
 def versions(state,entry):
+    from profile_contract import active
+    if active(state):return copy.deepcopy([v for v in entry.get('expression_versions',[]) if not v.get('deleted_at')]) if enabled(state,entry) else []
     if not enabled(state,entry):return []
     hidden=entry.get('profile_deleted_sets',[])
     return [v for v in [base_version(state,entry),*copy.deepcopy(entry.get('set_versions',[]))] if v['id'] not in hidden and not v.get('profile_deleted')]
@@ -25,6 +32,10 @@ def set_defaults(state,entry,refs):
                 entry['values'][fid]=v['content'];entry['sources'][fid]=v.get('source',{})
 
 def save_group(state,entry,values,*,mode='update',set_id='default',name='',layout=None,versioned=True):
+    from profile_contract import active
+    if active(state):
+        from profile_current import save_values
+        return save_values(state,entry,values,mode=mode,set_id=set_id,name=name)
     if mode=='new' and not versioned:raise LabError('这个子模块不使用版本，请直接保存资料组')
     if versioned:entry.setdefault('profile_base_version',base_version(state,entry))
     selected=entry['profile_base_version'] if versioned and set_id=='default' else next((v for v in entry.get('set_versions',[]) if v['id']==set_id),None)

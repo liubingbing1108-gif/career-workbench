@@ -15,6 +15,7 @@ COMBINED = {'听说': '听说综合水平', '听说能力': '听说综合水平'
 
 def normalize(state, website, mapping):
     """Only upgrade an already scoped, unrestricted language ability module."""
+    if state.get('profile_contract')==30:return
     rule = mapping.get('requirement') or {}
     if (mapping.get('category') != 'language' or not website.get('collection')
             or website.get('label') not in {'语言能力', '外语能力'}
@@ -59,6 +60,7 @@ def normalize_session(state, session):
 
 
 def applicable(entry, mapping):
+    if mapping.get('record_type') and entry.get('record_type')!=mapping['record_type']:return False
     if mapping.get('record_kind') != 'language_ability':
         return True
     # Exam scores alone are not an ability record. Untyped historical records

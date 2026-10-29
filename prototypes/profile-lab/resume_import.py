@@ -23,6 +23,8 @@ def comparison_token(values):
 
 
 def entry_values(state,entry):
+    from profile_contract import active,current_values
+    if active(state):return {k:v for k,v in current_values(state,entry).items() if v}
     values=dict(entry.get('values',{}))
     for f in state['fields']:
         v=default_version(state,entry,f['id'])
@@ -33,6 +35,9 @@ def entry_values(state,entry):
 def representations(state,entry):
     from profile_group_versions import versions
     sets=versions(state,entry)
+    from profile_contract import active,current_values
+    if active(state):
+        return [{'id':s['id'],'name':s['name'],'values':current_values(state,entry,s['id'])} for s in sets] if sets else [{'id':None,'name':'当前资料','values':current_values(state,entry)}]
     if not sets:return [{'id':'default','name':'当前资料','values':entry_values(state,entry)}]
     by_id={v['id']:v for store in ('versions','answer_versions') for v in state.get(store,[])}
     return [{'id':s['id'],'name':s['name'],'values':{fid:by_id[vid]['content'] for fid,vid in s['field_versions'].items() if vid in by_id and by_id[vid]['content']}} for s in sets]
@@ -42,18 +47,20 @@ def record_token(state,entry):
     return comparison_token({'values':entry_values(state,entry),'variants':representations(state,entry),'revision':entry.get('profile_revision',0),'archived':entry.get('profile_archived',False)})
 
 
-def identity(cat,values,record_type=''):
+def identity(cat,values,record_type='',current=False):
+    if current and cat=='subjective':return cat
     anchors={'education':['school','major','graduation_date'],'employment':['company','role','started','ended'],
              'honors':['award_name','award_date'],'projects':['project_name','project_started','project_ended'],
              'campus':['campus_title','campus_started','campus_ended'],'language':['exam_name','exam_date'] if record_type=='exam' else ['language_name'],
              'skills':['skill_name'],'certificates':['certificate_name','certificate_date']}.get(cat)
+    if current and cat=='language' and record_type=='exam':anchors=['exam_name']
     if not category(cat)[2]:return cat
     if not anchors or not all(values.get(k) for k in anchors):return None
     return cat+':'+record_type+':'+json.dumps([compact(values[k]) for k in anchors],ensure_ascii=False)
 
 
 def compatible(rows,entry):
-    return entry['category']==rows[0]['category'] and not entry.get('profile_archived') and not entry.get('application_excluded') and (not rows[0].get('record_type') or not entry.get('record_type') or rows[0]['record_type']==entry['record_type'])
+    return entry['category']==rows[0]['category'] and not entry.get('legacy_only') and not entry.get('profile_archived') and not entry.get('application_excluded') and (not rows[0].get('record_type') or not entry.get('record_type') or rows[0]['record_type']==entry['record_type'])
 
 
 def conflicts(rows,old):
@@ -70,6 +77,8 @@ def conflicts(rows,old):
 
 
 def reconcile(state):
+    from profile_contract import active
+    current=active(state)
     index={}; entries={e['id']:e for e in state['entries']}; pending={}
     for p in state['imports']:
         if p.get('parser_contract'):
@@ -85,18 +94,18 @@ def reconcile(state):
         decision=p.get('identity_decisions',{}).get(g)
         if decision and decision.get('entry_id'):return canonical(decision['entry_id'] if decision['entry_id'].startswith('pending:') else 'entry:'+decision['entry_id'],seen)
         vals={c['field_id']:c['value'] for c in rows}
-        return identity(rows[0]['category'],vals,rows[0].get('record_type','')) or ref
+        return identity(rows[0]['category'],vals,rows[0].get('record_type',''),current) or ref
     for ref,(p,g,rows) in pending.items():
         if all(c.get('saved') or c.get('disposition')=='ignore' for c in rows):continue
         before=json.dumps(rows,sort_keys=True,ensure_ascii=False)
         vals={c['field_id']:c['value'] for c in rows}; cat=rows[0]['category']; key=canonical(ref)
-        decision=p.get('identity_decisions',{}).get(g); target=None;choices=[];reason=[];semantic_conflicts=[]
+        decision=p.get('identity_decisions',{}).get(g); target=None;choices=[];reason=[];semantic_conflicts=[];invalid_decision=False
         if decision and decision.get('entry_id'):
             dest=canonical(decision['entry_id']) if decision['entry_id'].startswith('pending:') else 'entry:'+decision['entry_id']
             target=entries.get(dest.removeprefix('entry:'));key=dest
-            if target and not compatible(rows,target):target=None;reason.append('关联资料已删除或类型变化，请重新确认')
+            if not target or not compatible(rows,target):target=None;invalid_decision=True;reason.append('关联资料已删除或类型变化，请重新确认')
         elif not decision:
-            exact=[e for e in state['entries'] if compatible(rows,e) and identity(cat,entry_values(state,e),e.get('record_type',''))==key]
+            exact=[e for e in state['entries'] if compatible(rows,e) and identity(cat,entry_values(state,e),e.get('record_type',''),current)==key]
             if len(exact)==1:target=exact[0];key='entry:'+target['id']
             for e in state['entries']:
                 if not compatible(rows,e) or not entry_values(state,e):continue
@@ -139,7 +148,7 @@ def reconcile(state):
             else:options.append({'id':eid,'label':str(next(iter(entry_values(state,entries[eid]).values()),eid))})
         for c in rows:
             c.update(import_id=p['id'],identity_key=key,entry_id=target['id'] if target else None,
-                     identity_review=bool(choices),identity_choices=choices,identity_options=options,identity_reason='；'.join(dict.fromkeys(reason)),
+                     identity_review=bool(choices) or invalid_decision,identity_choices=choices,identity_options=options,identity_reason='；'.join(dict.fromkeys(reason)),
                      existing=old.get(c['field_id'],''),existing_versions=[],default_version_id=None,
                      representation_versions=versions,conflict_fields=factual,duplicate_of=duplicate,
                      target_token=record_token(state,target) if target else None)
@@ -151,6 +160,10 @@ def reconcile(state):
 
 
 def resolve(lab,state,decisions):
+    from profile_contract import active
+    if active(state):
+        from resume_current import resolve_selected
+        return resolve_selected(lab,state,decisions)
     from profile_group_versions import save_group, base_version, set_defaults
     rows_by_id={c['id']:(p,c) for p in state['imports'] for c in p['candidates'] if p.get('parser_contract')}
     requested={d['candidate_id']:d for d in decisions};saved=ignored=0;receipts=[]

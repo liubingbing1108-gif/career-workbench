@@ -1,0 +1,27 @@
+{
+  "kind": "docs",
+  "summary": "Align contract30 API documentation with implemented migration and executor stop-proof behavior.",
+  "capabilities": [
+    "profile",
+    "mapping",
+    "execution"
+  ],
+  "validation": "Documentation checked against implemented routes and the final passing synthetic regression suite.",
+  "compatibility": "No endpoint, permission or protocol change; contract30 activation remains explicit and existing installations must verify their extension/runtime versions.",
+  "handoff": {
+    "task": "profile-delivery-api-status",
+    "status": "complete",
+    "next": "No remaining work in this documentation scope.",
+    "docs": [
+      "docs/DATA_AND_API.md",
+      "prototypes/icbc-native-extension/API.md"
+    ],
+    "docs_reason": "Remove obsolete candidate-only labels and state the implemented stop-proof behavior."
+  },
+  "id": "20261029T104556Z-profile-delivery-api-status-852e57",
+  "files": [
+    "docs/DATA_AND_API.md",
+    "prototypes/icbc-native-extension/API.md"
+  ],
+  "release": "0.4.0"
+}

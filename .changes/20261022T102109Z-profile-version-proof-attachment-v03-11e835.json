@@ -1,0 +1,21 @@
+{
+  "kind": "docs",
+  "summary": "Confirm shared internship proof attachment references across expression versions, preserving original files and historical application selections.",
+  "capabilities": [
+    "profile"
+  ],
+  "validation": "python3 scripts/check_docs.py passed: 113 Markdown files, 739 relative links, D01-D100 coverage. python3 scripts/check_project.py passed: catalog, references and 48 change records; PR diff not checked. Read back the changed rules and four planned acceptance examples. Documentation only; no product tests or runtime operations.",
+  "compatibility": "No changes to code, Skills, APIs, runtime data, original files, website operations or deployment. Field cardinality and deletion rules remain owned by their respective topics.",
+  "handoff": {
+    "task": "profile-version-proof-attachment-v03",
+    "status": "complete",
+    "next": "Discuss whether internship referee information is shared across expression versions. Confirm only that ownership question; contact reuse and cardinality remain separate dependencies. Continue one item at a time with implementation deferred.",
+    "docs": [],
+    "docs_reason": "Updated only the assigned private version PRD topic to V0.3: attachment ownership, save scope, cancel/failure/history behavior, V-07 through V-10 and implementation dependencies. The main guide already delegates this domain; no shared-rule duplication."
+  },
+  "id": "20261022T102109Z-profile-version-proof-attachment-v03-11e835",
+  "files": [
+    "docs/PROJECT_ACTIVITY.md"
+  ],
+  "release": "0.4.0"
+}

@@ -9,17 +9,27 @@
       "depends_on": [],
       "sources": [
         "prototypes/profile-lab/profile_library.py",
-        "prototypes/profile-lab/profile_group_versions.py"
+        "prototypes/profile-lab/profile_group_versions.py",
+        "prototypes/profile-lab/profile_contract.py",
+        "prototypes/profile-lab/profile_current.py",
+        "prototypes/profile-lab/profile_pending.py",
+        "prototypes/profile-lab/profile_migration.py",
+        "prototypes/profile-lab/profile_trash.py",
+        "prototypes/profile-lab/profile_fields.py"
       ],
       "tests": [
         "prototypes/profile-lab/test_profile_group_versions.py",
-        "prototypes/profile-lab/test_profile_recovery.py"
+        "prototypes/profile-lab/test_profile_recovery.py",
+        "prototypes/profile-lab/test_profile_contract.py",
+        "prototypes/profile-lab/test_profile_pending.py",
+        "prototypes/profile-lab/test_profile_flat_browser.cjs",
+        "prototypes/profile-lab/test_profile_fields.py"
       ],
       "docs": [
         "docs/PRODUCT_REQUIREMENTS.md",
         "docs/DATA_AND_API.md"
       ],
-      "limitations": "现行资料组结构；新的简化结构待实施；不宣称任意字段完整覆盖",
+      "limitations": "契约30支持扁平字段、任职/项目表达版本与30天回收站，须显式备份迁移并确认旧值；历史缺实际材料时保留缺失标记及相关旧对象清理保护，不用当前答案补造。独立安装仍须自行演练及回读。",
       "acceptance": "保存/版本/恢复不丢原事实、原件、草稿及旧投递引用"
     },
     {
@@ -45,7 +55,7 @@
     {
       "id": "import",
       "status": "partial",
-      "summary": "解析Skill、清洁文本、原件联合核对、可跳过确认表单与整组表述版本确认",
+      "summary": "解析Skill、原件核对、可跳过确认表单与按对象选择变化",
       "depends_on": [
         "profile",
         "agent"
@@ -57,7 +67,8 @@
         "prototypes/profile-lab/resume_skill.py",
         "prototypes/profile-lab/resume_import.py",
         "prototypes/profile-lab/document_review.py",
-        "prototypes/profile-lab/import_questions.py"
+        "prototypes/profile-lab/import_questions.py",
+        "prototypes/profile-lab/resume_current.py"
       ],
       "tests": [
         "prototypes/profile-lab/test_markdown_sets.py",
@@ -65,12 +76,14 @@
         "prototypes/profile-lab/test_resume_skill_browser.cjs",
         "prototypes/profile-lab/test_document_review.py",
         "prototypes/profile-lab/test_import_questions.py",
-        "prototypes/profile-lab/test_import_questions_browser.cjs"
+        "prototypes/profile-lab/test_import_questions_browser.cjs",
+        "prototypes/profile-lab/test_current_writeback.py",
+        "prototypes/profile-lab/test_current_import_review.py"
       ],
       "docs": [
         "docs/PRODUCT_REQUIREMENTS.md"
       ],
-      "limitations": "原件视觉核对最多8页；Word页面渲染依赖可用LibreOffice，否则仅核对原始段落/表格；自定义Agent未声明图像能力时保留疑点。模型/转换失败和未确认解释不自动当作事实。",
+      "limitations": "新契约按勾选差异保存；任职/项目表达版本、其余当前值，考试保持同次结果；原件核对保留。列明兼容用例和虚构资料真实模型已验证，不保证任意版式或模型的识别准确率。",
       "acceptance": "原文完整、对象分组、确认后入库，冲突暂缓不覆盖旧值"
     },
     {
@@ -105,17 +118,27 @@
       "sources": [
         "prototypes/profile-lab/mapping.py",
         "prototypes/profile-lab/preparation.py",
-        "prototypes/profile-lab/application.py"
+        "prototypes/profile-lab/application.py",
+        "prototypes/profile-lab/mapping_skill.py",
+        "prototypes/profile-lab/mapping_relations.py",
+        "prototypes/profile-lab/derived_materials.py",
+        "prototypes/profile-lab/mixed_sources.py"
       ],
       "tests": [
         "prototypes/profile-lab/test_requirement_sets.py",
-        "prototypes/profile-lab/test_preparation.py"
+        "prototypes/profile-lab/test_preparation.py",
+        "prototypes/profile-lab/test_mapping_skill.py",
+        "prototypes/profile-lab/test_current_writeback.py",
+        "prototypes/profile-lab/test_derived_materials.py",
+        "prototypes/profile-lab/test_mixed_sources.py",
+        "prototypes/profile-lab/test_current_material_browser.cjs",
+        "prototypes/profile-lab/test_batch_writeback.py"
       ],
       "docs": [
         "docs/PRODUCT_REQUIREMENTS.md",
         "docs/AGENT_INTEGRATION.md"
       ],
-      "limitations": "新网站同义语义、动态分支仍有缺口；歧义不猜填",
+      "limitations": "契约30受控Skill、混合来源、确认草稿、联合回库、关系纠正和自定义字段合并有隔离验收及虚构资料真实模型证据；旧全局字段按明确选择迁移，不保证任意网站/模型的语义准确率。",
       "acceptance": "正确对象和范围、合法引用、确认后执行，缺项跳过而不清空官网"
     },
     {
@@ -133,7 +156,9 @@
       "tests": [
         "prototypes/icbc-native-extension/executor-core.test.cjs",
         "prototypes/icbc-native-extension/test-upload-ready.cjs",
-        "prototypes/profile-lab/test_executor_bridge.py"
+        "prototypes/profile-lab/test_executor_bridge.py",
+        "prototypes/icbc-native-extension/test-launch.cjs",
+        "prototypes/profile-lab/test_correction_browser.cjs"
       ],
       "docs": [
         "prototypes/icbc-native-extension/API.md",

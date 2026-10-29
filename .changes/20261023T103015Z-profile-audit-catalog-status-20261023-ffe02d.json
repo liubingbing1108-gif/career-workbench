@@ -1,0 +1,21 @@
+{
+  "kind": "docs",
+  "summary": "Align field catalog and removal specification completion status with the current guide.",
+  "capabilities": [
+    "profile"
+  ],
+  "validation": "Read three topic discussion histories; document check passed 115 Markdown files, 799 relative links and decision coverage; verified sequential acceptance IDs and 262 unique catalog references; project check passed. No runtime tests for this documentation-only task.",
+  "compatibility": "Documentation only. No application code, Skill, API, active user data or release changed. Confirmed requirements are synchronized; implementation and migration remain pending.",
+  "handoff": {
+    "task": "profile-audit-catalog-status-20261023",
+    "status": "complete",
+    "next": "Resolve the three remaining field-structure boundaries in the existing topic discussion, then plan implementation and migration when authorized.",
+    "docs": [],
+    "docs_reason": "Private PRD, topic specifications and navigation synchronized; private paths stay in the local receipt, with only a neutral public engineering record."
+  },
+  "id": "20261023T103015Z-profile-audit-catalog-status-20261023-ffe02d",
+  "files": [
+    "docs/PROJECT_ACTIVITY.md"
+  ],
+  "release": "0.4.0"
+}

@@ -1,0 +1,21 @@
+{
+  "kind": "docs",
+  "summary": "Confirm optional independent height, weight and health fields, preserving decimal measurements and user-provided health text without inference.",
+  "capabilities": [
+    "profile"
+  ],
+  "validation": "check_docs.py PASS; check_project.py PASS. Readback confirmed 258 unique catalog rows, approved 01-18 through 01-20, pending 02-01 through 02-04, and F-15 through F-17 acceptance targets. No implementation tests or live data access.",
+  "compatibility": "Documentation only; existing names, units and legacy mappings preserved. No code, Skill, API, storage, migration, browser or release changes.",
+  "handoff": {
+    "task": "profile-fields-health-f06",
+    "status": "complete",
+    "next": "Review identity document type, number and validity dates, including whether different document types coexist with their own paired values and scoped saving. Explain differences; do not treat this confirmation as approval of identity-document structure.",
+    "docs": [],
+    "docs_reason": "Updated only the owning local field PRD and review catalog with confirmed fields, save/failure/history boundaries, acceptance examples and old/new comparison; other topics and shared guide untouched."
+  },
+  "id": "20261022T105314Z-profile-fields-health-f06-ca66b1",
+  "files": [
+    "docs/PROJECT_ACTIVITY.md"
+  ],
+  "release": "0.4.0"
+}

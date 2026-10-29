@@ -1,0 +1,21 @@
+{
+  "kind": "docs",
+  "summary": "Synchronize confirmed manual language levels and autonomous evidence-based draft behavior into shared planning handoff and changelog.",
+  "capabilities": [
+    "profile"
+  ],
+  "validation": "check_docs.py passed for 107 Markdown files and 674 relative links; check_project.py passed with 40 records before receipt. No runtime tests for private planning-index synchronization.",
+  "compatibility": "No product, Skill or runtime changes. Concurrent release delivery records preserved.",
+  "handoff": {
+    "task": "profile-autonomous-shared-v022",
+    "status": "complete",
+    "next": "Continue remaining profile field-catalog decisions. Latest autonomous-draft and language decisions are synchronized across all planning indexes; no pending shared-document synchronization.",
+    "docs": [],
+    "docs_reason": "Updated private handoff and changelog after concurrent task released them; retained release records and did not change public runtime documentation."
+  },
+  "id": "20261022T075825Z-profile-autonomous-shared-v022-319b92",
+  "files": [
+    "docs/PROJECT_ACTIVITY.md"
+  ],
+  "release": "0.4.0"
+}

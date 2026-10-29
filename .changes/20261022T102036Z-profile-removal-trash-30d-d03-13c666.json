@@ -1,0 +1,21 @@
+{
+  "kind": "docs",
+  "summary": "Specify a profile recycle bin with a default thirty-day recovery window and automatic permanent removal after expiry, without a manual immediate-purge entry.",
+  "capabilities": [
+    "profile"
+  ],
+  "validation": "check_docs.py passed: 113 Markdown files, 739 relative links and D01-D100 coverage. check_project.py passed with 47 change records before recording. Reviewed seven new acceptance targets for expiry, restore/redelete, failure, concurrency, offline catch-up, references and legacy migration. Runtime tests not run; no product code changed.",
+  "compatibility": "Planning documentation only. No code, Skill, API, runtime data, scheduled automation, deployment or website changes. Originals and historical applications remain protected; existing archived data is not authorized for immediate purge.",
+  "handoff": {
+    "task": "profile-removal-trash-30d-d03",
+    "status": "complete",
+    "next": "Confirm restoration of website mappings and other references for non-exam records, one question at a time. Main guide owner should consolidate the resolved retention rule and implementation dependencies; migration must separately handle pre-existing archives without retrospective mass deletion.",
+    "docs": [],
+    "docs_reason": "Updated only the private removal PRD topic to D0.3, replacing indefinite recovery with a thirty-day recycle-bin rule, scoped persistence and history protection, engineering failure handling and seven acceptance targets. Cross-topic dependencies are listed locally; public runtime contracts are unchanged."
+  },
+  "id": "20261022T102036Z-profile-removal-trash-30d-d03-13c666",
+  "files": [
+    "docs/PROJECT_ACTIVITY.md"
+  ],
+  "release": "0.4.0"
+}

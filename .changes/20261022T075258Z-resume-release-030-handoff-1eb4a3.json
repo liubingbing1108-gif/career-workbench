@@ -1,0 +1,21 @@
+{
+  "kind": "docs",
+  "summary": "Synchronize local handoff with the verified v0.3.0 GitHub release",
+  "capabilities": [
+    "distribution"
+  ],
+  "validation": "PR and main commit CI passed all 8 jobs; local check_docs passed. Release/tag/main read back and matched; private specification updates preserved.",
+  "compatibility": "Documentation only; no runtime, storage, extension or permission change. Later profile refactor remains pending.",
+  "handoff": {
+    "task": "resume-release-030-handoff",
+    "status": "complete",
+    "next": "Continue the separately scoped profile refactor from its confirmed specification",
+    "docs": [],
+    "docs_reason": "Updated private release navigation and current handoff; public release documentation already shipped in v0.3.0"
+  },
+  "id": "20261022T075258Z-resume-release-030-handoff-1eb4a3",
+  "files": [
+    "docs/PROJECT_ACTIVITY.md"
+  ],
+  "release": "0.4.0"
+}

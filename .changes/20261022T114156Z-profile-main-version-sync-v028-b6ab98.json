@@ -1,0 +1,21 @@
+{
+  "kind": "docs",
+  "summary": "Update current handoff entry to main PRD v0.28 and settled version-topic V0.12 decisions.",
+  "capabilities": [
+    "profile"
+  ],
+  "validation": "check_docs PASS: 114 Markdown files, 766 relative links, D01-D100; check_project PASS: catalog, references and 68 records. Readback verified obsolete version summaries removed and V0.12 ownership, default selection, exclusions and acceptance references present. No product tests: documentation only.",
+  "compatibility": "No code, Skill, API, runtime data, original files, website, deployment or migration changes. No new product decisions. Only current handoff entry updated; historical handoff records preserved.",
+  "handoff": {
+    "task": "profile-main-version-sync-v028",
+    "status": "complete",
+    "next": "Current entry points to v0.28; follow the main PRD and V0.12 for version behavior, retaining field-structure dependencies and no-code scope.",
+    "docs": [],
+    "docs_reason": "User explicitly requested main-PRD synchronization. Relevant private PRD and current navigation/handoff entries updated; generated ledger handles continuity without duplicating private details."
+  },
+  "id": "20261022T114156Z-profile-main-version-sync-v028-b6ab98",
+  "files": [
+    "docs/PROJECT_ACTIVITY.md"
+  ],
+  "release": "0.4.0"
+}

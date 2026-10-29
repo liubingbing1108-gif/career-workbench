@@ -5,7 +5,7 @@
   else root.JobFillExecutorCore = api;
 })(typeof globalThis === 'object' ? globalThis : this, () => {
   'use strict';
-  const VERSION = '1.2.36';
+  const VERSION = '1.2.37';
   const clone = x => JSON.parse(JSON.stringify(x));
   const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
   const empty = v => v === '' || (Array.isArray(v) && !v.length);
@@ -31,7 +31,7 @@
       snapshot = { id: sessionId + ':' + (++serial), page: page(), fields, sections,attachments };
       return {
         schemaVersion: 1, executorVersion: VERSION, sessionId, snapshotId: snapshot.id,
-        page: adapter.page(), capabilities: { fill: true, ensureRecords: !!adapter.addRecord, openSection: !!adapter.openSection, saveDraft: !!adapter.saveDraft&&(!adapter.canSaveDraft||adapter.canSaveDraft()), upload: !!adapter.uploadAttachment, submit: false },
+        page: adapter.page(), capabilities: { fill: true, correctionRetry: 1, stopProof:1, ensureRecords: !!adapter.addRecord, openSection: !!adapter.openSection, saveDraft: !!adapter.saveDraft&&(!adapter.canSaveDraft||adapter.canSaveDraft()), upload: !!adapter.uploadAttachment, submit: false },
         attachments:clone(attachments.map(({input,root,...item})=>item)),
         sections: clone(sections), fields: fields.map(f => ({ fieldId: f.id, label: f.label, kind: f.kind, sectionId: f.sectionId || '', recordId: f.recordId || '', required: !!f.required, disabled: !!f.disabled, description: f.description || '', context: f.context || {}, blockedReason: f.blockedReason || '', constraints: f.constraints || {}, options: f.options || { state: 'not-enumerated', items: [] }, currentValue: clone(f.current) })),
         scanElapsedMs:Math.round(performance.now()-began), coverage: 'currently-accessible-fields', coverageDetails: adapter.coverage?.() || {}, validation: adapter.errors()
@@ -62,7 +62,7 @@
       adapter.validate?.(f, value);
     }
     function checkAssignment(a, fields) {
-      keys(a, ['fieldId', 'value', 'overwrite', 'sourceRef']);
+      keys(a, ['fieldId', 'value', 'overwrite', 'sourceRef', 'expectedCurrentValue']);
       if (!['emptyOnly', 'ifUnchanged', undefined].includes(a.overwrite)) fail('INVALID_REQUEST', 'overwrite 无效');
       if (a.sourceRef !== undefined && typeof a.sourceRef !== 'string') fail('INVALID_REQUEST', 'sourceRef 须为字符串');
       const saved = snapshot.fields.find(f => f.id === a.fieldId);
@@ -70,6 +70,7 @@
       if (saved.disabled) fail('READ_ONLY_FIELD', '字段不可写：' + saved.label);
       const f = locate(saved, fields); validateValue(f, a.value);
       if (!same(f.current, saved.current)) fail('VALUE_CHANGED', '扫描后该字段已被修改：' + f.label);
+      if (Object.hasOwn(a, 'expectedCurrentValue') && !same(f.current, a.expectedCurrentValue)) fail('VALUE_CHANGED', '官网值与确认修正时不同：' + f.label);
       if (!same(f.current, a.value) && !empty(f.current) && a.overwrite !== 'ifUnchanged') fail('EXISTING_VALUE', '已有值默认保留：' + f.label);
       return { saved, assignment: clone(a) };
     }
@@ -163,6 +164,7 @@
     }
     async function dispatch(method, args = {}) {
       try {
+        if (method === 'executionState') {keys(args,[]);adapter.guard();return {ok:true,result:{sessionId,page:adapter.page(),busy:!!busy(),cancelled}};}
         if (method === 'status') return { ok: true, result: clone(args.requestId ? requests.get(args.requestId)?.job || null : job) };
         if (method === 'cancel') { cancelled = true; return { ok: true, result: { stopping: job?.status === 'running' } }; }
         if (method === 'scan') { if (busy()) fail('BUSY', '执行中不能重新生成扫描'); return { ok: true, result: capture() }; }

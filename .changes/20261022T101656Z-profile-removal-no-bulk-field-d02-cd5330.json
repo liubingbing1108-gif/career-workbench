@@ -1,0 +1,21 @@
+{
+  "kind": "docs",
+  "summary": "Exclude bulk removal of a shared field across all records of a type from the planned profile refactor; retain field hiding and explicit per-record clearing.",
+  "capabilities": [
+    "profile"
+  ],
+  "validation": "check_docs.py passed: 113 Markdown files, 738 relative links and D01-D100 coverage. check_project.py passed with 44 change records before recording. Reviewed five new acceptance targets for scope, cancellation, failure, repeated saves, references and historical protection. Runtime tests not run; documentation only.",
+  "compatibility": "No code, Skill, API, runtime data, permissions, deployment or website changes. Field catalog and version ownership remain separately scoped decisions.",
+  "handoff": {
+    "task": "profile-removal-no-bulk-field-d02",
+    "status": "complete",
+    "next": "Discuss whether permanent deletion is needed, then restoration references for other records, one question at a time. The scoped removal PRD is authoritative for the resolved bulk-field-removal decision; the main guide owner can consolidate its status without duplicating the rule.",
+    "docs": [],
+    "docs_reason": "Updated only the private removal PRD topic to D0.2 with confirmed behavior, persistence and reference scope, cancellation/failure/history boundaries and five acceptance targets. Public runtime contracts unchanged."
+  },
+  "id": "20261022T101656Z-profile-removal-no-bulk-field-d02-cd5330",
+  "files": [
+    "docs/PROJECT_ACTIVITY.md"
+  ],
+  "release": "0.4.0"
+}

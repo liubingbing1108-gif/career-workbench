@@ -1,0 +1,21 @@
+{
+  "kind": "docs",
+  "summary": "Confirm shared department and work location across internship expression versions with scoped saving and partial import preservation.",
+  "capabilities": [
+    "profile"
+  ],
+  "validation": "python3 scripts/check_docs.py passed: 114 Markdown files, 763 relative links and D01-D100 coverage. python3 scripts/check_project.py passed: catalog, references and 56 change records; PR diff not checked. Read back both assignments and V-24 through V-27 acceptance targets. No product tests for documentation-only work.",
+  "compatibility": "No code, Skill, API, runtime data, original files, website or deployment changes. Existing explicit writeback and P48 partial-import rules are preserved; field types and location granularity remain pending.",
+  "handoff": {
+    "task": "profile-version-department-location-v07",
+    "status": "complete",
+    "next": "Confirm common ownership of experience type and current employment status next, without expanding long-term versions to full-time or part-time work. Already confirmed company, position and dates need no repeated approval; contact association remains a dependency.",
+    "docs": [],
+    "docs_reason": "Updated only the assigned private version PRD to V0.7 with two field assignments, saving/cancellation/failure/history boundaries, four acceptance targets and dependencies. Main/shared specifications remain owned by their respective topics."
+  },
+  "id": "20261022T104444Z-profile-version-department-location-v07-0d4d31",
+  "files": [
+    "docs/PROJECT_ACTIVITY.md"
+  ],
+  "release": "0.4.0"
+}

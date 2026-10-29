@@ -1,0 +1,21 @@
+{
+  "kind": "docs",
+  "summary": "Simplify language exams to ten field definitions with one obtained date and prepare the skill batch.",
+  "capabilities": [
+    "profile"
+  ],
+  "validation": "check_docs and check_project passed; verified 259 stable IDs, ten confirmed exam rows, five numbered exclusions, obtained-date reference, six acceptance examples and five skill candidates. No runtime tests.",
+  "compatibility": "Documentation only; no code, Skill, API, runtime, migration, browser or release changes. Legacy exam dates and levels require semantic review, with old values and originals preserved.",
+  "handoff": {
+    "task": "profile-fields-exam-confirm-f017",
+    "status": "complete",
+    "next": "Batch-review five professional skill fields, optional values, four self-rating levels and decimal years. Other owners must sync obtained-date semantics and the prior four-expression project decision before implementation; do not equate old exam dates with obtained dates.",
+    "docs": [],
+    "docs_reason": "Updated owning field PRD and catalog including exclusions, references, legacy mappings and explicit cross-topic date dependency. Other topic files unchanged."
+  },
+  "id": "20261022T125003Z-profile-fields-exam-confirm-f017-885b7a",
+  "files": [
+    "docs/PROJECT_ACTIVITY.md"
+  ],
+  "release": "0.4.0"
+}

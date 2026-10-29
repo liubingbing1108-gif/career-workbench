@@ -1,0 +1,21 @@
+{
+  "kind": "docs",
+  "summary": "Confirm seven language ability inputs, exclude composite ratings and notes, and prepare the full exam field batch.",
+  "capabilities": [
+    "profile"
+  ],
+  "validation": "check_docs and check_project passed; verified 259 unique IDs, seven confirmed language inputs, three excluded fields, three exam references, legacy mapping and F-55 through F-59. No runtime tests.",
+  "compatibility": "Documentation only; no code, Skill, API, runtime, migration, browser or release changes. Existing source values, original files and history preserved.",
+  "handoff": {
+    "task": "profile-fields-language-confirm-f016",
+    "status": "complete",
+    "next": "Batch-review 22 exam candidates: original 15 rows plus seven explicit backlog additions; distinguish registered level from result grade. Single selected result and exam-reference mechanisms remain settled. Project four-expression dependency still requires version/main-guide owner sync.",
+    "docs": [],
+    "docs_reason": "Updated owning field PRD and catalog; allocated 09-13 for approved mother-tongue status, preserving original 258 IDs. Other topics unchanged."
+  },
+  "id": "20261022T124133Z-profile-fields-language-confirm-f016-e752b3",
+  "files": [
+    "docs/PROJECT_ACTIVITY.md"
+  ],
+  "release": "0.4.0"
+}

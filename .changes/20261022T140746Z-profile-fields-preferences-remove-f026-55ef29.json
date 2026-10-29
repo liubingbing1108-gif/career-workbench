@@ -1,0 +1,21 @@
+{
+  "kind": "docs",
+  "summary": "Exclude the complete job-preference category and eleven preset fields; keep salary as a separately pending batch.",
+  "capabilities": [
+    "profile"
+  ],
+  "validation": "check_docs.py and check_project.py passed; targeted checks verified 261 unique IDs, eleven excluded preference rows and legacy mappings, F-97 through F-99 and five pending salary fields. No runtime tests or full PR diff checks.",
+  "compatibility": "Documentation only; no code, Skill, API, runtime, migration, browser or release changes. Legacy preferences, sources, original files and history preserved; shared legacy category does not authorize salary cleanup.",
+  "handoff": {
+    "task": "profile-fields-preferences-remove-f026",
+    "status": "complete",
+    "next": "Batch-review five salary fields separately: optional grouped current amount or range, currency, pay period, tax basis and manual negotiability; no inferred defaults, conversion or automatic clearing. Preference category exclusion requires later model/import/UI compatibility synchronization. Prior cross-topic dependencies remain.",
+    "docs": [],
+    "docs_reason": "Updated the owning local field PRD and catalog; other topics unchanged."
+  },
+  "id": "20261022T140746Z-profile-fields-preferences-remove-f026-55ef29",
+  "files": [
+    "docs/PROJECT_ACTIVITY.md"
+  ],
+  "release": "0.4.0"
+}

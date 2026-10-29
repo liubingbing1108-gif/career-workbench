@@ -1,0 +1,52 @@
+{
+  "kind": "refactor",
+  "summary": "Add same-core stop proof and reconnect recovery, stable display renames, traceable equivalent local-field merges, explicit relation correction and joint batch definition/answer/relation writeback. Candidate remains inactive and incomplete.",
+  "capabilities": [
+    "profile",
+    "import",
+    "mapping",
+    "execution"
+  ],
+  "validation": "387 profile Python tests pass (15.176s); 80 combined extension/core tests pass. Six field-management and six batch-writeback tests included. Flat-profile browser passes rename/reload/merge/retained draft; material browser passes selected batch joint writeback, unselected draft retention and relation correction. Full-project and exported-candidate acceptance next.",
+  "compatibility": "Contract30 opt-in remains. Protocol v1 gains optional stopProof/read-only executionState with same-core checks; source core 1.2.37 and extension 1.3.10 unchanged from this unreleased candidate. Active database/service, installed extension, actual websites and remote release untouched.",
+  "handoff": {
+    "task": "profile-refactor-implementation",
+    "status": "in_progress",
+    "next": "Run whole-project and exported-candidate validation; finish parser I-01 to I-08, legacy/global custom-field and migration edge cases, then read-only active inventory and isolated migration rehearsal before any switch.",
+    "docs": [
+      "docs/AGENT_INTEGRATION.md"
+    ],
+    "docs_reason": "Document optional stop proof, guarded field lifecycle, relation correction and batch joint-writeback contracts. Confirmed product rules remain; no deployment or real personal-data processing."
+  },
+  "id": "20261027T115004Z-profile-refactor-implementation-f16aab",
+  "files": [
+    "docs/AGENT_INTEGRATION.md",
+    "docs/CAPABILITIES.json",
+    "prototypes/icbc-native-extension/executor-core.js",
+    "prototypes/icbc-native-extension/executor-core.test.cjs",
+    "prototypes/icbc-native-extension/protocol.d.ts",
+    "prototypes/icbc-native-extension/test-launch.cjs",
+    "prototypes/icbc-native-extension/workbench.js",
+    "prototypes/profile-lab/application.py",
+    "prototypes/profile-lab/application_current.py",
+    "prototypes/profile-lab/corrections.py",
+    "prototypes/profile-lab/executor_bridge.py",
+    "prototypes/profile-lab/mapping_relations.py",
+    "prototypes/profile-lab/material_sets.py",
+    "prototypes/profile-lab/preparation.py",
+    "prototypes/profile-lab/profile_contract.py",
+    "prototypes/profile-lab/profile_current.py",
+    "prototypes/profile-lab/profile_fields.py",
+    "prototypes/profile-lab/server.py",
+    "prototypes/profile-lab/test_batch_writeback.py",
+    "prototypes/profile-lab/test_corrections.py",
+    "prototypes/profile-lab/test_current_material_browser.cjs",
+    "prototypes/profile-lab/test_current_material_fixture.py",
+    "prototypes/profile-lab/test_current_writeback.py",
+    "prototypes/profile-lab/test_profile_fields.py",
+    "prototypes/profile-lab/test_profile_flat_browser.cjs",
+    "prototypes/profile-lab/web/material-sets.js",
+    "prototypes/profile-lab/web/profile-flat.js"
+  ],
+  "release": "0.4.0"
+}

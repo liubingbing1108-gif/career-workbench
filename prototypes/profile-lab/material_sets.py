@@ -6,6 +6,10 @@ from lab import LabError, find, all_versions, default_version, put_answer, valid
 
 
 def record_versions(state, entry):
+    from profile_contract import active
+    if active(state):
+        from profile_group_versions import versions
+        return versions(state,entry)
     fields = [f for f in state['fields'] if f['category'] == entry['category'] and (not f.get('entry_id') or f['entry_id']==entry['id'])]
     defaults = {f['id']: (default_version(state, entry, f['id']) or {}).get('id') for f in fields}
     result = [copy.deepcopy(entry.get('profile_base_version') or dict(id='default', name='版本1', field_versions=defaults))]
@@ -36,7 +40,7 @@ class MaterialSets:
 
     def records(self, state, session, mapping):
         cat = mapping['category']
-        return [e for e in state['entries'] if e['category'] == cat and profile_available(e,session) and not e.get('application_excluded')
+        return [e for e in state['entries'] if e['category'] == cat and (not mapping.get('record_type') or e.get('record_type')==mapping['record_type']) and profile_available(e,session) and not e.get('application_excluded')
                 and e['id'] not in session['website'].get('excluded_entry_ids', [])]
 
     def snapshot(self, state, session, mapping, group, entry):
@@ -70,10 +74,16 @@ class MaterialSets:
                     values = self.version_values(state, entry, version)
                     if all(current.get(k, '') == v for k, v in values.items()):
                         matching.append(version['id'])
-                material['selected_set'] = selected if selected in matching else (matching[0] if matching else '')
+                if state.get('profile_contract') == 30:
+                    chosen = selected if entry['id'] in session.get('selected_sets', {}).get(group, {}) else entry.get('profile_default_set_id')
+                    material['selected_set'] = chosen if chosen in matching else ''
+                else:
+                    material['selected_set'] = selected if selected in matching else (matching[0] if matching else '')
 
     @staticmethod
     def version_values(state, entry, version):
+        from profile_contract import active, current_values
+        if active(state):return current_values(state,entry,version['id'])
         result = {}
         for field in state['fields']:
             if field['category'] != entry['category'] or (field.get('entry_id') and field['entry_id']!=entry['id']):
@@ -83,9 +93,12 @@ class MaterialSets:
         return result
 
     def apply_version(self, state, session, group, entry, version):
+        from profile_contract import active, expression_ids
+        expression=set(expression_ids(state,entry)) if active(state) else None
         ids = session.setdefault('scoped_versions', {}).setdefault(group, {})
         overrides = session.setdefault('scoped_overrides', {}).setdefault(group, {})
         for fid, value in self.version_values(state, entry, version).items():
+            if expression is not None and fid not in expression:continue
             key = entry['id'] + '/' + fid
             vid = version['field_versions'].get(fid)
             if vid:
@@ -106,6 +119,9 @@ class MaterialSets:
         return self.lab.mutate(change)
 
     def save_in_state(self, state, session, mapping, group, data, mode, name):
+        if state.get('profile_contract')==30:
+            from application_current import save_material_record
+            return save_material_record(self,state,session,mapping,group,data,mode,name)
         entry = find(self.records(state, session, mapping), data['entry_id'])
         fields = [f for f in state['fields'] if f['category'] == entry['category'] and profile_field_visible(state,entry,f['id'],session)]
         values = data.get('values')
@@ -137,7 +153,7 @@ class MaterialSets:
         session.setdefault('preparation', {}).pop('preview', None)
         return entry['id']
 
-    def save(self, sid, wid, records, mode='session', name='', composition=False):
+    def save(self, sid, wid, records, mode='session', name='', composition=False, request_id=None):
         if mode not in {'session', 'update', 'new'} or not isinstance(records, list) or not records:
             raise LabError('请选择要保存的资料组和保存方式')
         if len({r.get('entry_id') for r in records}) != len(records):
@@ -147,14 +163,27 @@ class MaterialSets:
             raise LabError('版本名称过长')
         def change(state):
             session, mapping, group = self.target(state, sid, wid)
-            ids = [self.save_in_state(state, session, mapping, group, r, mode, name) for r in records]
+            from profile_migration import state_hash
+            signature=state_hash([wid,records,mode,name,composition])
+            if state.get('profile_contract')==30 and mode!='session':
+                if not request_id:raise LabError('缺少回库请求标识')
+                prior=session.setdefault('material_write_receipts',{}).get(request_id)
+                if prior:
+                    if prior['signature']!=signature:raise LabError('回库请求内容已变化',409)
+                    return prior['result']
+                from application_current import sync_preview
+                fresh=sync_preview(self.app,state,dict(session_id=sid,website_id=wid,records=records))
+                if any(row.get('sync_token')!=checked['sync_token'] for row,checked in zip(records,fresh['records'])):raise LabError('回库预览已变化，请重新核对选中内容及对应',409)
+            ids = [self.save_in_state(state, session, mapping, group, {**r,'request_id':request_id}, mode, name) for r in records]
             if composition:
                 # Store the entire confirmed composition, including intentional blanks.
                 saved = dict(id=uid('composition'), name=name, records=[dict(entry_id=eid,
                     values=self.snapshot(state, session, mapping, group, find(state['entries'], eid))) for eid in ids])
                 session.setdefault('composition_versions', {}).setdefault(group, []).append(saved)
                 session.setdefault('selected_compositions', {})[group] = saved['id']
-            return dict(entry_ids=ids)
+            result=dict(entry_ids=ids)
+            if state.get('profile_contract')==30 and mode!='session':session['material_write_receipts'][request_id]=dict(signature=signature,result=result)
+            return result
         return self.lab.mutate(change)
 
     def select_composition(self, sid, wid, vid):

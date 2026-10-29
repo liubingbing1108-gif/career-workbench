@@ -1,0 +1,26 @@
+{
+  "kind": "refactor",
+  "summary": "Complete exported regression and reviewed migration rollback rehearsal; make legacy import results explicitly read-only.",
+  "capabilities": [
+    "profile",
+    "import",
+    "mapping",
+    "execution"
+  ],
+  "validation": "364-file export passed 400 profile, 97 management, 40 script tests (one skipped), 120 JavaScript tests and 18 browser scripts. Follow-up legacy-import UI change passed syntax and complete flat-profile browser regression. Reviewed private-copy apply/replay/rollback restored state and original hashes with management tables unchanged.",
+  "compatibility": "No active database switch or installed extension reload. Confirmed identity/language choices exist only in private candidate. Chrome extension manager renders blank; popup remains accessible. No real recruitment website actions or remote publication.",
+  "handoff": {
+    "task": "profile-refactor-implementation",
+    "status": "in_progress",
+    "next": "Await already-requested deletion scope, normalization, undergraduate course and campus wording choices. Finish remaining parser cross-case acceptance and old global-field disposition, recheck source drift, then activate existing runtime and verify installed extension; do not infer missing personal facts.",
+    "docs": [],
+    "docs_reason": "Private validation and implementation notes record latest evidence and unresolved local delivery steps; existing public contract remains unchanged."
+  },
+  "id": "20261027T124420Z-profile-refactor-implementation-55aed5",
+  "files": [
+    "prototypes/profile-lab/test_profile_flat_browser.cjs",
+    "prototypes/profile-lab/test_profile_flat_fixture.py",
+    "prototypes/profile-lab/web/app.js"
+  ],
+  "release": "0.4.0"
+}

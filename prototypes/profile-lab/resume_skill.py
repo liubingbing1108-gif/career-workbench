@@ -16,8 +16,8 @@ def rules():
 
 
 def catalog(fields):
-    keys = ('id','label','category','type','aliases','record_types','options','entry_id','group','widget')
-    return [{k: f[k] for k in keys if k in f} for f in fields if not f.get('profile_archived') and f.get('widget') != 'files']
+    keys = ('id','label','category','type','aliases','record_types','options','entry_id','group','widget','value_role','save_unit','date_markers')
+    return [{k: f[k] for k in keys if k in f} for f in fields if not f.get('profile_archived') and not f.get('legacy_preserved') and f.get('widget') != 'files']
 
 
 def scope_schema():

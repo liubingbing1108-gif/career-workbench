@@ -1,0 +1,21 @@
+{
+  "kind": "docs",
+  "summary": "Confirm independent native-place and student-origin fields, with optional current values and no automatic copying or invented district details.",
+  "capabilities": [
+    "profile"
+  ],
+  "validation": "check_docs.py PASS; check_project.py PASS. Readback confirmed 258 unique review rows, approved origins, preserved photo constraints and three still-pending supplementary fields; acceptance targets F-12 through F-14 added. No implementation or live-data tests.",
+  "compatibility": "Documentation only; original field numbering and legacy mappings preserved. No code, Skill, API, runtime data, migration, browser or release changes.",
+  "handoff": {
+    "task": "profile-fields-origins-f05",
+    "status": "complete",
+    "next": "Review height in centimeters, weight in kilograms and health information (01-18 through 01-20). Photo separation and original-file references are already settled; remaining file-management details stay with the attachment review. Explain old/new differences for each batch.",
+    "docs": [],
+    "docs_reason": "Updated only the owning local field PRD and catalog with origins, save/failure/history boundaries, acceptance targets and legacy comparison; retained existing photo constraints without extending confirmation. Other topics and shared guide untouched."
+  },
+  "id": "20261022T104959Z-profile-fields-origins-f05-39298f",
+  "files": [
+    "docs/PROJECT_ACTIVITY.md"
+  ],
+  "release": "0.4.0"
+}

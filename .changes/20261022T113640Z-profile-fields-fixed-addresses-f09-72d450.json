@@ -1,0 +1,21 @@
+{
+  "kind": "docs",
+  "summary": "Specify two fixed address entries and remove the address-purpose preset from the field design.",
+  "capabilities": [
+    "profile"
+  ],
+  "validation": "check_docs and check_project passed; 258 unique review IDs retained; documentation only, no product or live-data tests.",
+  "compatibility": "Documentation only; no code, Skill, API, runtime, migration, browser or release changes.",
+  "handoff": {
+    "task": "profile-fields-fixed-addresses-f09",
+    "status": "complete",
+    "next": "Batch-review remaining contact fields and the six candidate components for each fixed residence and mailing address. Address purpose and default hukou address are excluded; preserve legacy values for migration review.",
+    "docs": [],
+    "docs_reason": "Updated owning local field PRD and catalog; no changes to other topics or the shared guide."
+  },
+  "id": "20261022T113640Z-profile-fields-fixed-addresses-f09-72d450",
+  "files": [
+    "docs/PROJECT_ACTIVITY.md"
+  ],
+  "release": "0.4.0"
+}

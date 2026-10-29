@@ -1,0 +1,21 @@
+{
+  "kind": "docs",
+  "summary": "Confirm five portfolio work fields and exclude role/order, platform, publication date and registration number; prepare homepage entries.",
+  "capabilities": [
+    "profile"
+  ],
+  "validation": "check_docs.py and check_project.py passed; targeted checks verified 259 unique IDs, five retained work fields including type, four exclusions and legacy mappings, F-85 through F-88 and three pending homepage entries. No runtime tests or full PR diff checks.",
+  "compatibility": "Documentation only; no code, Skill, API, runtime, migration, browser or release changes. Legacy values, original files, references and history preserved.",
+  "handoff": {
+    "task": "profile-fields-work-confirm-f023",
+    "status": "complete",
+    "next": "Batch-review personal homepage, code homepage and platform-named additional public homepage fields: optional, one current link per independent field, no copying or inferred URLs. Explain transition from platform-plus-URL groups without duplicating old links. Prior patent exclusion, obtained-date and four-project-expression implementation synchronization dependencies remain.",
+    "docs": [],
+    "docs_reason": "Updated the owning local field PRD and catalog; other topics unchanged."
+  },
+  "id": "20261022T134723Z-profile-fields-work-confirm-f023-5c18c1",
+  "files": [
+    "docs/PROJECT_ACTIVITY.md"
+  ],
+  "release": "0.4.0"
+}

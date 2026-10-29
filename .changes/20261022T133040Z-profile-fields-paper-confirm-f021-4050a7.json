@@ -1,0 +1,21 @@
+{
+  "kind": "docs",
+  "summary": "Confirm eight paper fields and exclude DOI; prepare the complete patent field batch.",
+  "capabilities": [
+    "profile"
+  ],
+  "validation": "check_docs.py and check_project.py passed; targeted checks verified 259 unique catalog IDs, eight retained paper rows, DOI exclusion and legacy mapping, F-78 through F-81 acceptance targets, and eleven pending patent fields. No runtime tests or full PR diff checks.",
+  "compatibility": "Documentation only; no code, Skill, API, runtime, migration, browser or release changes. Legacy values, original files and history preserved.",
+  "handoff": {
+    "task": "profile-fields-paper-confirm-f021",
+    "status": "complete",
+    "next": "Batch-review eleven patent fields: optional per-patent current values, one combined role/inventor-order text, separate partial application/grant dates, distinct text identifiers, manual state, one link and multiple attachments. Preserve prior obtained-date and four-project-expression synchronization dependencies.",
+    "docs": [],
+    "docs_reason": "Updated owning local field PRD and catalog; other topics unchanged."
+  },
+  "id": "20261022T133040Z-profile-fields-paper-confirm-f021-4050a7",
+  "files": [
+    "docs/PROJECT_ACTIVITY.md"
+  ],
+  "release": "0.4.0"
+}

@@ -1,0 +1,22 @@
+{
+  "kind": "docs",
+  "summary": "Confirm field-by-field selection of imported profile changes while preserving unselected values and same-sitting exam results.",
+  "capabilities": [
+    "profile",
+    "import"
+  ],
+  "validation": "check_docs.py passed for 114 Markdown files and 762 relative links; check_project.py passed before recording. Read back the revised guide, compatibility C04 and I-04 acceptance cases. No runtime tests executed because only requirements and planning documents changed.",
+  "compatibility": "Requirements only: no product code, Skill, API, live data or deployment change. Partial import selection is confirmed but unimplemented; exam category, relationship and remaining version-field decisions remain with their existing topics.",
+  "handoff": {
+    "task": "profile-import-field-selection-p48",
+    "status": "complete",
+    "next": "Continue remaining field/category/relationship and version details in their assigned topics. Implement partial import selection only when code reconstruction is authorized, including preservation of unselected values and same-sitting exam integrity.",
+    "docs": [],
+    "docs_reason": "Updated private PRD R30a, compatibility C04, acceptance cases and shared planning references. Private specification paths stay in the local receipt; public metadata contains only generic engineering status."
+  },
+  "id": "20261022T104308Z-profile-import-field-selection-p48-0023f0",
+  "files": [
+    "docs/PROJECT_ACTIVITY.md"
+  ],
+  "release": "0.4.0"
+}

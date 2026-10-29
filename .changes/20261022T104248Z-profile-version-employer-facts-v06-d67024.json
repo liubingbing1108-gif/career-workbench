@@ -1,0 +1,21 @@
+{
+  "kind": "docs",
+  "summary": "Confirm shared industry, organization type and size across internship expression versions, with scoped saves and historical protection.",
+  "capabilities": [
+    "profile"
+  ],
+  "validation": "python3 scripts/check_docs.py passed: 114 Markdown files, 753 relative links, D01-D100 coverage. python3 scripts/check_project.py passed: catalog, references and 54 change records; PR diff not checked. Read back all three assignments and V-20 through V-23 acceptance targets. No product tests run for documentation-only work.",
+  "compatibility": "No code, Skill, API, runtime data, files, website or deployment changes. Field types and option sets remain owned by the field topic; no cross-internship organization object was approved.",
+  "handoff": {
+    "task": "profile-version-employer-facts-v06",
+    "status": "complete",
+    "next": "Confirm shared ownership of internship department and work location next, using a concrete example. Continue remaining internship and project ownership questions without re-asking established company, position and date sharing. Contact design remains a dependency; implementation is deferred.",
+    "docs": [],
+    "docs_reason": "Updated only the assigned private version PRD to V0.6: three confirmed common fields, save/cancel/failure/history behavior and four acceptance targets. Reconciled the dependency note now that the field topic has updated the departure-reason catalog entry. No shared specification files were edited."
+  },
+  "id": "20261022T104248Z-profile-version-employer-facts-v06-d67024",
+  "files": [
+    "docs/PROJECT_ACTIVITY.md"
+  ],
+  "release": "0.4.0"
+}

@@ -16,3 +16,23 @@
 #profile-view .profile-content{overflow:visible;min-height:0}
 #profile-view .record-actions{position:static}
 #profile-view .library-record{scroll-margin-top:20px}
+/* The migrated profile contract has no editable hierarchy or large page banner. */
+.flat-profile .library-topbar>div:first-of-type>p,.flat-profile .library-topbar h1,
+.flat-profile .profile-content>.section-heading,.flat-profile .library-tools{display:none}
+.flat-profile .library-topbar{display:flex;flex-wrap:wrap;gap:12px;align-items:center;padding:12px 0;margin:0}
+.flat-profile #profile-search{flex:1;min-width:180px;max-width:460px}
+.flat-profile .workspace{grid-template-columns:170px minmax(0,1fr)}
+.flat-profile .flat-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.flat-profile .flat-field{min-width:0;display:grid;gap:6px}
+.flat-profile .flat-field.full-span{grid-column:1/-1}
+.flat-profile .flat-field label{font-weight:600}
+.flat-profile .flat-field .text-button{justify-self:end;font-size:12px;padding:0}
+.flat-profile .flat-field input,.flat-profile .flat-field select,.flat-profile .flat-field textarea{width:100%;min-width:0;box-sizing:border-box}
+.flat-profile .flat-field textarea{min-height:110px;resize:vertical}
+.flat-profile .flat-scalar{padding:16px;background:white;border:1px solid #e2e6e8;border-radius:10px;margin-bottom:12px}
+.flat-profile .flat-scalar .flat-fields{grid-template-columns:1fr}
+.flat-profile .flat-version,.flat-profile .flat-components{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+.flat-profile .flat-components input{flex:1;min-width:80px;width:80px}
+.flat-profile .library-record>form,.flat-profile .library-record>.flat-version{margin:16px}
+.flat-profile .flat-search-context{color:#64706c;font-size:13px}
+@media(max-width:760px){.flat-profile .workspace{display:block}.flat-profile #category-nav{display:flex;flex-wrap:wrap}.flat-profile .flat-fields{grid-template-columns:1fr}.flat-profile .library-topbar{position:static}}

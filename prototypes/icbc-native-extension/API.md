@@ -1,6 +1,6 @@
 # 填写执行器接口 v1
 
-当前注入核心版本 `1.2.36`，后台客户端 `1.2.13`，包版本 `1.3.9`，协议 `schemaVersion: 1`。安装见 [README](README.md)，结构类型见 [protocol.d.ts](protocol.d.ts)。
+源码核心版本 `1.2.37`，后台客户端 `1.2.13`，包版本 `1.3.10`（安装状态需另行核对），协议 `schemaVersion: 1`。安装见 [README](README.md)，结构类型见 [protocol.d.ts](protocol.d.ts)。
 
 ## 职责和入口
 
@@ -176,3 +176,20 @@ status的Job可选currentField={label,index,total,sectionId}、progress（当前
 ## 保存持久性（D79）
 
 底层 `saveDraft.saved` 仅表示观察到官网保存回应。材料运行器另外调用受限客户端 `reloadAndScan(expectedUrl)`，仅重新载入同一已确认官网页并重新扫描；按分区、记录序号、字段标签及组件位置比较。报告区分 `save_acknowledged`、`persistence_verified`、`persisted`、`expected_count`、`attachment_verified`；材料层 `saved` 只有预期值及已选附件重开后均在才为真。没有重新打开能力时不能确认保存。该客户端方法不作为任意网页/上层输入的通用导航API。
+
+
+## 局部修正能力（协议v1增量）
+
+执行核心1.2.37的scan返回`capabilities.correctionRetry=1`，Assignment增加可选`expectedCurrentValue`。存在此参数时，validate及执行前均要求官网值仍等于确认预览展示的旧值；原snapshot校验继续生效。未声明能力的核心不得接收局部修正，旧客户端/旧计划维持v1行为。扩展源码包1.3.10包含此能力；源码版本不证明用户浏览器已经安装。
+
+上层连接另声明`structuredIssues:1`及`correctionRetry:1`。结构化问题与旧`issues:string[]`并存，字段包含官网叶节点、实际控件/分区/记录、来源对象字段、预期值、观察旧值、约束、可见校验、记录内其他字段快照。服务绑定session、岗位、尝试、映射修订及材料digest，并拒绝超出已确认内容的报告。旧尝试的迟到报告不能修改新任务。
+
+工作台保存本次编辑后请求`/api/preparation/correction-preview`，明确确认后沿现有start入口发送`correction:true`。服务必须确认旧批次结束、材料未再变化及能力匹配。局部运行仅执行确认列表，不增删记录、不上传附件、不暂存或刷新页面；逐项比对官网旧值及整条记录定位。官网手改或记录变化只暂停相关项，独立项可继续。结果`current_verified`仅表示当前值回读和可见校验通过，不表示网站持久保存或已投递；未知网站校验仍由本人核对。
+
+混合网页行的来源同时标识实际对象`entry_id`与可见行`row_entry_id`。失去执行响应时，先取消并等待核心终止确认；确认失败报告`stop_unconfirmed`并停止本批后续写入，不能把发出取消请求当作已停止。
+
+## 原执行页停止证明（协议v1可选增量）
+
+scan增加`capabilities.stopProof=1`；`executionState({})`只读返回`{sessionId,page,busy,cancelled}`，执行中也可读取，禁止额外参数。`cancel`只请求停止；只有busy为false且cancelled为true才可形成停止证明。核心身份随页面核心实例创建，同URL的新标签页不能冒充原实例。
+
+扩展connect发送`core_session_id`与stopProof能力；已配对stop-check只查询等待核验的旧任务，不领取材料。poll也可返回stop_check。扩展先核对原核心和URL，再cancel并等待空闲，最后提交`stop-proof`的job_id/proof；不刷新或关闭官网、不重填。服务核验任务身份、能力和原页后解除stop_unconfirmed并废弃旧预览。错误核心不取消，未停止不放行；旧核心无身份继续待核对。服务重启时未发给执行器的排队任务可直接暂停，已发出的任务须证明停止。

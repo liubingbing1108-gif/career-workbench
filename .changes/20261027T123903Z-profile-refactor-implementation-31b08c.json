@@ -1,0 +1,42 @@
+{
+  "kind": "refactor",
+  "summary": "Validate live model schema integration, guarded migration reviews, legacy draft access and correction UI.",
+  "capabilities": [
+    "profile",
+    "import",
+    "mapping",
+    "execution"
+  ],
+  "validation": "Fictional live Codex mapping and resume parsing passed. Migration/mapping/pending 28 checks, current import 24 checks, pending 13 checks after historical scope addition, correction browser and legacy draft browser passed. Full latest export regression pending.",
+  "compatibility": "Contract30 remains opt-in; active databases and installed extension unchanged. Review mutates isolated candidates only; old parser results cannot bypass current review. Management database is backed up, reference-checked and guarded during apply.",
+  "handoff": {
+    "task": "profile-refactor-implementation",
+    "status": "in_progress",
+    "next": "Await pending personal-data choices; finish latest full regression, reviewed migration rehearsal, local runtime activation and installed extension readback.",
+    "docs": [
+      "docs/AGENT_INTEGRATION.md"
+    ],
+    "docs_reason": "Document root-object output schema adaptation, confirmed migration review/management safeguards and legacy candidate/draft behavior."
+  },
+  "id": "20261027T123903Z-profile-refactor-implementation-31b08c",
+  "files": [
+    "docs/AGENT_INTEGRATION.md",
+    "docs/CAPABILITIES.json",
+    "prototypes/profile-lab/derived_materials.py",
+    "prototypes/profile-lab/lab.py",
+    "prototypes/profile-lab/mapping_skill.py",
+    "prototypes/profile-lab/profile_migration.py",
+    "prototypes/profile-lab/test_correction_browser.cjs",
+    "prototypes/profile-lab/test_correction_browser_fixture.py",
+    "prototypes/profile-lab/test_current_import_review.py",
+    "prototypes/profile-lab/test_mapping_skill.py",
+    "prototypes/profile-lab/test_profile_flat_browser.cjs",
+    "prototypes/profile-lab/test_profile_flat_fixture.py",
+    "prototypes/profile-lab/test_profile_pending.py",
+    "prototypes/profile-lab/web/profile-flat.js",
+    "scripts/migrate_profile_refactor.py",
+    "scripts/run_tests.py",
+    "scripts/test_profile_refactor_migration.py"
+  ],
+  "release": "0.4.0"
+}

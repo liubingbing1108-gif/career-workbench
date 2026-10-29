@@ -1,0 +1,21 @@
+{
+  "kind": "docs",
+  "summary": "Confirm 27 education fields and save boundaries; align the field catalog with final version ownership and prepare the employment batch.",
+  "capabilities": [
+    "profile"
+  ],
+  "validation": "check_docs and check_project passed; verified 258 stable IDs, 27 confirmed education fields, six education exclusions, and final canceled fields from the version topic. Documentation only; no runtime tests.",
+  "compatibility": "No code, Skill, API, runtime, migration, browser or release changes. Existing values, source files and history remain protected.",
+  "handoff": {
+    "task": "profile-fields-education-confirm-f012",
+    "status": "complete",
+    "next": "Batch-review employment fields 06-01 through 06-19 and proposed optional values, date/state handling, one referee and multiple source attachments. Do not re-ask final V0.12 ownership or canceled 06-20/07-15. Employment-type transitions still require structural follow-up.",
+    "docs": [],
+    "docs_reason": "Updated the owning field PRD and catalog; cited final version topic without editing it or shared guide files."
+  },
+  "id": "20261022T120601Z-profile-fields-education-confirm-f012-955772",
+  "files": [
+    "docs/PROJECT_ACTIVITY.md"
+  ],
+  "release": "0.4.0"
+}

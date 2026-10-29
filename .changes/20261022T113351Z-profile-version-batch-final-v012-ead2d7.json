@@ -1,0 +1,21 @@
+{
+  "kind": "docs",
+  "summary": "Finalize internship and project version ownership after batch review; exclude tool fields and applicability metadata, keep referees local to an internship, and prioritize default versions with per-application user switching.",
+  "capabilities": [
+    "profile"
+  ],
+  "validation": "check_docs PASS: 114 Markdown files, 764 relative links, D01-D100; check_project PASS: catalog, references and 66 records. Read back V0.12, checked V-01 through V-60 uniqueness and completeness, and removed superseded candidate rules. No product tests: scenarios are implementation targets.",
+  "compatibility": "Only assigned private version PRD edited. No code, Skill, runtime data, original files, website or migration changes. Legacy values and history retained for migration mapping. Field-catalog and main-guide alignment dependencies are explicit; those other-topic documents were not edited.",
+  "handoff": {
+    "task": "profile-version-batch-final-v012",
+    "status": "complete",
+    "next": "Version ownership batch is settled; do not repeat field-by-field approval. Field-topic owner must reflect exclusion of 07-15 and contact link 06-20 and direct internship referee storage. Main-guide owner must align default-first application switching and removal of language/job/company version metadata. Remaining structure/migration dependencies and implementation require their existing workflow.",
+    "docs": [],
+    "docs_reason": "The assigned version PRD is the authoritative PRD component for these decisions. V0.12 includes final ownership, changed default-selection behavior, V-44 through V-60 and explicit cross-topic alignment requirements. No duplicate edits to other chats' documents."
+  },
+  "id": "20261022T113351Z-profile-version-batch-final-v012-ead2d7",
+  "files": [
+    "docs/PROJECT_ACTIVITY.md"
+  ],
+  "release": "0.4.0"
+}

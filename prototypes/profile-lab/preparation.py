@@ -200,6 +200,8 @@ class Preparation:
         if 'attachment_id' not in prep:
             tasks.append({'key': 'attachment', 'label': '简历附件', 'message': '未选择附件，本次跳过上传；仍可填写其他资料'})
         pending = [i['label'] + '：' + i['message'] for i in tasks if i.get('blocks_execution')]
+        if session.get('mapping_relations_stale'):
+            pending.append('字段对应已纠正或失效，请重新读取问题并核对材料')
         rows = []
         for item in plan['automatic'] + plan['decisions']:
             w = item['website_field']
@@ -221,11 +223,12 @@ class Preparation:
                         unresolved = next((i for i in plan['missing'] if i['website_field']['id'] == w['id'] and i.get('entry_id') == entry['id'] and i.get('child_id') == child['id']), None)
                         if unresolved and self.missing_key(unresolved) in removed:
                             continue
+                        choice=next((c for c in entry.get('answer_choices',[]) if c.get('child_id')==child['id']),{})
                         values.append({'website_id': child['id'], 'label': child['label'],
                                        'value': '' if unresolved else entry.get('answer_values', {}).get(key, ''),
                                        'pending': bool(unresolved), 'manual': bool(unresolved and self.missing_key(unresolved) in deferred),
-                                       'source_ref': {'entry_id': entry['id'], 'field_id': member.get('field_id'),
-                                                      'version_id': next((c['selected']['id'] for c in entry.get('answer_choices', []) if c['field']['id'] == member.get('field_id') and c.get('selected')), None)}})
+                                       'source_ref': {'entry_id': choice.get('source_entry_id',entry['id']), 'row_entry_id':entry['id'], 'field_id': member.get('field_id'),
+                                                      'version_id': (choice.get('selected') or {}).get('id')}})
                     records.append({'entry_id': entry['id'], 'values': values})
                 rows.append({'website_id': w['id'], 'label': w['label'], 'records': records, 'pending':uncertain})
             else:
@@ -282,15 +285,22 @@ class Preparation:
             session = find(state['sessions'], session_id)
             if any(s['id'] != session_id and
                    (s.get('website') or s.get('target') or {}).get('url') == content['url'] and
-                   s.get('preparation', {}).get('execution', {}).get('status') in {'awaiting_executor', 'running'}
+                   (s.get('preparation', {}).get('execution', {}).get('status') in {'awaiting_executor', 'running'} or s.get('preparation', {}).get('execution', {}).get('stop_unconfirmed'))
                    for s in state['sessions']):
                 raise LabError('同一官网有另一个岗位正在填写，请先暂停，再连接本次岗位', 409)
             previous = session['preparation'].get('execution')
+            if previous and previous.get('stop_unconfirmed'):
+                raise LabError('尚未确认旧执行已停止，请在原页停止并重新连接核对',409)
             if previous and previous.get('digest') == digest and previous['status'] in {'awaiting_executor', 'running'}:
                 return previous
+            if previous and previous['status'] in {'awaiting_executor', 'running'}:
+                raise LabError('请先停止旧批次并等待停止确认，再执行新材料', 409)
             if previous:
-                session['preparation'].setdefault('execution_history',[]).append({k:copy.deepcopy(v) for k,v in previous.items() if k not in {'confirmed_materials','connection'}})
+                session['preparation'].setdefault('execution_history',[]).append({k:copy.deepcopy(v) for k,v in previous.items() if k!='connection'})
             queued_content=copy.deepcopy(content)
+            if state.get('profile_contract') == 30:
+                from corrections import mapping_revision
+                queued_content.update(session_id=session_id, mapping_revision=mapping_revision(session))
             if retry:
                 if not previous or previous.get('status') in {'running','awaiting_executor'}:
                     raise LabError('请先停止当前填写，再重试',409)
@@ -321,9 +331,10 @@ class Preparation:
         def queue(state):
             session=find(state['sessions'],session_id);prep=session.get('preparation',{});previous=prep.get('execution')
             if not previous or previous.get('status') in ('running','awaiting_executor'):raise LabError('请先完成或暂停本次填写后核对',409)
+            if previous.get('stop_unconfirmed'):raise LabError('请先在原页确认旧执行已停止',409)
             content=copy.deepcopy(previous['confirmed_materials'])
             content.update(verification_only=True,after_reopen=after_reopen)
-            prep.setdefault('execution_history',[]).append({k:copy.deepcopy(v) for k,v in previous.items() if k not in {'confirmed_materials','connection'}})
+            prep.setdefault('execution_history',[]).append({k:copy.deepcopy(v) for k,v in previous.items() if k!='connection'})
             prep['execution']={'id':uid('verify'),'digest':previous['digest'],'status':'awaiting_executor','confirmed_materials':content,'filled':0,'verified':0,'saved':False,'attachment_verified':False,'verification_only':True,'after_reopen':after_reopen,'message':'正在核对当前官网；不填写或重新上传。'}
             return prep['execution']
         return self.lab.mutate(queue)

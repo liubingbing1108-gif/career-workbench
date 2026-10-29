@@ -1,0 +1,21 @@
+{
+  "kind": "docs",
+  "summary": "Confirm political status, a single combined joining-date field and marital status, with optional independent saves and preserved date precision.",
+  "capabilities": [
+    "profile"
+  ],
+  "validation": "check_docs.py PASS; check_project.py PASS. Catalog review: 258 unique rows, confirmed rows 01-11 through 01-13, next two rows still candidates, stale split-date pending statements removed. No product implementation tests performed.",
+  "compatibility": "Documentation only. Original field numbering and legacy mapping retained. No code, Skill, API, runtime data, migration, publication or browser changes.",
+  "handoff": {
+    "task": "profile-fields-political-f04",
+    "status": "complete",
+    "next": "Continue with native place and student origin (01-14 and 01-15), explaining differences against existing presets. Combined joining date is confirmed and must not be split or re-asked; remaining fields stay pending.",
+    "docs": [],
+    "docs_reason": "Updated the local owning field PRD topic and review catalog with current rules, confirmation scope, cancellation/failure/history boundaries and acceptance targets. Shared guide and other topics remain under their assigned sessions."
+  },
+  "id": "20261022T104453Z-profile-fields-political-f04-1082e0",
+  "files": [
+    "docs/PROJECT_ACTIVITY.md"
+  ],
+  "release": "0.4.0"
+}

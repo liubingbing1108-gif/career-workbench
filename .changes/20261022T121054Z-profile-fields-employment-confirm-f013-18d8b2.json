@@ -1,0 +1,21 @@
+{
+  "kind": "docs",
+  "summary": "Confirm 19 employment fields, one referee and multiple attachments; prepare the full project field batch.",
+  "capabilities": [
+    "profile"
+  ],
+  "validation": "check_docs and check_project passed. Targeted verification passed for 258 IDs, 19 confirmed employment rows and 16 pending project rows; corrected an overbroad check that mistook pending implementation for pending confirmation. No runtime tests.",
+  "compatibility": "Documentation only; no code, Skill, API, runtime, migration, browser or release changes. Legacy values, original files and history preserved.",
+  "handoff": {
+    "task": "profile-fields-employment-confirm-f013",
+    "status": "complete",
+    "next": "Batch-review 16 project fields excluding canceled 07-15, including optional values, partial dates, independent state, integer team count, one current link and multiple original-file references. Existing version ownership is settled. Employment-type transition handling remains a separate unresolved structural detail.",
+    "docs": [],
+    "docs_reason": "Updated owning field PRD and catalog; cited version topic without editing it or shared guide files."
+  },
+  "id": "20261022T121054Z-profile-fields-employment-confirm-f013-18d8b2",
+  "files": [
+    "docs/PROJECT_ACTIVITY.md"
+  ],
+  "release": "0.4.0"
+}

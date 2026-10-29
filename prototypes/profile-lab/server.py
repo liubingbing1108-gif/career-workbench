@@ -229,6 +229,9 @@ def make_server(lab, port=0, mapper=None, management_app=None, management_handle
                     result = preparation.omit_optional(data['session_id'], data['key'], data.get('omitted') is True)
                 elif action == "/api/preparation/preview":
                     result = preparation.preview(data['session_id'], data.get('official_draft') is True)
+                elif action == '/api/preparation/correction-preview':
+                    from corrections import preview
+                    result = preview(preparation, data['session_id'], data.get('issue_ids'))
                 elif action == "/api/preparation/start":
                     if job_sessions:job_sessions.validate_destination(data['session_id'])
                     if job_sessions:
@@ -238,7 +241,11 @@ def make_server(lab, port=0, mapper=None, management_app=None, management_handle
                             if job.get('requires_preference'):raise LabError('该岗位需要选择志愿，请到官网人工申请')
                             if job.get('needs_review'):raise LabError('请在投递管理核对公司和具体岗位后开始填写')
                             if job.get('official_url_status')!='verified':raise LabError('官网入口尚未核验，招聘信息链接不能用于填写')
-                    result = preparation.start(data['session_id'], data['digest'], data.get('official_draft') is True, retry=data.get('retry') is True)
+                    if data.get('correction') is True:
+                        from corrections import start
+                        result = start(preparation, data['session_id'], data['digest'])
+                    else:
+                        result = preparation.start(data['session_id'], data['digest'], data.get('official_draft') is True, retry=data.get('retry') is True)
                 elif action == '/api/preparation/verify':
                     if job_sessions:job_sessions.validate_destination(data['session_id'])
                     result=preparation.verify(data['session_id'],data.get('after_reopen') is True)
@@ -273,17 +280,22 @@ def make_server(lab, port=0, mapper=None, management_app=None, management_handle
                     result = MaterialSets(application).select(data['session_id'], data['website_id'], data['entry_id'], data['version_id'])
                 elif action == "/api/website/set-answer":
                     from material_sets import MaterialSets
-                    result = MaterialSets(application).save(data['session_id'], data['website_id'], data['records'], data.get('mode', 'session'), data.get('name', ''), data.get('composition', False))
+                    result = MaterialSets(application).save(data['session_id'], data['website_id'], data['records'], data.get('mode', 'session'), data.get('name', ''), data.get('composition', False),data.get('request_id'))
                 elif action == "/api/website/composition-version":
                     from material_sets import MaterialSets
                     result = MaterialSets(application).select_composition(data['session_id'], data['website_id'], data['version_id'])
                 elif action == "/api/website/version":
                     result = application.select_version(data["session_id"], data["website_id"], data["version_id"], data.get("entry_id"), data.get("field_id"), data.get("child_id"))
                 elif action == "/api/website/answer":
-                    result = application.edit_answer(data["session_id"], data["website_id"], data["value"], data["mode"], data.get("version_id"), data.get("expected_revision"), data.get("name", ""), data.get("entry_id"), data.get("field_id"), data.get("child_id"))
+                    result = application.edit_answer(data["session_id"], data["website_id"], data["value"], data["mode"], data.get("version_id"), data.get("expected_revision"), data.get("name", ""), data.get("entry_id"), data.get("field_id"), data.get("child_id"),data.get('request_id'),data.get('preview_token'),data.get('relation_options'))
+                elif action == '/api/website/answer-preview':
+                    from application_current import answer_preview
+                    result=answer_preview(application,lab.state(),data)
                 elif action == "/api/fields":
                     result = lab.add_field(data)
                 elif action == "/api/entries":
+                    if lab.state().get('profile_contract') == 30:
+                        raise LabError('请通过资料新增入口指定对象类型与保存请求', 409)
                     result = lab.mutate(lambda state: lab.new_entry(state, data["category"]))
                 elif action == "/api/profile/tree":
                     result = library.tree(data)
@@ -291,6 +303,33 @@ def make_server(lab, port=0, mapper=None, management_app=None, management_handle
                     result = library.save(data)
                 elif action == "/api/profile/draft":
                     result = library.draft(data)
+                elif action == "/api/profile/visibility":
+                    from profile_current import visibility
+                    result = lab.mutate(lambda state:visibility(state,data))
+                elif action == '/api/profile/field-preview':
+                    from profile_fields import preview as field_preview
+                    result=field_preview(lab.state(),data)
+                elif action == '/api/profile/field':
+                    from profile_fields import update as update_field
+                    result=lab.mutate(lambda state:update_field(state,data))
+                elif action == "/api/profile/pending":
+                    from profile_pending import resolve
+                    result = lab.mutate(lambda state:resolve(state,data))
+                elif action == "/api/mapping/relations":
+                    from mapping_relations import update
+                    result = lab.mutate(lambda state:update(state,data))
+                elif action == '/api/mapping/derived-preview':
+                    from derived_materials import preview
+                    result = preview(application,lab.state(),data['session_id'],data['website_id'],data.get('entry_ids'))
+                elif action == '/api/mapping/derived-confirm':
+                    from derived_materials import confirm
+                    result = lab.mutate(lambda state:confirm(application,state,data))
+                elif action == '/api/mapping/extract-request':
+                    from derived_materials import request_excerpt
+                    result=request_excerpt(application,data)
+                elif action == "/api/website/sync-preview":
+                    from application_current import sync_preview
+                    result = sync_preview(application,lab.state(),data)
                 elif action == "/api/profile/archive":
                     result = library.archive(data)
                 elif action == "/api/profile/field-version":
@@ -302,7 +341,7 @@ def make_server(lab, port=0, mapper=None, management_app=None, management_handle
                 elif action == "/api/profile/attachment":
                     result = library.attachment(data)
                 elif action == "/api/profile/attachment-upload":
-                    result = library.upload_attachment(data["filename"],base64.b64decode(data["base64"],validate=True))
+                    result = library.upload_attachment(data["filename"],base64.b64decode(data["base64"],validate=True),data.get('attachment_type',''))
                 elif action == "/api/profile":
                     result = lab.save_profile(data["values"])
                 elif action == "/api/sessions":

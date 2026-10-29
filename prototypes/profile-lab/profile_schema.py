@@ -89,6 +89,10 @@ for field in FIELDS:field['aliases']=ALIASES.get(field['id'],[])
 
 def install(state):
     """Add definitions; never rewrite record values, IDs, versions or source files."""
+    from profile_contract import active, install as install_current
+    if active(state):
+        install_current(state)
+        return
     if state.get('library_contract',0)<24:
         state.setdefault('profile_legacy_single_entries',{cat:[e['id'] for e in state['entries'] if e['category']==cat and not e.get('profile_archived')] for cat in ('subjective','preferences')})
     state.setdefault('profile_field_links',{})
@@ -115,9 +119,13 @@ def install(state):
 
 
 def fields_for(state,entry):
+    from profile_contract import active, fields_for as current_fields
+    if active(state):return current_fields(state,entry)
     return [f for f in state['fields'] if f['category']==entry['category'] and (not f.get('entry_id') or f['entry_id']==entry.get('id')) and
         (not f.get('record_types') or not entry.get('record_type') or entry['record_type'] in f['record_types'] or f['id'] in entry.get('values',{}))]
 
 
 def available(entry,session=None):
+    if entry.get('deleted_at') or entry.get('purged'):return False
+    if entry.get('legacy_only'):return False
     return not entry.get('profile_archived') or entry['id'] in (session or {}).get('archived_profile_refs',[])

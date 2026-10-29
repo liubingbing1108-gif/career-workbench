@@ -1,0 +1,21 @@
+{
+  "kind": "docs",
+  "summary": "Confirm whole-version switching for internship description, responsibilities and achievements, with ordinary saves limited to the current version.",
+  "capabilities": [
+    "profile"
+  ],
+  "validation": "python3 scripts/check_docs.py passed: 114 Markdown files, 752 relative links, D01-D100 coverage. python3 scripts/check_project.py passed: catalog, references and 51 change records; PR diff not checked. Read back the three field assignments and five planned acceptance examples. Product tests were not run for this documentation-only change.",
+  "compatibility": "No code, Skill, API, runtime data, original files, website or deployment changes. Workbench edits remain only for the current application unless explicitly written back; other field decisions remain pending.",
+  "handoff": {
+    "task": "profile-version-internship-text-v05",
+    "status": "complete",
+    "next": "Confirm the version ownership of internship employer industry, organization type and organization size as the next small field group. Continue remaining internship and project fields; contact association remains a cross-topic dependency. Implementation is deferred.",
+    "docs": [],
+    "docs_reason": "Updated only the assigned private version PRD to V0.5, replacing the three expression candidates with confirmed assignments, scoped save and switch behavior, cancellation/failure/history boundaries and V-15 through V-19. Main/shared files remain owned by their respective tasks."
+  },
+  "id": "20261022T103115Z-profile-version-internship-text-v05-f10042",
+  "files": [
+    "docs/PROJECT_ACTIVITY.md"
+  ],
+  "release": "0.4.0"
+}

@@ -1,0 +1,1462 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:career-workbench:application-field-mapper:v1",
+  "$ref": "#/$defs/request",
+  "$defs": {
+    "context": {
+      "type": "object",
+      "properties": {
+        "preparation_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "session_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "target_revision": {
+          "type": "string",
+          "minLength": 1
+        },
+        "catalog_revision": {
+          "type": "string",
+          "minLength": 1
+        },
+        "relation_revision": {
+          "type": "string",
+          "minLength": 1
+        },
+        "scan_revision": {
+          "type": "string",
+          "minLength": 1
+        },
+        "profile_revision": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "preparation_id",
+        "session_id",
+        "target_revision",
+        "catalog_revision",
+        "relation_revision",
+        "scan_revision",
+        "profile_revision"
+      ],
+      "additionalProperties": false
+    },
+    "site": {
+      "type": "object",
+      "properties": {
+        "origin": {
+          "type": "string",
+          "minLength": 1
+        },
+        "tenant": {
+          "type": "string"
+        },
+        "form_key": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "origin",
+        "tenant",
+        "form_key"
+      ],
+      "additionalProperties": false
+    },
+    "object": {
+      "type": "object",
+      "properties": {
+        "category": {
+          "type": "string"
+        },
+        "record_type": {
+          "type": "string"
+        },
+        "entry_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "repeatable": {
+          "type": "boolean"
+        },
+        "allowed_entry_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "required": [
+        "category",
+        "record_type",
+        "entry_id",
+        "repeatable",
+        "allowed_entry_ids"
+      ],
+      "additionalProperties": false
+    },
+    "condition": {
+      "type": "object",
+      "properties": {
+        "field_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "domain": {
+          "type": "string",
+          "enum": [
+            "text",
+            "number",
+            "date",
+            "education_level",
+            "employment_type",
+            "study_status"
+          ]
+        },
+        "op": {
+          "type": "string",
+          "enum": [
+            "in",
+            "not_in",
+            "gte",
+            "lte",
+            "exists"
+          ]
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "field_id",
+        "domain",
+        "op",
+        "values"
+      ],
+      "additionalProperties": false
+    },
+    "selector": {
+      "type": "object",
+      "properties": {
+        "selection": {
+          "type": "string",
+          "enum": [
+            "all",
+            "choose",
+            "one",
+            "highest"
+          ]
+        },
+        "entry_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "filters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/condition"
+          }
+        },
+        "rank": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "field_id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "domain": {
+                  "type": "string",
+                  "enum": [
+                    "text",
+                    "number",
+                    "date",
+                    "education_level",
+                    "employment_type",
+                    "study_status"
+                  ]
+                },
+                "direction": {
+                  "type": "string",
+                  "enum": [
+                    "asc",
+                    "desc"
+                  ]
+                }
+              },
+              "required": [
+                "field_id",
+                "domain",
+                "direction"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "required_values": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/condition"
+          }
+        },
+        "min_items": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "max_items": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "selection",
+        "entry_ids",
+        "filters",
+        "rank",
+        "required_values",
+        "min_items",
+        "max_items"
+      ],
+      "additionalProperties": false
+    },
+    "question": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "group_id": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "section": {
+          "type": "string"
+        },
+        "instructions": {
+          "type": "string"
+        },
+        "examples": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "control": {
+          "type": "string",
+          "minLength": 1
+        },
+        "options": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "condition": {
+          "type": "string"
+        },
+        "required": {
+          "type": "boolean"
+        },
+        "length": {
+          "type": "object",
+          "properties": {
+            "max": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "unit": {
+              "type": "string",
+              "enum": [
+                "characters",
+                "words",
+                "bytes",
+                "unknown"
+              ]
+            },
+            "encoding": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "max",
+            "unit",
+            "encoding"
+          ],
+          "additionalProperties": false
+        },
+        "object": {
+          "$ref": "#/$defs/object"
+        },
+        "unit": {
+          "type": "string"
+        },
+        "scale": {
+          "type": "string"
+        },
+        "semantic_fingerprint": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "id",
+        "group_id",
+        "label",
+        "section",
+        "instructions",
+        "examples",
+        "control",
+        "options",
+        "condition",
+        "required",
+        "length",
+        "object",
+        "unit",
+        "scale",
+        "semantic_fingerprint"
+      ],
+      "additionalProperties": false
+    },
+    "field": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "category": {
+          "type": "string",
+          "minLength": 1
+        },
+        "type": {
+          "type": "string",
+          "minLength": 1
+        },
+        "aliases": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "record_types": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "entry_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "meaning": {
+          "type": "string",
+          "minLength": 1
+        },
+        "unit": {
+          "type": "string"
+        },
+        "scale": {
+          "type": "string"
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "id",
+        "label",
+        "category",
+        "type",
+        "aliases",
+        "record_types",
+        "entry_id",
+        "meaning",
+        "unit",
+        "scale",
+        "revision"
+      ],
+      "additionalProperties": false
+    },
+    "scope": {
+      "type": "object",
+      "properties": {
+        "level": {
+          "type": "string",
+          "enum": [
+            "site",
+            "general"
+          ]
+        },
+        "origin": {
+          "type": "string"
+        },
+        "tenant": {
+          "type": "string"
+        },
+        "form_key": {
+          "type": "string"
+        },
+        "category": {
+          "type": "string",
+          "minLength": 1
+        },
+        "record_type": {
+          "type": "string"
+        },
+        "entry_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "level",
+        "origin",
+        "tenant",
+        "form_key",
+        "category",
+        "record_type",
+        "entry_id"
+      ],
+      "additionalProperties": false
+    },
+    "plan": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "none",
+            "alias",
+            "transform",
+            "compose",
+            "extract"
+          ]
+        },
+        "transform": {
+          "anyOf": [
+            {
+              "type": "string",
+              "enum": [
+                "month",
+                "year",
+                "education_level",
+                "academic_degree_level",
+                "is_full_time"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "extracts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "span_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "start": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "end": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "covers": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "span_id",
+              "start",
+              "end",
+              "covers"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "kind",
+        "transform",
+        "extracts"
+      ],
+      "additionalProperties": false
+    },
+    "exclusion": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "scope": {
+          "$ref": "#/$defs/scope"
+        },
+        "semantic_fingerprint": {
+          "type": "string",
+          "minLength": 1
+        },
+        "field_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        },
+        "match": {
+          "type": "string",
+          "enum": [
+            "target",
+            "plan"
+          ]
+        },
+        "selector": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/selector"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "plan": {
+          "$ref": "#/$defs/plan"
+        }
+      },
+      "required": [
+        "id",
+        "scope",
+        "semantic_fingerprint",
+        "field_ids",
+        "revision",
+        "reason",
+        "match",
+        "selector",
+        "plan"
+      ],
+      "additionalProperties": false
+    },
+    "relation": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "state": {
+          "type": "string",
+          "enum": [
+            "candidate",
+            "active",
+            "needs_review",
+            "disabled",
+            "superseded"
+          ]
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "alias",
+            "recipe"
+          ]
+        },
+        "scope": {
+          "$ref": "#/$defs/scope"
+        },
+        "semantic_fingerprint": {
+          "type": "string",
+          "minLength": 1
+        },
+        "question_label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "question_context": {
+          "type": "string",
+          "minLength": 1
+        },
+        "field_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "field_revisions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "field_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "revision": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "required": [
+              "field_id",
+              "revision"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "selector": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/selector"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "plan": {
+          "$ref": "#/$defs/plan"
+        },
+        "confirmation_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "confirmation_basis": {
+          "type": "string"
+        },
+        "confirmed_at": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "supersedes": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "rules_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "contract_version": {
+          "const": "application-field-mapper/v1"
+        }
+      },
+      "required": [
+        "id",
+        "revision",
+        "state",
+        "kind",
+        "scope",
+        "semantic_fingerprint",
+        "question_label",
+        "question_context",
+        "field_ids",
+        "field_revisions",
+        "selector",
+        "plan",
+        "confirmation_id",
+        "confirmation_basis",
+        "confirmed_at",
+        "supersedes",
+        "rules_version",
+        "contract_version"
+      ],
+      "additionalProperties": false
+    },
+    "availability_check": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "question_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "field_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "ready",
+            "missing_value",
+            "version_needed",
+            "conflict"
+          ]
+        },
+        "entry_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "version_refs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "entry_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "version_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "revision": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "required": [
+              "entry_id",
+              "version_id",
+              "revision"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "context": {
+          "$ref": "#/$defs/context"
+        }
+      },
+      "required": [
+        "id",
+        "question_id",
+        "field_ids",
+        "status",
+        "entry_ids",
+        "version_refs",
+        "context"
+      ],
+      "additionalProperties": false
+    },
+    "source_span": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "field_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "entry_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "version_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "id",
+        "field_id",
+        "entry_id",
+        "version_id",
+        "revision",
+        "text"
+      ],
+      "additionalProperties": false
+    },
+    "search": {
+      "type": "object",
+      "properties": {
+        "receipt": {
+          "type": "string",
+          "minLength": 1
+        },
+        "catalog_revision": {
+          "type": "string",
+          "minLength": 1
+        },
+        "complete_categories": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "required": [
+        "receipt",
+        "catalog_revision",
+        "complete_categories"
+      ],
+      "additionalProperties": false
+    },
+    "request": {
+      "type": "object",
+      "properties": {
+        "contract_version": {
+          "const": "application-field-mapper/v1"
+        },
+        "request_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "context": {
+          "$ref": "#/$defs/context"
+        },
+        "site": {
+          "$ref": "#/$defs/site"
+        },
+        "questions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/question"
+          }
+        },
+        "catalog": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/field"
+          }
+        },
+        "search": {
+          "$ref": "#/$defs/search"
+        },
+        "relations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/relation"
+          }
+        },
+        "exclusions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/exclusion"
+          }
+        },
+        "availability_checks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/availability_check"
+          }
+        },
+        "source_spans": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/source_span"
+          }
+        }
+      },
+      "required": [
+        "contract_version",
+        "request_id",
+        "context",
+        "site",
+        "questions",
+        "catalog",
+        "search",
+        "relations",
+        "exclusions",
+        "availability_checks",
+        "source_spans"
+      ],
+      "additionalProperties": false
+    },
+    "decision": {
+      "type": "object",
+      "properties": {
+        "question_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "proposal_state": {
+          "const": "candidate"
+        },
+        "semantic_status": {
+          "type": "string",
+          "enum": [
+            "equivalent",
+            "transform",
+            "compose",
+            "extract_candidate",
+            "ambiguous",
+            "new_attribute_candidate",
+            "unresolved"
+          ]
+        },
+        "category": {
+          "type": "string"
+        },
+        "record_type": {
+          "type": "string"
+        },
+        "selector": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/selector"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sources": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "field_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "covers": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "field_id",
+              "covers"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "alternatives": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "field_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "reason": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "field_ids",
+              "reason"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "coverage": {
+          "type": "object",
+          "properties": {
+            "covered": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "uncovered": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "partial": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "covered",
+            "uncovered",
+            "partial"
+          ],
+          "additionalProperties": false
+        },
+        "plan": {
+          "$ref": "#/$defs/plan"
+        },
+        "availability": {
+          "type": "object",
+          "properties": {
+            "status": {
+              "type": "string",
+              "enum": [
+                "not_evaluated",
+                "ready",
+                "missing_value",
+                "version_needed",
+                "conflict",
+                "draft_required"
+              ]
+            },
+            "check_id": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "status",
+            "check_id"
+          ],
+          "additionalProperties": false
+        },
+        "relation_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "new_attribute": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "label": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "meaning": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "category": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "record_type": {
+                  "type": "string"
+                },
+                "type": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "unit": {
+                  "type": "string"
+                },
+                "scale": {
+                  "type": "string"
+                },
+                "search_receipt": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "required": [
+                "label",
+                "meaning",
+                "category",
+                "record_type",
+                "type",
+                "unit",
+                "scale",
+                "search_receipt"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "request_expand_catalog": {
+          "type": "boolean"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        },
+        "clarification": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "question_id",
+        "proposal_state",
+        "semantic_status",
+        "category",
+        "record_type",
+        "selector",
+        "sources",
+        "alternatives",
+        "coverage",
+        "plan",
+        "availability",
+        "relation_id",
+        "new_attribute",
+        "request_expand_catalog",
+        "reason",
+        "clarification"
+      ],
+      "additionalProperties": false
+    },
+    "response": {
+      "type": "object",
+      "properties": {
+        "contract_version": {
+          "const": "application-field-mapper/v1"
+        },
+        "request_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "context": {
+          "$ref": "#/$defs/context"
+        },
+        "decisions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/decision"
+          }
+        }
+      },
+      "required": [
+        "contract_version",
+        "request_id",
+        "context",
+        "decisions"
+      ],
+      "additionalProperties": false
+    },
+    "query": {
+      "type": "object",
+      "properties": {
+        "contract_version": {
+          "const": "application-field-mapper/v1"
+        },
+        "context": {
+          "$ref": "#/$defs/context"
+        },
+        "site": {
+          "$ref": "#/$defs/site"
+        },
+        "questions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/question"
+          }
+        }
+      },
+      "required": [
+        "contract_version",
+        "context",
+        "site",
+        "questions"
+      ],
+      "additionalProperties": false
+    },
+    "query_result": {
+      "type": "object",
+      "properties": {
+        "context": {
+          "$ref": "#/$defs/context"
+        },
+        "query_receipt": {
+          "type": "string",
+          "minLength": 1
+        },
+        "relations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/relation"
+          }
+        },
+        "exclusions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/exclusion"
+          }
+        },
+        "catalog": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/field"
+          }
+        },
+        "search": {
+          "$ref": "#/$defs/search"
+        }
+      },
+      "required": [
+        "context",
+        "query_receipt",
+        "relations",
+        "exclusions",
+        "catalog",
+        "search"
+      ],
+      "additionalProperties": false
+    },
+    "update": {
+      "type": "object",
+      "properties": {
+        "contract_version": {
+          "const": "application-field-mapper/v1"
+        },
+        "operation": {
+          "type": "string",
+          "enum": [
+            "confirm",
+            "correct",
+            "disable",
+            "invalidate",
+            "reconfirm"
+          ]
+        },
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 1
+        },
+        "payload_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "expected_context": {
+          "$ref": "#/$defs/context"
+        },
+        "relation_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "expected_revision": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "candidate": {
+          "$ref": "#/$defs/relation"
+        },
+        "confirmation_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "confirmation_basis": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "contract_version",
+        "operation",
+        "idempotency_key",
+        "payload_sha256",
+        "expected_context",
+        "relation_id",
+        "expected_revision",
+        "candidate",
+        "confirmation_id",
+        "confirmation_basis",
+        "reason"
+      ],
+      "additionalProperties": false
+    },
+    "update_result": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "saved",
+            "replayed",
+            "conflict",
+            "rejected"
+          ]
+        },
+        "relation_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "receipt": {
+          "type": "string",
+          "minLength": 1
+        },
+        "profile_write": {
+          "const": "none"
+        },
+        "affected_question_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "error_code": {
+          "type": "string"
+        },
+        "current_revision": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "current_state": {
+          "type": "string",
+          "enum": [
+            "absent",
+            "candidate",
+            "active",
+            "needs_review",
+            "disabled",
+            "superseded"
+          ]
+        }
+      },
+      "required": [
+        "status",
+        "relation_id",
+        "revision",
+        "receipt",
+        "profile_write",
+        "affected_question_ids",
+        "error_code",
+        "current_revision",
+        "current_state"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

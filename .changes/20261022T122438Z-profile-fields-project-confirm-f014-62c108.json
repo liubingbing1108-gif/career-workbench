@@ -1,0 +1,21 @@
+{
+  "kind": "docs",
+  "summary": "Confirm 15 project fields, remove the process field and record four-expression version dependency; prepare the activity batch.",
+  "capabilities": [
+    "profile"
+  ],
+  "validation": "check_docs and check_project passed; verified 258 stable IDs, 15 confirmed project rows, two exclusions, 14 pending activity fields, acceptance examples and cross-topic dependency. No runtime tests.",
+  "compatibility": "Documentation only; no code, Skill, API, runtime, migration, browser, release or cross-chat messages. Legacy content and originals protected.",
+  "handoff": {
+    "task": "profile-fields-project-confirm-f014",
+    "status": "complete",
+    "next": "Batch-review 14 activity fields with optional values, partial dates, decimal duration plus explicit unit and multiple original attachments. Version topic and main guide owners must sync the now four project expressions (07-10, 07-11, 07-12, 07-14), since 07-13 is excluded by the latest confirmed rule.",
+    "docs": [],
+    "docs_reason": "Updated owning field PRD and catalog, including latest decision precedence and explicit dependency for version/main-guide owners. No edits to other topics."
+  },
+  "id": "20261022T122438Z-profile-fields-project-confirm-f014-62c108",
+  "files": [
+    "docs/PROJECT_ACTIVITY.md"
+  ],
+  "release": "0.4.0"
+}

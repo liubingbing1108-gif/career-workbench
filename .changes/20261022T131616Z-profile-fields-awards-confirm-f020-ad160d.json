@@ -1,0 +1,21 @@
+{
+  "kind": "docs",
+  "summary": "Confirm six award fields and exclude issuer, recipient type and role; prepare the complete paper field batch.",
+  "capabilities": [
+    "profile"
+  ],
+  "validation": "check_docs.py and check_project.py passed; targeted checks verified 259 unique review IDs, six retained and three excluded award rows, legacy mappings, four acceptance targets and nine pending paper fields. No runtime tests or full PR diff checks.",
+  "compatibility": "Documentation only; no code, Skill, API, runtime, migration, browser or release changes. Legacy values, original files and history preserved.",
+  "handoff": {
+    "task": "profile-fields-awards-confirm-f020",
+    "status": "complete",
+    "next": "Batch-review nine paper fields and per-paper current-value saves: optional values, one combined author-role/order text, partial publication date, manual status, one link and multiple original attachments. Preserve pending cross-topic obtained-date and four-project-expression synchronization dependencies.",
+    "docs": [],
+    "docs_reason": "Updated the owning local field PRD and catalog; other topics unchanged."
+  },
+  "id": "20261022T131616Z-profile-fields-awards-confirm-f020-ad160d",
+  "files": [
+    "docs/PROJECT_ACTIVITY.md"
+  ],
+  "release": "0.4.0"
+}

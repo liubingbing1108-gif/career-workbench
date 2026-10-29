@@ -1,0 +1,24 @@
+{
+  "kind": "refactor",
+  "summary": "Complete full offline and browser regression of the exported profile-refactor migration candidate.",
+  "capabilities": [
+    "profile",
+    "import",
+    "mapping",
+    "execution"
+  ],
+  "validation": "Fresh 360-file source-only export passed 398 profile tests, 97 management tests, 37 script tests (one skipped), 120 JavaScript tests and all 17 browser scripts. Documentation and project checks passed. Isolated private-copy migration/replay/rollback restored state and original BLOB hashes; active source was read-only.",
+  "compatibility": "Candidate remains undeployed and contract30 opt-in. No runtime switch, installed extension change, real model/website action or publication. Product and migration acceptance gaps remain explicit.",
+  "handoff": {
+    "task": "profile-refactor-implementation",
+    "status": "in_progress",
+    "next": "Continue remaining parser acceptance combinations, old global custom-field and duplicate-identity classification handling, management-linked rehearsal and model forward validation. Resolve concrete migration choices and historical evidence gaps before activation; do not fabricate historical answers.",
+    "docs": [],
+    "docs_reason": "Private validation, implementation and changelog now record the completed exported regression; no exported API or runtime behavior changed in this receipt."
+  },
+  "id": "20261027T120744Z-profile-refactor-implementation-ebdb09",
+  "files": [
+    "docs/PROJECT_ACTIVITY.md"
+  ],
+  "release": "0.4.0"
+}

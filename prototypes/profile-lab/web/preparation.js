@@ -246,6 +246,10 @@ function updatePreparationProgress(){
   $('#execution-attachment').hidden=!file;
   $('#execution-attachment').textContent=file?(execution.attachment_verified&&execution.persistence_verified?'已保存到官网「简历附件」：'+file.name:execution.attachment_verified?(preserve?'所选原件已上传至当前官网：':readOnly?'当前官网附件已核对：':'附件已显示，正在检查是否保存：')+file.name:'附件尚未确认保存：'+file.name):'';
   $('#execution-issues').innerHTML=[...new Set((execution?.issues||[]).map(readableIssue))].map(t=>`<li>${escapeHtml(t)}</li>`).join('');
+  if(typeof state!=='undefined'&&state?.profile_contract===30)for(const issue of execution?.structured_issues||[]){
+    const li=document.createElement('li');li.innerHTML=`${escapeHtml(issue.label)} · ${escapeHtml(issue.error_type)} <button data-edit-issue>在工作台修正</button> <button data-retry-issue ${active?'disabled':''}>预览局部重试</button>`;
+    $('[data-edit-issue]',li).onclick=safe(()=>editExecutionIssue(issue));$('[data-retry-issue]',li).onclick=safe(()=>previewExecutionCorrection(issue));$('#execution-issues').append(li);
+  }
   $('#execution-return').hidden=active||confirmingPreparation;$('#execution-pause').hidden=!active;$('#execution-official').hidden=!finished&&!executionError&&preparationState.browser?.status!=='needs_user';
   if($('#execution-retry')){$('#execution-retry').hidden=applied||(!finished&&!executionError);$('#execution-retry').disabled=active||confirmingPreparation||dirty||!!pending.length;}
   if(applied){$('#execution-title').textContent='已确认投递';$('#execution-current').textContent='投递管理和时间线已同步';const last=$$('#execution-steps li').at(-1);last?.classList.add('done');last?.classList.remove('incomplete');}
@@ -255,3 +259,17 @@ setInterval(async()=>{
   if(typeof currentView==='undefined'||currentView!=='practice'||!sessionId)return;
   try{const selected=sessionId,latest=await api('/api/preparation?session='+encodeURIComponent(selected));if(selected!==sessionId||currentView!=='practice')return;preparationState={...latest,current:preparationState.current};updatePreparationProgress();}catch{}
 },1200);
+
+async function editExecutionIssue(issue){
+  const row=[...(application.automatic||[]),...(application.decisions||[])].find(item=>item.website_field.id===issue.website_id||item.website_field.children?.some(c=>c.id===issue.website_id));
+  if(!row)throw Error('当前映射已变化，请重新读取后核对');
+  const ref={website_id:row.website_field.id,child_id:row.website_field.collection?issue.website_id:undefined,entry_id:issue.source_ref.entry_id,field_id:issue.source_ref.field_id};
+  const host=document.createElement('dialog');host.className='library-dialog';host.innerHTML=`<form><h3>修正 ${escapeHtml(issue.label)}</h3><p>官网当前观察值：${escapeHtml(String(issue.observed_value))}</p><label>本次修正内容<textarea name="value" rows="5">${escapeHtml(String(issue.expected_value))}</textarea></label><p>保存为本次材料后，可查看局部修正预览并确认重试。</p><button type="button" data-close>取消</button><button class="primary">保存为本次材料</button></form>`;document.body.append(host);$('[data-close]',host).onclick=()=>host.close();host.onclose=()=>host.remove();
+  $('form',host).onsubmit=safe(async event=>{event.preventDefault();await api('/api/website/answer',{session_id:sessionId,...ref,value:$('[name=value]',host).value,mode:'session'});host.close();await refresh();toast('本次修正材料已保存，请核对局部预览');});host.showModal();
+}
+async function previewExecutionCorrection(issue){
+  requireSavedPreparation($('#form-analysis'));
+  const sid=sessionId,preview=await api('/api/preparation/correction-preview',{session_id:sid,issue_ids:[issue.id]});
+  const host=document.createElement('dialog');host.className='library-dialog';host.innerHTML=`<form><h3>确认局部修正</h3>${preview.corrections.map(c=>`<p><b>${escapeHtml(c.label)}</b></p><p>官网已观察：${escapeHtml(String(c.expected_current))}</p><p>准备改为：${escapeHtml(String(c.value))}</p>`).join('')}<p>官网旧值或记录位置再有变化时，会保留现场并暂停该项。</p><button type="button" data-close>取消</button><button class="primary">确认修改并局部重试</button></form>`;document.body.append(host);$('[data-close]',host).onclick=()=>host.close();host.onclose=()=>host.remove();
+  $('form',host).onsubmit=safe(async event=>{event.preventDefault();if(sid!==sessionId)throw Error('岗位已切换');const job=await api('/api/preparation/start',{session_id:sid,digest:preview.digest,correction:true});preparationState.execution=job;host.close();showExecutionDialog();});host.showModal();
+}

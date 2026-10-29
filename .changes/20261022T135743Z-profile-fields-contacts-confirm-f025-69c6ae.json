@@ -1,0 +1,21 @@
+{
+  "kind": "docs",
+  "summary": "Confirm ten contact fields, exclude contact email and experience linkage, and prepare the job-preference batch.",
+  "capabilities": [
+    "profile"
+  ],
+  "validation": "check_docs.py and check_project.py passed; targeted checks verified 261 unique IDs, ten retained contact fields, two exclusions, email legacy mapping, F-93 through F-96 and eleven pending preference fields. No runtime tests or full PR diff checks.",
+  "compatibility": "Documentation only; no code, Skill, API, runtime, migration, browser or release changes. Legacy contact email, links, sources and history preserved; own email and employment referee contacts unchanged.",
+  "handoff": {
+    "task": "profile-fields-contacts-confirm-f025",
+    "status": "complete",
+    "next": "Batch-review eleven job-preference fields with independent current-value saves, optional inputs, partial dates, source duration units, decimal days per week and separate manual arrangement choices. Salary remains a separate next category. Prior cross-topic implementation synchronization dependencies remain.",
+    "docs": [],
+    "docs_reason": "Updated owning local field PRD and catalog; other topics unchanged."
+  },
+  "id": "20261022T135743Z-profile-fields-contacts-confirm-f025-69c6ae",
+  "files": [
+    "docs/PROJECT_ACTIVITY.md"
+  ],
+  "release": "0.4.0"
+}

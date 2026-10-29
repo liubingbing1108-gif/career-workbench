@@ -1,0 +1,25 @@
+{
+  "id": "20261029T114600Z-mapper-distribution-receipt-0c35d6",
+  "kind": "docs",
+  "summary": "Retrospectively record four existing field-mapper package artifacts in the v0.4.0 distribution baseline.",
+  "capabilities": [
+    "mapping",
+    "distribution"
+  ],
+  "files": [
+    "skills/application-field-mapper/fixtures/conformance.json",
+    "skills/application-field-mapper/fixtures/rejections.json",
+    "skills/application-field-mapper/schemas/contract.schema.json",
+    "skills/application-field-mapper/scripts/test_contract.py"
+  ],
+  "validation": "PR CI correctly rejected missing change-record coverage. These unchanged artifacts were included in the prior successful 41-test mapper contract run and source/privacy audit; this receipt adds traceability without changing implementation or weakening checks.",
+  "compatibility": "No runtime, API or data change. Retrospective distribution receipt only; original implementation history is not rewritten.",
+  "release": "0.4.0",
+  "handoff": {
+    "task": "mapper-distribution-receipt",
+    "status": "complete",
+    "next": "Continue exact-commit v0.4.0 PR checks.",
+    "docs": [],
+    "docs_reason": "The package schema, fixtures and contract tests already match implementation; only missing distribution coverage is added."
+  }
+}

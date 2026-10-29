@@ -23,7 +23,7 @@ class ExecutorBridge:
                 for session in state['sessions']:
                     job = session.get('preparation', {}).get('execution')
                     if job and job['status'] in {'running', 'awaiting_executor'}:
-                        job.update(status='paused', stop_requested=True, message='本机服务已重启，旧任务已暂停；请重新连接并核对预览后继续，官网已填内容保留。')
+                        job.update(stop_unconfirmed=job['status']=='running',status='paused', stop_requested=True, message='本机服务已重启，旧任务已暂停；请重新连接并核对预览后继续，官网已填内容保留。')
             lab.mutate(recover)
 
     @staticmethod
@@ -47,7 +47,7 @@ class ExecutorBridge:
                 for session in state['sessions']:
                     job = session.get('preparation', {}).get('execution')
                     if job and job['status'] == 'running' and job.get('connection') in stale:
-                        job.update(status='failed', message='填写连接已中断；官网可能保留部分输入，请重新连接、预览并检查实际现场。')
+                        job.update(status='failed', stop_unconfirmed=True, message='填写连接已中断；官网可能保留部分输入，请重新连接、预览并检查实际现场。')
             self.lab.mutate(expire)
         active = any(c['url'] == url and (session_id is None or c['session_id'] == session_id)
                      and time.time()-c['seen'] < 20 for c in self.connections.values())
@@ -86,9 +86,13 @@ class ExecutorBridge:
                 session_id = candidates[0]['id']
                 if any(s.get('preparation', {}).get('execution', {}).get('status') == 'running' and (s.get('website') or s.get('target') or {}).get('url') == url for s in self.lab.state()['sessions']):
                     raise LabError('当前官网正在填写，请先暂停再更换连接', 409)
-                self.connections = {k: c for k, c in self.connections.items() if c['url'] != url}
                 token = secrets.token_urlsafe(24)
-                self.connections[token] = dict(origin=origin, url=url, session_id=session_id, seen=time.time())
+                capabilities=data.get('capabilities', {})
+                if not isinstance(capabilities, dict):raise LabError('插件能力声明无效')
+                core_id=data.get('core_session_id')
+                if core_id is not None and (not isinstance(core_id,str) or not core_id or len(core_id)>200):raise LabError('执行核心身份无效')
+                self.connections = {k: c for k, c in self.connections.items() if c['url'] != url}
+                self.connections[token] = dict(origin=origin, url=url, session_id=session_id, seen=time.time(),core_session_id=core_id, capabilities={k:1 for k in ('structuredIssues','correctionRetry','stopProof') if capabilities.get(k)==1})
                 self.code = secrets.token_urlsafe(18)
                 self.code_session_id = None
                 self.codes.pop(code,None)
@@ -110,15 +114,37 @@ class ExecutorBridge:
             if action == 'draft':
                 from official_draft import save_official_draft
                 return save_official_draft(self.lab, connection['session_id'], connection['url'], data)
+            if action == 'stop-check':
+                session=next(s for s in self.lab.state()['sessions'] if s['id']==connection['session_id'])
+                job=session.get('preparation',{}).get('execution',{})
+                return {'stop_check':{'job_id':job['id'],'core_session_id':job.get('executor_core_session_id')} if job.get('stop_unconfirmed') else None}
+            if action == 'stop-proof':
+                def acknowledge(state):
+                    session=next(s for s in state['sessions'] if s['id']==connection['session_id'])
+                    job=session.get('preparation',{}).get('execution',{})
+                    proof=data.get('proof',{})
+                    if not isinstance(proof,dict) or not isinstance(proof.get('page'),dict):raise LabError('停止核验格式无效')
+                    if not job.get('stop_unconfirmed') or job.get('id')!=data.get('job_id'):raise LabError('停止核验已过期',409)
+                    expected=job.get('executor_core_session_id')
+                    if connection['capabilities'].get('stopProof')!=1 or not expected or expected!=connection.get('core_session_id') or proof.get('sessionId')!=expected:raise LabError('无法证明已回到原执行页面，请保留原页核对',409)
+                    if proof.get('busy') is not False or proof.get('cancelled') is not True or proof.get('page',{}).get('url')!=connection['url']:raise LabError('执行核心尚未确认原页停止',409)
+                    job.update(stop_unconfirmed=False,status='paused',stop_requested=True,stop_confirmed_at=time.time(),executor_capabilities=connection['capabilities'],message='原执行页面已确认停止；请重新核对预览后继续。')
+                    session['preparation'].pop('preview',None);session['preparation'].pop('correction_preview',None)
+                    return dict(accepted=True)
+                return self.lab.mutate(acknowledge)
             if action == 'poll':
                 def take(state):
                     for session in state['sessions']:
                         if session['id'] != connection['session_id']:
                             continue
                         job = session.get('preparation', {}).get('execution')
+                        if job and job.get('stop_unconfirmed'):
+                            return {'stop_check':{'job_id':job['id'],'core_session_id':job.get('executor_core_session_id')}}
                         if not job or job['status'] != 'awaiting_executor' or job['confirmed_materials']['url'] != connection['url']:
                             continue
-                        job.update(status='running', connection=data['connection'], message='已连接，正在重新读取官网并准备填写。')
+                        if job['confirmed_materials'].get('corrections') and connection['capabilities'].get('correctionRetry') != 1:
+                            raise LabError('插件不支持受限修正，未发送材料',409)
+                        job.update(status='running', connection=data['connection'], executor_core_session_id=connection.get('core_session_id'),executor_capabilities=connection['capabilities'], message='已连接，正在重新读取官网并准备填写。')
                         materials=copy.deepcopy(job['confirmed_materials'])
                         attachment=materials.get('attachment')
                         if attachment and not materials.get('verification_only'):
@@ -128,7 +154,8 @@ class ExecutorBridge:
                             attachment.update(base64=base64.b64encode(raw).decode(),mime_type=mimetypes.guess_type(meta['name'])[0] or 'application/octet-stream')
                         return {'id': job['id'], 'materials': materials}
                     return None
-                return {'job': self.lab.mutate(take)}
+                result=self.lab.mutate(take)
+                return {'job':None,**result} if result and 'stop_check' in result else {'job':result}
             if action == 'report':
                 def report(state):
                     job = next((s.get('preparation', {}).get('execution') for s in state['sessions']
@@ -146,6 +173,17 @@ class ExecutorBridge:
                     issues = data.get('issues', [])
                     if not isinstance(issues, list) or any(not isinstance(i, str) or len(i) > 1000 for i in issues) or len(issues) > 500:
                         raise LabError('执行问题格式无效')
+                    if 'structured_issues' in data:
+                        if connection['capabilities'].get('structuredIssues') != 1:raise LabError('插件未声明结构化问题能力')
+                        from corrections import accept_issues
+                        session=next(s for s in state['sessions'] if s['id']==connection['session_id'])
+                        job['structured_issues']=accept_issues(session,job,data['structured_issues'])
+                    if 'correction_results' in data:
+                        allowed={c['issue_id'] for c in job['confirmed_materials'].get('corrections',[])}
+                        results=data['correction_results']
+                        if not isinstance(results,list) or len(results)>len(allowed) or any(not isinstance(r,dict) or r.get('issue_id') not in allowed or r.get('state') not in {'current_verified','conflict','needs_review'} for r in results):raise LabError('局部修正回报范围无效')
+                        if len({r['issue_id'] for r in results})!=len(results):raise LabError('修正回报重复')
+                        job['correction_results']=[{k:r[k] for k in ('issue_id','state')} for r in results]
                     manual = [i['label'] + '：已选择由本人在官网填写' for i in job['confirmed_materials'].get('manual', [])]
                     skipped = [i['label'] + '：本次留空或跳过，可在官网补充' for i in job['confirmed_materials'].get('skipped', [])]
                     issues = list(dict.fromkeys(issues + manual + skipped))
@@ -159,6 +197,7 @@ class ExecutorBridge:
                     phase=data.get('phase','review' if status in {'needs_attention','complete'} else 'filling')
                     if phase not in {'connecting','filling','saving','verifying','review'}:raise LabError('填写步骤无效')
                     job.update(status=status, phase=phase, filled=data['filled'], verified=data['verified'], message=data['message'], issues=issues,**flags,**counts)
+                    if data.get('stop_unconfirmed') is True:job['stop_unconfirmed']=True
                     if job.get('verification_only') and job.get('after_reopen') and flags['persistence_verified'] and not flags['draft_supported'] and counts['persisted']<counts['expected_count']:
                         next(s for s in state['sessions'] if s['id']==connection['session_id'])['preparation']['preserve_unsaved_page']=True
                     return {'accepted': True, 'stop': bool(job.get('stop_requested'))}

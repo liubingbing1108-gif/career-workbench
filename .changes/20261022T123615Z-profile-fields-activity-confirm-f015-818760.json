@@ -1,0 +1,21 @@
+{
+  "kind": "docs",
+  "summary": "Confirm ten activity fields and exclude four fields; prepare the language-ability batch including the previously listed mother-tongue candidate.",
+  "capabilities": [
+    "profile"
+  ],
+  "validation": "check_docs and check_project passed; verified 258 stable IDs, ten confirmed activity rows, four exclusions and legacy mappings, five acceptance examples and explicit language candidate scope. No runtime tests.",
+  "compatibility": "Documentation only; no code, Skill, API, runtime, migration, browser or release changes. Legacy fields, versions, original files and history preserved.",
+  "handoff": {
+    "task": "profile-fields-activity-confirm-f015",
+    "status": "complete",
+    "next": "Batch-review ten editable language-ability candidates (nine numbered plus previously unnumbered mother-tongue status) and show three already-settled exam references. Preserve four-level self-ratings, optional values and no score conversion. Existing dependency remains: version/main-guide owners must sync four project expressions after excluding 07-13.",
+    "docs": [],
+    "docs_reason": "Updated owning field PRD and catalog only, with confirmed exclusions and next batch proposal; other topic files unchanged."
+  },
+  "id": "20261022T123615Z-profile-fields-activity-confirm-f015-818760",
+  "files": [
+    "docs/PROJECT_ACTIVITY.md"
+  ],
+  "release": "0.4.0"
+}

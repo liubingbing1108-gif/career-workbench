@@ -1,0 +1,21 @@
+{
+  "kind": "docs",
+  "summary": "Exclude six education preset fields and retain the remaining 27 fields for batch review.",
+  "capabilities": [
+    "profile"
+  ],
+  "validation": "check_docs and check_project passed; verified 258 stable review IDs, six excluded education fields, 27 pending fields and six updated legacy mappings. Documentation only; no runtime tests.",
+  "compatibility": "No code, Skill, API, runtime, migration, browser or release changes; legacy content and files remain protected.",
+  "handoff": {
+    "task": "profile-fields-education-trim-f011",
+    "status": "complete",
+    "next": "Confirm the remaining 27 education fields and per-education save proposal together; do not re-ask the six excluded fields or infer approval of the remainder.",
+    "docs": [],
+    "docs_reason": "Updated owning local field PRD and catalog, including exclusions, legacy mappings and acceptance examples; other topics unchanged."
+  },
+  "id": "20261022T115642Z-profile-fields-education-trim-f011-32d45b",
+  "files": [
+    "docs/PROJECT_ACTIVITY.md"
+  ],
+  "release": "0.4.0"
+}

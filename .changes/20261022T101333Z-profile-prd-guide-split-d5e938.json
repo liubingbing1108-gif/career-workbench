@@ -1,0 +1,21 @@
+{
+  "kind": "docs",
+  "summary": "Restructure the profile refactor PRD into an implementation guide, separate historical material, preserve acceptance coverage, and establish three scoped discussion topics with confirmed-decision writeback.",
+  "capabilities": [
+    "profile"
+  ],
+  "validation": "check_docs.py passed: 113 Markdown files and 738 relative links. Audit preserved all 87 acceptance rows, R01–R32 plus R02a/R12a, 12 implementation tasks and 258 candidate review rows. Three explicitly requested chats were created and observed reading handoff. Runtime tests not run; no code change.",
+  "compatibility": "Documentation and chat coordination only. No code, Skill, API, runtime data, permissions or deployment change; no blanket approval of candidate fields or deletion policies.",
+  "handoff": {
+    "task": "profile-prd-guide-split",
+    "status": "complete",
+    "next": "Use the three scoped chats to confirm field storage, version ownership and remaining deletion/restoration behavior. Each chat updates its linked PRD topic on confirmation; consolidate cross-topic consistency before authorizing implementation.",
+    "docs": [],
+    "docs_reason": "Updated private main work guide, three formal PRD topics, preserved historical/acceptance attachments, catalog pointers, shared indexes and chat ownership map. Public runtime contracts unchanged."
+  },
+  "id": "20261022T101333Z-profile-prd-guide-split-d5e938",
+  "files": [
+    "docs/PROJECT_ACTIVITY.md"
+  ],
+  "release": "0.4.0"
+}
