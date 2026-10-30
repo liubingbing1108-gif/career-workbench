@@ -14,6 +14,7 @@ const {chromium}=require('playwright'),{spawn}=require('node:child_process'),ass
   assert.equal(await row.locator('[data-set-value="exam_name"]').inputValue(),'未选考试名称草稿');
   await page.locator('#mapping-relation-panel summary').click();await page.getByRole('button',{name:'核对组合/摘取草稿：姓与名',exact:true}).click();
   const derived=page.locator('dialog.library-dialog');await derived.locator('[name="value"]').fill('林 晓');await derived.locator('[name="confirmed"]').check();await derived.locator('button.primary').click();await derived.waitFor({state:'detached'});
+  await page.waitForFunction(()=>document.querySelector('#prep-live-preview').textContent.includes('林 晓'));
   assert(await page.locator('#prep-live-preview').textContent().then(t=>t.includes('林 晓')));
   await page.reload();await page.locator('[data-material-module="row"]').waitFor();assert.equal(await page.locator('[data-linked-sources] [data-version-content]').inputValue(),'英文');
   const state=await page.evaluate(async()=>{const r=await fetch('/api/state');return r.json();});

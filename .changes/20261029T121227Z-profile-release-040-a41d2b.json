@@ -1,0 +1,25 @@
+{
+  "kind": "docs",
+  "summary": "Record release candidate review, installed extension reload and pending CI.",
+  "capabilities": [
+    "profile",
+    "mapping",
+    "import",
+    "execution",
+    "distribution"
+  ],
+  "validation": "Full PR baseline and tracked privacy passed; private identifier/history audit passed; installed extension read back as enabled version 1.3.10. Complete CI exposed asynchronous test waits; three focused browser tests pass after synchronization fixes; exact commit CI pending.",
+  "compatibility": "Explicit contract30 migration; extension 1.3.10/core 1.2.37/client 1.2.13 with protocol v1. Existing data remains local and old databases are not silently migrated.",
+  "handoff": {
+    "task": "profile-release-040",
+    "status": "in_progress",
+    "next": "Verify sanitized export and full PR baseline, publish through PR and successful exact-commit CI, build and read back immutable release assets, verify installed extension.",
+    "docs": [],
+    "docs_reason": "Private release evidence update only; public product rules are unchanged."
+  },
+  "id": "20261029T121227Z-profile-release-040-a41d2b",
+  "files": [
+    "docs/PROJECT_ACTIVITY.md"
+  ],
+  "release": null
+}
